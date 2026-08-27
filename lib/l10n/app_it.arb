@@ -1,0 +1,440 @@
+{
+  "@@locale": "it",
+  "navTrain": "Allenati",
+  "navWorkouts": "Workout",
+  "navCombos": "Combo",
+  "navHistory": "Storico",
+  "navStats": "Stats",
+  "commonCancel": "Annulla",
+  "commonSave": "Salva",
+  "commonStart": "Avvia",
+  "commonDelete": "Elimina",
+  "commonEdit": "Modifica",
+  "commonNew": "Nuovo",
+  "commonClear": "Azzera",
+  "commonDone": "Fatto",
+  "commonAll": "Tutti",
+  "commonSequential": "Sequenziale",
+  "commonRandom": "Casuale",
+  "commonWork": "Lavoro",
+  "commonRest": "Riposo",
+  "commonRounds": "Round",
+  "commonRound": "Round",
+  "commonDuration": "Durata",
+  "commonType": "Tipo",
+  "commonName": "Nome",
+  "commonOptional": "(facoltativo)",
+  "commonNone": "Nessuna",
+  "commonCategory": "Categoria",
+  "commonClose": "Chiudi",
+  "commonDecrease": "Diminuisci",
+  "commonIncrease": "Aumenta",
+  "commonDeleted": "(eliminato)",
+  "commonTotal": "Totale",
+  "commonPause": "Pausa",
+  "commonResume": "Riprendi",
+  "commonLoad": "Carico",
+  "unitSession": "sessione",
+  "unitSessions": "sessioni",
+  "unitExercise": "esercizio",
+  "unitExercises": "esercizi",
+  "feelingGreat": "Ottimo",
+  "feelingGood": "Bene",
+  "feelingOk": "OK",
+  "feelingDrained": "Sfinito",
+  "pickerTitle": "Seleziona combinazioni",
+  "pickerSearch": "Cerca…",
+  "pickerEmpty": "Nessuna combinazione trovata. Creane una nella scheda Combinazioni.",
+  "pickerDone": "Fatto ({n})",
+  "@pickerDone": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "pickerSelectAll": "Seleziona tutte",
+  "randomMinTechniques": "Min tecniche",
+  "randomMaxTechniques": "Max tecniche",
+  "randomAllowedCategories": "Categorie consentite",
+  "randomRequirePunch": "Almeno 1 pugno",
+  "randomRequireKick": "Almeno 1 calcio",
+  "randomIncludeDefense": "Includi difesa / movimento",
+  "randomGenerated": "Combinazioni generate",
+  "comboAddTechnique": "Aggiungi almeno una tecnica",
+  "comboGiveName": "Dai un nome alla combinazione",
+  "comboSaved": "Combinazione salvata",
+  "comboEdit": "Modifica combinazione",
+  "comboNew": "Nuova combinazione",
+  "comboToggleFavorite": "Attiva/disattiva preferito",
+  "comboTechniquesCount": "Combinazione ({n} tecniche)",
+  "@comboTechniquesCount": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "comboTapHint": "Tocca le tecniche a destra per costruire la combinazione.",
+  "comboMoveUp": "Sposta su",
+  "comboMoveDown": "Sposta giù",
+  "comboRemove": "Rimuovi",
+  "comboTechniqueLibrary": "Libreria tecniche",
+  "comboTechnique": "Tecnica",
+  "comboTechniqueAdded": "Tecnica aggiunta",
+  "comboNotFound": "Non trovato",
+  "comboNotFoundMsg": "Questa combinazione non esiste più.",
+  "comboCustomTechniques": "Tecniche personalizzate",
+  "comboDeleteAria": "Elimina {name}",
+  "@comboDeleteAria": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "comboTechniqueNeedsName": "La tecnica ha bisogno di un nome",
+  "comboNewTechnique": "Nuova tecnica",
+  "comboShortName": "Nome breve mostrato",
+  "comboDescription": "Descrizione (facoltativa)",
+  "comboAddTechniqueBtn": "Aggiungi tecnica",
+  "combosTitle": "Combinazioni",
+  "combosFavorites": "★ Preferite",
+  "combosSearch": "Cerca combinazioni…",
+  "combosEmpty": "Nessuna combinazione",
+  "combosEmptyMsg": "Crea la tua prima combinazione dalla libreria tecniche.",
+  "combosCreate": "Crea combinazione",
+  "combosDuplicated": "Combinazione duplicata",
+  "combosDeleted": "Combinazione eliminata",
+  "combosDeleteTitle": "Elimina combinazione",
+  "combosDeleteMsg": "Eliminare \"{name}\"? Gli allenamenti che la usano passeranno a round liberi. L'operazione è irreversibile.",
+  "@combosDeleteMsg": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "combosTrain": "Allenati: {name}",
+  "@combosTrain": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "combosRoundLength": "Durata round",
+  "combosRestBetween": "Riposo tra i round",
+  "combosStartSession": "Avvia sessione",
+  "trainHeavyBag": "Sacco pesante",
+  "trainHeavyBagSub": "Round di combinazioni al sacco",
+  "trainComboWorkout": "Allenamento combinato",
+  "trainComboWorkoutSub": "Esegui un allenamento salvato",
+  "trainTabata": "Tabata",
+  "trainTabataSub": "Raffiche 20s lavoro / 10s riposo",
+  "trainIntervals": "Intervalli",
+  "trainIntervalsSub": "Preset lavoro/riposo personalizzati",
+  "trainFree": "Round libero",
+  "trainFreeSub": "Solo timer, nessuna combinazione",
+  "trainNothingToRun": "Niente da eseguire: aggiungi prima dei round",
+  "trainInProgress": "Sessione in corso",
+  "trainAt": "a {time}",
+  "@trainAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "trainRounds": "Round",
+  "trainCombinations": "Combinazioni",
+  "trainRotateEvery": "Ruota ogni",
+  "trainOrder": "Ordine",
+  "trainNoneFree": "Nessuna — round liberi",
+  "trainSelected": "{n} selezionati",
+  "@trainSelected": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "trainNoWorkouts": "Nessun allenamento salvato.",
+  "trainCreateWorkout": "Crea un allenamento",
+  "trainFixed": "Fissa",
+  "trainCycle": "Ciclo",
+  "trainChangesEvery": "La combinazione cambia a ogni intervallo di lavoro.",
+  "trainShowRandom": "Mostra combinazioni casuali",
+  "trainSavePreset": "Salva come preset",
+  "trainPresetSaved": "Preset salvato",
+  "trainPresetDeleted": "Preset eliminato",
+  "trainPresetHint": "Tocca per caricare · doppio tocco per eliminare",
+  "trainTimerSettings": "Impostazioni timer",
+  "trainSoundCues": "Segnali sonori",
+  "trainVibration": "Vibrazione",
+  "trainPrepCountdown": "Conto alla rovescia",
+  "trainPrepHint": "Secondi prima del round 1",
+  "trainRestSuffix": "RIPOSO",
+  "trainFreeRounds": "ROUND LIBERI",
+  "trainHeavyBagName": "SACCO PESANTE",
+  "trainIntervalsName": "INTERVALLI",
+  "livePreparing": "PREPARAZIONE",
+  "liveRoundOf": "ROUND {x} DI {y}",
+  "@liveRoundOf": {
+    "placeholders": {
+      "x": {},
+      "y": {}
+    }
+  },
+  "livePrevious": "Precedente",
+  "liveSkip": "Salta",
+  "liveRestart": "Riavvia",
+  "liveSound": "Suono",
+  "liveVibe": "Vibrazione",
+  "liveExit": "Esci",
+  "liveExitMsg": "Uscire da questa sessione? I progressi non verranno salvati.",
+  "liveReady": "Pronto a lavorare",
+  "liveTotal": "{rounds} round · {time} totali",
+  "@liveTotal": {
+    "placeholders": {
+      "rounds": {},
+      "time": {}
+    }
+  },
+  "liveSoundHint": "Tieni il suono attivo: le campane segnano i round, i bip segnano le combinazioni.",
+  "liveGetReady": "Preparati",
+  "livePaused": "In pausa",
+  "liveFirstUp": "Prima",
+  "liveNext": "Prossimo",
+  "liveNextRound": "Prossimo — round {n}",
+  "@liveNextRound": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "liveNextRoundShort": "Prossimo round {n}",
+  "@liveNextRoundShort": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "liveFree": "Libero",
+  "liveThrowEverything": "Dai tutto",
+  "liveStaySharp": "Resta reattivo, muoviti bene",
+  "liveFreeSlot": "LIBERO",
+  "liveDefenseSlot": "DIFESA",
+  "liveConditioningSlot": "CONDIZIONAMENTO",
+  "liveCustomSlot": "PERSONALIZZATO",
+  "liveRandomSlot": "CASUALE {n}",
+  "@liveRandomSlot": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "workoutsTitle": "Allenamenti",
+  "workoutsNoRounds": "Questo allenamento non ha round",
+  "workoutsEmpty": "Nessun allenamento",
+  "workoutsEmptyMsg": "Crea un allenamento strutturato con round, riposo e combinazioni.",
+  "workoutsCreate": "Crea allenamento",
+  "workoutsDuplicated": "Allenamento duplicato",
+  "workoutsDeleted": "Allenamento eliminato",
+  "workoutsDeleteTitle": "Elimina allenamento",
+  "workoutsDeleteMsg": "Eliminare \"{name}\"? Le sessioni completate nello storico restano. L'operazione è irreversibile.",
+  "@workoutsDeleteMsg": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "builderAddRound": "Aggiungi almeno un round",
+  "builderMinSeconds": "Ogni round deve durare almeno 5 secondi",
+  "builderSaved": "Allenamento salvato",
+  "builderEdit": "Modifica allenamento",
+  "builderNew": "Nuovo allenamento",
+  "builderWorkoutName": "Nome allenamento",
+  "builderWorkRest": "Lavoro {w} · Riposo {r}",
+  "@builderWorkRest": {
+    "placeholders": {
+      "w": {},
+      "r": {}
+    }
+  },
+  "builderAddRoundBtn": "Aggiungi round",
+  "builderSaveStart": "Salva + Avvia",
+  "builderRoundN": "Round {n}",
+  "@builderRoundN": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "builderMoveUp": "Sposta round su",
+  "builderMoveDown": "Sposta round giù",
+  "builderDuplicate": "Duplica round",
+  "builderDeleteRound": "Elimina round",
+  "builderRestLast": "Riposo (nessuno, ultimo)",
+  "builderRestAfter": "Riposo dopo",
+  "builderRoundType": "Tipo di round",
+  "builderSelectCombos": "Seleziona combinazioni…",
+  "builderSelected": "{n} SELEZIONATE",
+  "@builderSelected": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "builderFocusLabel": "Etichetta focus (mostrata durante il round)",
+  "builderDeletedCombo": "(combinazione eliminata)",
+  "builderFreeHint": "Nessuna combinazione: colpisci come preferisci.",
+  "builderNotFound": "Questo allenamento non esiste più. Salvando ne creerai uno nuovo.",
+  "historyTitle": "Storico",
+  "historyLogSession": "Registra sessione",
+  "historySearch": "Cerca note e allenamenti…",
+  "historyFrom": "Da",
+  "historyTo": "A",
+  "historyEmpty": "Nessuna sessione",
+  "historyEmptyMsg": "Termina una sessione di allenamento o registrane una manualmente e comparirà qui.",
+  "historyLogOne": "Registra una sessione",
+  "historyRnd": "RND",
+  "historyWorkUnit": "LAVORO",
+  "historyEnergyBefore": "Energia prima: {n}/5",
+  "@historyEnergyBefore": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "historyFeelingAfter": "Sensazione dopo: {feeling}",
+  "@historyFeelingAfter": {
+    "placeholders": {
+      "feeling": {}
+    }
+  },
+  "historyCombosUsed": "Combinazioni usate",
+  "historyDeleteSession": "Elimina sessione",
+  "historyDeleteMsg": "Rimuovere questa sessione dallo storico? L'operazione è irreversibile.",
+  "historySessionDeleted": "Sessione eliminata",
+  "historyMinDuration": "La durata deve essere almeno 1 minuto",
+  "historySessionLogged": "Sessione registrata",
+  "historyNameOptional": "Nome (facoltativo)",
+  "historyRpeLoad": "RPE — carico {n}",
+  "@historyRpeLoad": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "historyDistance": "Distanza (km, facoltativa)",
+  "historyExercises": "Esercizi",
+  "historyAdd": "Aggiungi",
+  "historyExercisePlaceholder": "Esercizio",
+  "historySets": "serie",
+  "historyReps": "rip",
+  "historyKg": "kg",
+  "historyRemoveExercise": "Rimuovi esercizio",
+  "historyNoExercises": "Nessun esercizio aggiunto: la sessione verrà registrata solo per durata.",
+  "historyNotes": "Note (facoltative)",
+  "historySaveSession": "Salva sessione",
+  "statsTitle": "Statistiche",
+  "statsEmpty": "Ancora nessuno storico. Termina una sessione e le tue statistiche compariranno qui.",
+  "stats7days": "7 giorni",
+  "stats30days": "30 giorni",
+  "statsAllTime": "Tutto",
+  "statsSessions": "Sessioni",
+  "statsTrainingTime": "Tempo di allenamento",
+  "statsRounds": "Round",
+  "statsWorkTime": "Tempo di lavoro",
+  "statsTrainingLoad": "Carico di allenamento",
+  "statsWeeklyLoad": "Carico settimanale",
+  "statsMonthlyLoad": "Carico mensile",
+  "statsLoadNote": "Carico = durata × RPE. Una stima semplice, non un indicatore medico.",
+  "statsConsistency": "Costanza",
+  "statsCurrentStreak": "Serie attuale",
+  "statsLongestStreak": "Serie più lunga",
+  "statsSessionsPerWeek": "Sessioni / settimana",
+  "statsHeavyBag": "Sacco pesante",
+  "statsBagSessions": "Sessioni al sacco",
+  "statsBagRounds": "Round al sacco",
+  "statsBagTime": "Tempo al sacco",
+  "statsMostUsed": "Combinazioni più usate",
+  "statsMostUsedEmpty": "Completa sessioni con combinazioni per vedere l'uso.",
+  "statsTechFreq": "Frequenza tecniche",
+  "statsTechEmpty": "Ancora nessun dato sulle tecniche.",
+  "statsWeeklyOverview": "Riepilogo settimanale",
+  "statsThisWeek": "Questa settimana",
+  "statsLastWeek": "Scorsa settimana",
+  "statsSessionsLine": "{n} sessioni · {time} · carico {load}",
+  "@statsSessionsLine": {
+    "placeholders": {
+      "n": {},
+      "time": {},
+      "load": {}
+    }
+  },
+  "statsPlan": "Pianifica",
+  "statsPlanSession": "Pianifica una sessione",
+  "statsLabelOptional": "Etichetta (facoltativa)",
+  "statsPlannedMinutes": "Minuti previsti",
+  "statsAddToWeek": "Aggiungi alla settimana",
+  "statsTogglePlan": "Attiva/disattiva sessione pianificata",
+  "statsDeletePlan": "Elimina piano",
+  "statsPrevWeek": "Settimana precedente",
+  "statsNextWeek": "Settimana successiva",
+  "completeSelectRpe": "Seleziona prima un RPE",
+  "completeSaved": "Sessione salvata",
+  "completeTitle": "Allenamento completato",
+  "completeRounds": "Round",
+  "completeEstSession": "Sessione stimata",
+  "completeWork": "Lavoro",
+  "completeRest": "Riposo",
+  "completeHowHard": "Quanto è stato duro?",
+  "completeRpe": "RPE —",
+  "completeLoadApprox": "Carico di allenamento ≈ {n}",
+  "@completeLoadApprox": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "completeEnergyBefore": "Energia prima (facoltativa)",
+  "completeFeelingAfter": "Sensazione dopo (facoltativa)",
+  "completeNotes": "Note (facoltative)",
+  "completeNotesPlaceholder": "Combinazioni rapide, fiato ok…",
+  "completeDiscard": "Scarta",
+  "completeSaveSession": "Salva sessione",
+  "completeDiscardTitle": "Scarta sessione",
+  "completeDiscardMsg": "Scartare questa sessione? Non comparirà nello storico.",
+  "sessionNoRounds": "NESSUN ROUND",
+  "sessionNRounds": "{n} ROUND",
+  "@sessionNRounds": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "sessionRest": "RIPOSO",
+  "sessionDeletedCombo": "COMBINAZIONE ELIMINATA",
+  "sessionUnknown": "Sconosciuto",
+  "pushupsTitle": "Flessioni",
+  "pushupsSub": "Contatore automatico con la fotocamera",
+  "pushupsHint": "Posiziona il telefono a terra con la fotocamera frontale rivolta verso l'alto e scendi sopra di lui: ogni flessione viene contata automaticamente.",
+  "pushupsName": "Flessioni",
+  "pushupsExercise": "Flessioni",
+  "pushupsCount": "flessioni",
+  "pushupsDetecting": "Rilevamento attivo",
+  "pushupsMoveCloser": "Avvicinati o regola la sensibilità",
+  "pushupsSensitivity": "Sensibilità",
+  "pushupsSave": "Salva",
+  "pushupsStop": "Ferma",
+  "pushupsSaved": "Sessione di flessioni salvata",
+  "pushupsNothingToSave": "Nessuna flessione da salvare",
+  "pushupsErrorPermission": "Permesso fotocamera negato. Concedi l'accesso alla fotocamera nelle impostazioni del browser.",
+  "pushupsErrorNoCamera": "Nessuna fotocamera trovata.",
+  "pushupsErrorGeneric": "Impossibile avviare la fotocamera.",
+  "builderAddBlock": "Aggiungi blocco",
+  "builderBlockType": "Tipo di blocco",
+  "builderSeries": "Serie",
+  "builderChooseRoutine": "Routine di stretching",
+  "navLibrary": "Libreria",
+  "navProgress": "Progressi",
+  "settingsTitle": "Impostazioni",
+  "settingsLanguage": "Lingua",
+  "settingsSound": "Segnali sonori",
+  "settingsVibration": "Vibrazione",
+  "settingsPrep": "Countdown preparazione",
+  "settingsPrepHint": "Parte automaticamente all'avvio della sessione",
+  "trainPresets": "Preset",
+  "trainCombosToggle": "Allenati sulle combinazioni",
+  "trainTools": "Strumenti extra",
+  "trainLastUsed": "Ultimo uso",
+  "trainSeries": "Serie",
+  "trainSwipeHint": "Scorri per regolare",
+  "trainWorkoutSub": "Esegui un allenamento salvato",
+  "trainWorkout": "Workout",
+  "libraryTitle": "Libreria",
+  "libraryBag": "Sacco",
+  "libraryStretching": "Stretching",
+  "progressTitle": "Progressi",
+  "progressWeekSessions": "Sessioni settimana",
+  "liveExitWorkout": "Esci dall'allenamento",
+  "builderGiveName": "Dai un nome all'allenamento"
+}

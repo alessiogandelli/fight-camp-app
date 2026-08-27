@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Lat stretch with broomstick">
+  <rect x="0" y="0" width="240" height="240" rx="16" fill="#121216"/>
+  <rect x="4" y="4" width="232" height="232" rx="12" fill="none" stroke="#26262e" stroke-width="2"/>
+  <line x1="24" y1="196" x2="216" y2="196" stroke="#26262e" stroke-width="3" stroke-linecap="round"/>
+  <line x1="64" y1="192" x2="28" y2="48" stroke="#ff4d4d" stroke-width="6" stroke-linecap="round"/>
+  <path d="M172 120 L186 132 L200 120" stroke="#ff4d4d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <g stroke="#f4f4f1" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M172 158 L148 190 L188 192"/>
+    <path d="M178 164 L160 194 L200 194"/>
+    <path d="M172 158 L110 108"/>
+    <path d="M110 108 L46 94"/>
+    <path d="M110 108 L50 106"/>
+    <circle cx="94" cy="126" r="13" fill="#121216"/>
+  </g>
+  <g font-family="sans-serif" font-size="11" font-weight="700" fill="#9a9aa5">
+    <text x="120" y="226" text-anchor="middle">LAT</text>
+  </g>
+</svg>
