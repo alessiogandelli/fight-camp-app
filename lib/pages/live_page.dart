@@ -47,7 +47,6 @@ class _LivePageState extends State<LivePage> {
     SystemChrome.setPreferredOrientations(const [
       DeviceOrientation.portraitUp,
       DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
     ]);
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
@@ -262,38 +261,47 @@ class _LivePageState extends State<LivePage> {
       onExit: () => _confirmExit(context),
     );
 
-    // Controls stay anchored at the bottom in every orientation; only the
-    // timer/phase body changes. In landscape the timer is duplicated and the
-    // second copy flipped 180° so it reads from both sides of the phone.
     final Widget body;
     if (isLandscape) {
-      final bigTimer = TimerBlock(
-        engine: engine,
-        view: view,
-        plan: plan,
-        lang: lang,
-        showMeta: false,
+      // The surrounding screen stays upright: header remains at the top and
+      // controls at the bottom. Only the two timer faces follow the phone's
+      // long axis, so athletes on either side can read one of them.
+      Widget timerFace(int quarterTurns) => Expanded(
+        child: Center(
+          child: RotatedBox(
+            quarterTurns: quarterTurns,
+            child: TimerBlock(
+              engine: engine,
+              view: view,
+              plan: plan,
+              lang: lang,
+              showMeta: false,
+              compact: true,
+            ),
+          ),
+        ),
       );
-      final mirrored = RotatedBox(quarterTurns: 2, child: bigTimer);
-      if (_hasCombo(view)) {
-        body = Row(
-          children: [
-            Expanded(child: Center(child: bigTimer)),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(child: Center(child: phase)),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(child: Center(child: mirrored)),
-          ],
-        );
-      } else {
-        body = Row(
-          children: [
-            Expanded(child: Center(child: bigTimer)),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(child: Center(child: mirrored)),
-          ],
-        );
-      }
+
+      final timerFaces = Row(
+        children: [
+          timerFace(1),
+          const SizedBox(width: AppSpacing.md),
+          timerFace(3),
+        ],
+      );
+      body = _hasCombo(view)
+          ? Column(
+              children: [
+                Expanded(child: timerFaces),
+                SizedBox(
+                  height: 260,
+                  // Cancel the fixed frame's quarter-turn so combinations
+                  // read in the same direction as the primary timer face.
+                  child: RotatedBox(quarterTurns: 3, child: phase),
+                ),
+              ],
+            )
+          : timerFaces;
     } else if (!_hasCombo(view)) {
       body = Center(
         child: TimerBlock(
@@ -313,13 +321,32 @@ class _LivePageState extends State<LivePage> {
       );
     }
 
-    return Column(
+    final sessionFrame = Column(
       children: [
         header,
         Expanded(child: swipe(body)),
         controls,
         const SizedBox(height: 12),
       ],
+    );
+
+    if (!isLandscape) return sessionFrame;
+
+    // Keep the portrait frame anchored to the phone itself. In the permitted
+    // landscape direction this places the controls on the charging-port edge,
+    // with the title on the opposite edge. The timer faces above are rotated
+    // inside this frame, so they remain readable from opposite long sides.
+    return LayoutBuilder(
+      builder: (context, constraints) => Center(
+        child: RotatedBox(
+          quarterTurns: 1,
+          child: SizedBox(
+            width: constraints.maxHeight,
+            height: constraints.maxWidth,
+            child: sessionFrame,
+          ),
+        ),
+      ),
     );
   }
 
@@ -462,6 +489,7 @@ class TimerBlock extends StatelessWidget {
   final SessionPlan plan;
   final Lang lang;
   final bool showMeta;
+  final bool compact;
   const TimerBlock({
     super.key,
     required this.engine,
@@ -469,6 +497,7 @@ class TimerBlock extends StatelessWidget {
     required this.plan,
     required this.lang,
     this.showMeta = true,
+    this.compact = false,
   });
 
   Color get _phaseColor => switch (view.segment?.kind) {
@@ -510,7 +539,9 @@ class TimerBlock extends StatelessWidget {
                 color: color,
                 fontWeight: FontWeight.w900,
                 fontFeatures: const [FontFeature.tabularFigures()],
-                fontSize: last3 ? 160 : (warnMode ? 76 : 88),
+                fontSize: compact
+                    ? (last3 ? 124 : (warnMode ? 60 : 70))
+                    : (last3 ? 160 : (warnMode ? 76 : 88)),
               ),
               child: Text(
                 last3 ? '${view.segRemaining}' : fmtClock(view.segRemaining),
@@ -529,7 +560,7 @@ class TimerBlock extends StatelessWidget {
                 phaseTag,
                 style: TextStyle(
                   color: _phaseColor,
-                  fontSize: 12,
+                  fontSize: compact ? 10 : 12,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 2,
                 ),
