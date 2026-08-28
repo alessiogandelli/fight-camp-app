@@ -1082,6 +1082,18 @@ abstract class AppLocalizations {
   /// **'Delete \"{name}\"? Completed sessions in history are kept. This cannot be undone.'**
   String workoutsDeleteMsg(Object name);
 
+  /// No description provided for @workoutsCombosCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} COMBOS'**
+  String workoutsCombosCount(Object n);
+
+  /// No description provided for @workoutsRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'STRETCHING ROUTINE'**
+  String get workoutsRoutine;
+
   /// No description provided for @builderAddRound.
   ///
   /// In en, this message translates to:
@@ -2000,11 +2012,53 @@ abstract class AppLocalizations {
   /// **'Bag'**
   String get libraryBag;
 
+  /// No description provided for @libraryTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool'**
+  String get libraryTool;
+
   /// No description provided for @libraryStretching.
   ///
   /// In en, this message translates to:
   /// **'Stretching'**
   String get libraryStretching;
+
+  /// No description provided for @routineNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New stretching routine'**
+  String get routineNew;
+
+  /// No description provided for @routineEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit stretching routine'**
+  String get routineEdit;
+
+  /// No description provided for @routineTapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap stretching exercises on the right to build the routine.'**
+  String get routineTapHint;
+
+  /// No description provided for @routineExercisesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine ({n} exercises)'**
+  String routineExercisesCount(Object n);
+
+  /// No description provided for @routineGiveName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the routine a name'**
+  String get routineGiveName;
+
+  /// No description provided for @routineSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine saved'**
+  String get routineSaved;
 
   /// No description provided for @progressTitle.
   ///

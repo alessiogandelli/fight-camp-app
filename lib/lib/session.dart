@@ -1,32 +1,90 @@
 // Session helpers ported from src/lib/session.ts.
-import '../engine/blocks.dart';
 import '../engine/plan.dart';
 import '../models/types.dart';
 import 'format.dart';
+import 'stretch.dart';
 import '../l10n/app_localizations.dart';
 
-LiveConfig configFromWorkout(Workout w, int prepSeconds) => LiveConfig(
+/// Fixed stretching cadence: work seconds per exercise, rest seconds between
+/// exercises (ADR 0003 — intervals are always the same within a workout).
+const stretchWorkSeconds = 30;
+const stretchRestSeconds = 10;
+
+/// Rounds generated per endless batch; the engine appends more while running.
+const endlessBatchRounds = 8;
+
+/// Compiles a Workout (single uniform configuration) into the LiveConfig the
+/// session engine consumes. Stretching workouts expand into one round per
+/// exercise of the routine, each carrying its SVG illustration.
+/// Workouts with rounds == 0 are endless: a first batch is emitted and the
+/// engine keeps appending rounds of the same pattern until stopped.
+LiveConfig configFromWorkout(
+  Workout w,
+  List<Combination> combos,
+  List<Technique> techniques,
+  int prepSeconds,
+) {
+  final exerciseRounds = <RoundBase>[];
+  if (w.routineId != null) {
+    final techByName = {for (final t in techniques) t.id: t};
+    final routine = combos.where((c) => c.id == w.routineId).firstOrNull;
+    final exerciseIds = routine?.techniqueIds ?? const <String>[];
+    for (var i = 0; i < exerciseIds.length; i++) {
+      final id = exerciseIds[i];
+      exerciseRounds.add(
+        RoundBase(
+          label: techByName[id]?.name,
+          duration: stretchWorkSeconds,
+          restDuration: i < exerciseIds.length - 1 ? stretchRestSeconds : 0,
+          type: RoundType.custom,
+          image: stretchImageFor(id),
+        ),
+      );
+    }
+    return LiveConfig(
       name: w.name,
-      type: w.type,
+      type: WorkoutType.stretching,
       workoutId: w.id,
       prepSeconds: prepSeconds,
-      rounds: blockRounds(w),
+      rounds: exerciseRounds,
     );
-
-/// Compact one-line summary of a workout's shape, e.g. "10 × 0:30 · 1:00 riposo".
-String summarizeWorkout(Workout w, AppLocalizations l) {
-  if (w.blocks.isEmpty) return l.sessionNoRounds;
-  final parts = <String>[];
-  for (final b in w.blocks) {
-    switch (b.type) {
-      case BlockType.round || BlockType.circuit:
-        parts.add(b.rounds > 1 ? '${b.rounds}×${fmtClock(b.duration)}' : fmtClock(b.duration));
-      case BlockType.aerobic || BlockType.stretching || BlockType.free:
-        parts.add(fmtClock(b.duration));
-    }
   }
-  final totals = workoutTotals(w);
-  return totals.rest > 0 ? '${parts.join(' + ')} · ${fmtClock(totals.rest)} ${l.sessionRest}' : parts.join(' + ');
+
+  final endless = w.rounds == 0;
+  final count = endless ? endlessBatchRounds : w.rounds;
+  final rounds = [
+    for (var i = 0; i < count; i++)
+      RoundBase(
+        duration: w.workDuration,
+        restDuration: endless || i < count - 1 ? w.restDuration : 0,
+        type: w.hasCombos ? RoundType.combination : RoundType.free,
+        combinationIds: w.combinationIds,
+      ),
+  ];
+  return LiveConfig(
+    name: w.name,
+    type: w.type,
+    workoutId: w.id,
+    prepSeconds: prepSeconds,
+    endless: endless,
+    rounds: rounds,
+  );
+}
+
+/// Compact one-line summary of a workout's shape, e.g. "4×3:00 · 1:00 RIPOSO · 5 COMBO".
+String summarizeWorkout(Workout w, AppLocalizations l) {
+  if (w.workDuration < 1) return l.sessionNoRounds;
+  final parts = <String>[
+    w.rounds == 0
+        ? '∞ ×${fmtClock(w.workDuration)}'
+        : (w.rounds > 1
+              ? '${w.rounds}×${fmtClock(w.workDuration)}'
+              : fmtClock(w.workDuration)),
+    if (w.restDuration > 0) '${fmtClock(w.restDuration)} ${l.sessionRest}',
+    if (w.hasCombos) l.workoutsCombosCount(w.combinationIds.length),
+    if (w.routineId != null) l.workoutsRoutine,
+  ];
+  return parts.join(' · ');
 }
 
 class WorkoutTotals {
@@ -37,16 +95,16 @@ class WorkoutTotals {
 }
 
 WorkoutTotals workoutTotals(Workout w) {
-  var work = 0;
-  var rest = 0;
-  for (final b in w.blocks) {
-    if (b.type == BlockType.round || b.type == BlockType.circuit) {
-      work += b.duration * b.rounds;
-      rest += b.restDuration * (b.rounds - 1).clamp(0, 1 << 30);
-    } else {
-      work += b.duration;
-    }
+  if (w.rounds == 0) {
+    // Endless: surface a single round's footprint; the session has no fixed total.
+    return WorkoutTotals(
+      w.workDuration,
+      w.restDuration,
+      w.workDuration + w.restDuration,
+    );
   }
+  final work = w.workDuration * w.rounds;
+  final rest = w.restDuration * (w.rounds - 1).clamp(0, 1 << 30);
   return WorkoutTotals(work, rest, work + rest);
 }
 

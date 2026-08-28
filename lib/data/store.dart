@@ -39,7 +39,6 @@ AppData ensureStretchingPlans(AppData data) {
     combinations: data.combinations,
     workouts: data.workouts,
     sessions: data.sessions,
-    presets: data.presets,
     plans: [...data.plans, ...missing],
     settings: data.settings,
   );
@@ -84,7 +83,6 @@ class AppStore extends ChangeNotifier {
       combinations: data.combinations,
       workouts: data.workouts,
       sessions: data.sessions,
-      presets: data.presets,
       plans: data.plans,
       settings: data.settings,
     ));
@@ -121,15 +119,9 @@ class AppStore extends ChangeNotifier {
     _set(_copyWith(
       combinations: data.combinations.where((c) => c.id != id).toList(),
       workouts: data.workouts
-          .map((w) => Workout(
-                id: w.id,
-                name: w.name,
-                type: w.type,
-                createdAt: w.createdAt,
-                blocks: w.blocks
-                    .map((b) => b.copyWith(
-                        combinationIds: b.combinationIds.where((cid) => cid != id).toList()))
-                    .toList(),
+          .map((w) => w.copyWith(
+                combinationIds: w.combinationIds.where((cid) => cid != id).toList(),
+                clearRoutineId: w.routineId == id,
               ))
           .toList(),
     ));
@@ -184,9 +176,12 @@ class AppStore extends ChangeNotifier {
     final copy = Workout(
       id: uid(),
       name: '${src.name} COPY',
-      type: src.type,
+      workDuration: src.workDuration,
+      restDuration: src.restDuration,
+      rounds: src.rounds,
+      combinationIds: src.combinationIds.toList(),
+      routineId: src.routineId,
       createdAt: DateTime.now().millisecondsSinceEpoch,
-      blocks: src.blocks.map((b) => b.copyWith(id: uid())).toList(),
     );
     _set(_copyWith(workouts: [...data.workouts, copy]));
     return copy;
@@ -199,18 +194,6 @@ class AppStore extends ChangeNotifier {
 
   void deleteSession(String id) {
     _set(_copyWith(sessions: data.sessions.where((s) => s.id != id).toList()));
-  }
-
-  // ---- presets ----
-  void savePreset(TimerPreset p) {
-    final exists = data.presets.any((x) => x.id == p.id);
-    _set(_copyWith(
-      presets: exists ? data.presets.map((x) => x.id == p.id ? p : x).toList() : [...data.presets, p],
-    ));
-  }
-
-  void deletePreset(String id) {
-    _set(_copyWith(presets: data.presets.where((p) => p.id != id).toList()));
   }
 
   // ---- week plan ----
@@ -236,7 +219,6 @@ class AppStore extends ChangeNotifier {
     List<Combination>? combinations,
     List<Workout>? workouts,
     List<SessionRecord>? sessions,
-    List<TimerPreset>? presets,
     List<WeekPlanItem>? plans,
     Settings? settings,
   }) =>
@@ -246,7 +228,6 @@ class AppStore extends ChangeNotifier {
         combinations: combinations ?? data.combinations,
         workouts: workouts ?? data.workouts,
         sessions: sessions ?? data.sessions,
-        presets: presets ?? data.presets,
         plans: plans ?? data.plans,
         settings: settings ?? data.settings,
       );

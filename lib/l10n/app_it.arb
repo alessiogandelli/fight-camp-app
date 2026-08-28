@@ -231,6 +231,13 @@
       "name": {}
     }
   },
+  "workoutsCombosCount": "{n} COMBO",
+  "@workoutsCombosCount": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "workoutsRoutine": "ROUTINE STRETCHING",
   "builderAddRound": "Aggiungi almeno un round",
   "builderMinSeconds": "Ogni round deve durare almeno 5 secondi",
   "builderSaved": "Allenamento salvato",
@@ -433,6 +440,12 @@
   "libraryTitle": "Libreria",
   "libraryBag": "Sacco",
   "libraryStretching": "Stretching",
+  "routineNew": "Nuova routine di stretching",
+  "routineEdit": "Modifica routine di stretching",
+  "routineTapHint": "Tocca gli esercizi a destra per costruire la routine.",
+  "routineExercisesCount": "Routine ({n} esercizi)",
+  "routineGiveName": "Dai un nome alla routine",
+  "routineSaved": "Routine salvata",
   "progressTitle": "Progressi",
   "progressWeekSessions": "Sessioni settimana",
   "liveExitWorkout": "Esci dall'allenamento",

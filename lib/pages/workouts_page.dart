@@ -1,4 +1,4 @@
-// Workouts page ported from src/pages/WorkoutsPage.tsx.
+// Workouts page: saved single-configuration workouts (ADR 0003).
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -22,36 +22,48 @@ class WorkoutsPage extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final workouts = [...store.data.workouts]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 768),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(children: [
-                SectionTitle(l.workoutsTitle),
-                const Spacer(),
-                Button(label: l.workoutsCreate, size: BtnSize.sm, icon: Icons.add, onTap: () => context.go('/workouts/new')),
-              ]),
-              if (workouts.isEmpty)
-                EmptyState(
-                  title: l.workoutsEmpty,
-                  message: l.workoutsEmptyMsg,
-                  action: Button(label: l.workoutsCreate, onTap: () => context.go('/workouts/new')),
-                )
-              else
-                ...[
-                  for (var i = 0; i < workouts.length; i++) ...[
-                    if (i > 0) const SizedBox(height: AppSpacing.sm + 4),
-                    _WorkoutCard(workout: workouts[i]),
-                  ],
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 768),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SectionTitle(l.workoutsTitle),
+                  const SizedBox(height: 4),
+                  if (workouts.isEmpty)
+                    EmptyState(
+                      title: l.workoutsEmpty,
+                      message: l.workoutsEmptyMsg,
+                    )
+                  else
+                    ...[
+                      for (var i = 0; i < workouts.length; i++) ...[
+                        if (i > 0) const SizedBox(height: AppSpacing.sm + 4),
+                        _WorkoutCard(workout: workouts[i]),
+                      ],
+                    ],
                 ],
-            ],
+              ),
+            ),
           ),
         ),
-      ),
+        Positioned(
+          right: 20,
+          bottom: 20,
+          child: FloatingActionButton(
+            heroTag: null,
+            backgroundColor: AppColors.accent,
+            foregroundColor: Colors.white,
+            tooltip: l.workoutsCreate,
+            onPressed: () => context.go('/workouts/new'),
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -135,9 +147,8 @@ class _WorkoutCardState extends State<_WorkoutCard> {
                     Button(
                       label: l.commonStart,
                       size: BtnSize.sm,
-                      onTap: workout.blocks.isEmpty
-                          ? () => context.showToast(l.workoutsNoRounds)
-                          : () => context.push('/live', extra: LiveArgs(configFromWorkout(workout, store.data.settings.prepSeconds))),
+                      onTap: () => context.push('/live', extra: LiveArgs(configFromWorkout(
+                          workout, store.data.combinations, store.data.techniques, store.data.settings.prepSeconds))),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     IconButton2(Icons.copy_rounded, onTap: () {

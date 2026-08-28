@@ -22,43 +22,59 @@ class ProgressPage extends StatelessWidget {
     final vol = volumeStats(weekSessions);
     final streak = streaks(store.data.sessions);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xl),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 768),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Row of Expanded cards instead of a GridView: no orphan cell,
-              // no clipping from a fixed childAspectRatio. IntrinsicHeight keeps
-              // the three cards equal height without an unbounded constraint.
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: StatCard(label: l.progressWeekSessions.toUpperCase(), value: '${vol.sessions}'),
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xl),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 768),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Row of Expanded cards instead of a GridView: no orphan cell,
+                  // no clipping from a fixed childAspectRatio. IntrinsicHeight keeps
+                  // the three cards equal height without an unbounded constraint.
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: StatCard(label: l.progressWeekSessions.toUpperCase(), value: '${vol.sessions}'),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: StatCard(label: l.statsTrainingTime.toUpperCase(), value: fmtMinutes(vol.minutes * 60)),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: StatCard(label: l.statsCurrentStreak.toUpperCase(), value: '${streak.current}', sub: l.unitSessions),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: StatCard(label: l.statsTrainingTime.toUpperCase(), value: fmtMinutes(vol.minutes * 60)),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: StatCard(label: l.statsCurrentStreak.toUpperCase(), value: '${streak.current}', sub: l.unitSessions),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  const StatsContent(),
+                  const SizedBox(height: AppSpacing.lg),
+                  const HistoryContent(),
+                ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              const StatsContent(),
-              const SizedBox(height: AppSpacing.lg),
-              const HistoryContent(),
-            ],
+            ),
           ),
         ),
-      ),
+        Positioned(
+          right: 20,
+          bottom: 20,
+          child: FloatingActionButton(
+            heroTag: null,
+            backgroundColor: AppColors.accent,
+            foregroundColor: Colors.white,
+            tooltip: l.historyLogOne,
+            onPressed: () => showLogSessionModal(context, store),
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ],
     );
   }
 }

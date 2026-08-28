@@ -15,34 +15,7 @@ import '../ui/theme.dart';
 import '../ui/toast.dart';
 import '../ui/widgets.dart';
 import '../widgets/combo_picker.dart';
-import '../widgets/pushup_counter.dart';
 import '../l10n/app_localizations.dart';
-
-class _TimerPresetDef {
-  final String id;
-  final String nameIt;
-  final String nameEn;
-  final int rounds;
-  final int work;
-  final int rest;
-  const _TimerPresetDef(
-    this.id,
-    this.nameIt,
-    this.nameEn,
-    this.rounds,
-    this.work,
-    this.rest,
-  );
-}
-
-const _presets = <_TimerPresetDef>[
-  _TimerPresetDef('sacco-31', "Sacco 3'/1'", "Bag 3'/1'", 5, 180, 60),
-  _TimerPresetDef('sacco-21', "Sacco 2'/1'", "Bag 2'/1'", 6, 120, 60),
-  _TimerPresetDef('sacco-51', "Sacco 5'/1'", "Bag 5'/1'", 3, 300, 60),
-  _TimerPresetDef('tabata-2010', 'Tabata 20"/10"', 'Tabata 20"/10"', 8, 20, 10),
-  _TimerPresetDef('hiit-4020', 'HIIT 40"/20"', 'HIIT 40"/20"', 8, 40, 20),
-  _TimerPresetDef('free', 'Libero', 'Free', 5, 180, 0),
-];
 
 class TimerSetup {
   int rounds;
@@ -72,14 +45,11 @@ class TrainPage extends StatefulWidget {
 
 class _TrainPageState extends State<TrainPage> {
   ActiveSnapshot? _active;
-  String _presetId = 'sacco-31';
   late TimerSetup _setup;
   bool _useCombos = false;
   List<String> _comboIds = [];
   int _rotationInterval = 30;
   RotationOrder _rotationOrder = RotationOrder.sequential;
-  bool _toolsOpen = false;
-  TimerSetup? _lastUsed;
 
   @override
   void initState() {
@@ -92,13 +62,11 @@ class _TrainPageState extends State<TrainPage> {
       if (!mounted || j == null) return;
       final last = TimerSetup.fromJson(j);
       setState(() {
-        _lastUsed = last;
         _setup = TimerSetup(
           rounds: last.rounds,
           work: last.work,
           rest: last.rest,
         );
-        _presetId = 'last';
         if (j['comboIds'] is List && (j['comboIds'] as List).isNotEmpty) {
           _useCombos = true;
           _comboIds = [...(j['comboIds'] as List).map((e) => e.toString())];
@@ -116,18 +84,9 @@ class _TrainPageState extends State<TrainPage> {
     if (mounted) setState(() => _active = snap);
   }
 
-  void _applyPreset(_TimerPresetDef p) {
-    setState(() {
-      _presetId = p.id;
-      _setup = TimerSetup(rounds: p.rounds, work: p.work, rest: p.rest);
-      if (p.id == 'free') _useCombos = false;
-    });
-  }
-
   Future<void> _start() async {
     final l = AppLocalizations.of(context)!;
     final store = context.read<AppStore>();
-    final lang = store.lang;
     if (_setup.work < 5) return context.showToast(l.builderMinSeconds);
 
     unawaited(
@@ -139,12 +98,10 @@ class _TrainPageState extends State<TrainPage> {
       }),
     );
 
-    final def = _presets.firstWhere(
-      (p) => p.id == _presetId,
-      orElse: () => _presets.first,
-    );
     final cfg = LiveConfig(
-      name: lang == Lang.en ? def.nameEn : def.nameIt,
+      name: _useCombos && _comboIds.isNotEmpty
+          ? l.trainHeavyBagName
+          : l.trainFreeRounds,
       type: WorkoutType.heavyBag,
       prepSeconds: store.data.settings.prepSeconds,
       rounds: List.generate(
@@ -196,11 +153,8 @@ class _TrainPageState extends State<TrainPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _presetsRow(lang),
-                  const SizedBox(height: AppSpacing.lg),
                   _combosSection(lang),
                   const SizedBox(height: AppSpacing.lg),
-                  _toolsCard(lang),
                 ],
               ),
             ),
@@ -301,7 +255,6 @@ class _TrainPageState extends State<TrainPage> {
               current: _setup.work,
               onChanged: (v) => setState(() {
                 _setup.work = v;
-                _presetId = 'custom';
               }),
               child: _bigNumber(
                 fmtClock(_setup.work),
@@ -319,7 +272,6 @@ class _TrainPageState extends State<TrainPage> {
               current: _setup.rest,
               onChanged: (v) => setState(() {
                 _setup.rest = v;
-                _presetId = 'custom';
               }),
               child: _bigNumber(
                 _setup.rest > 0 ? fmtClock(_setup.rest) : '—',
@@ -341,7 +293,6 @@ class _TrainPageState extends State<TrainPage> {
           current: _setup.work,
           onChanged: (v) => setState(() {
             _setup.work = v;
-            _presetId = 'custom';
           }),
           child: _bigNumber(
             fmtClock(_setup.work),
@@ -357,7 +308,6 @@ class _TrainPageState extends State<TrainPage> {
           current: _setup.rest,
           onChanged: (v) => setState(() {
             _setup.rest = v;
-            _presetId = 'custom';
           }),
           child: _bigNumber(
             _setup.rest > 0 ? fmtClock(_setup.rest) : '—',
@@ -368,56 +318,6 @@ class _TrainPageState extends State<TrainPage> {
         const SizedBox(height: AppSpacing.sm),
         _roundsControl(),
       ],
-    );
-  }
-
-  Widget _presetsRow(Lang lang) {
-    final l = AppLocalizations.of(context)!;
-    return ShaderMask(
-      shaderCallback: (bounds) => const LinearGradient(
-        colors: [
-          Colors.transparent,
-          Colors.black,
-          Colors.black,
-          Colors.transparent,
-        ],
-        stops: [0.0, 0.07, 0.93, 1.0],
-      ).createShader(bounds),
-      blendMode: BlendMode.dstIn,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            const SizedBox(width: AppSpacing.xs),
-            if (_lastUsed != null)
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: ChipWidget(
-                  label: l.trainLastUsed,
-                  active: _presetId == 'last',
-                  onTap: () => setState(() {
-                    _presetId = 'last';
-                    _setup = TimerSetup(
-                      rounds: _lastUsed!.rounds,
-                      work: _lastUsed!.work,
-                      rest: _lastUsed!.rest,
-                    );
-                  }),
-                ),
-              ),
-            for (final p in _presets)
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: ChipWidget(
-                  label: _presetChipLabel(p, lang),
-                  active: _presetId == p.id,
-                  onTap: () => _applyPreset(p),
-                ),
-              ),
-            const SizedBox(width: AppSpacing.xs),
-          ],
-        ),
-      ),
     );
   }
 
@@ -527,16 +427,6 @@ class _TrainPageState extends State<TrainPage> {
     );
   }
 
-  String _presetChipLabel(_TimerPresetDef p, Lang lang) {
-    if (p.id == 'free') return lang == Lang.en ? p.nameEn : p.nameIt;
-    return '${_fmtPresetValue(p.work)}💪 ${_fmtPresetValue(p.rest)}💤';
-  }
-
-  String _fmtPresetValue(int seconds) {
-    if (seconds % 60 == 0) return '${seconds ~/ 60}';
-    return '$seconds';
-  }
-
   Widget _roundsControl() {
     final l = AppLocalizations.of(context)!;
     final landscape =
@@ -585,9 +475,9 @@ class _TrainPageState extends State<TrainPage> {
       min: 1,
       max: 30,
       current: _setup.rounds,
+      swipeEnabled: false,
       onChanged: (v) => setState(() {
         _setup.rounds = v;
-        _presetId = 'custom';
       }),
       child: number,
     );
@@ -607,7 +497,6 @@ class _TrainPageState extends State<TrainPage> {
               if (v == _setup.rounds) return;
               setState(() {
                 _setup.rounds = v;
-                _presetId = 'custom';
               });
               HapticFeedback.selectionClick();
             },
@@ -638,7 +527,7 @@ class _TrainPageState extends State<TrainPage> {
           softWrap: false,
           maxLines: 1,
           style: TextStyle(
-            fontSize: 52,
+            fontSize: 46,
             fontWeight: FontWeight.w900,
             color: color,
             height: 1.0,
@@ -658,72 +547,19 @@ class _TrainPageState extends State<TrainPage> {
       ),
     ],
   );
-
-  Widget _toolsCard(Lang lang) {
-    final l = AppLocalizations.of(context)!;
-    return CardWidget(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () => setState(() => _toolsOpen = !_toolsOpen),
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                children: [
-                  const Text('💪', style: TextStyle(fontSize: 20)),
-                  const SizedBox(width: AppSpacing.sm + 4),
-                  Expanded(
-                    child: Text(
-                      l.trainTools.toUpperCase(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    _toolsOpen
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.mut,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 180),
-            crossFadeState: _toolsOpen
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox(width: double.infinity),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                0,
-                AppSpacing.md,
-                AppSpacing.md,
-              ),
-              child: PushupCounterSection(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// A widget whose value is adjusted with −/+ buttons flanking its child.
-class _StepperValue extends StatelessWidget {
+/// When [swipeEnabled], dragging horizontally on [child] also steps the value
+/// (right = increase, left = decrease) — handy with boxing gloves on.
+class _StepperValue extends StatefulWidget {
   final Widget child;
   final int step;
   final int min;
   final int max;
   final int current;
   final ValueChanged<int> onChanged;
+  final bool swipeEnabled;
   const _StepperValue({
     required this.child,
     required this.step,
@@ -731,20 +567,31 @@ class _StepperValue extends StatelessWidget {
     required this.max,
     required this.current,
     required this.onChanged,
+    this.swipeEnabled = true,
   });
 
+  @override
+  State<_StepperValue> createState() => _StepperValueState();
+}
+
+class _StepperValueState extends State<_StepperValue> {
+  static const _swipeStepPx = 56.0;
+  double _dragAccum = 0;
+
   void _apply(int delta) {
-    var v = current + delta;
-    if (v < min) v = min;
-    if (v > max) v = max;
-    if (v == current) return;
-    onChanged(v);
+    var v = widget.current + delta;
+    if (v < widget.min) v = widget.min;
+    if (v > widget.max) v = widget.max;
+    if (v == widget.current) return;
+    widget.onChanged(v);
     HapticFeedback.selectionClick();
   }
 
   Widget _stepButton(bool plus) {
-    final delta = plus ? step : -step;
-    final disabled = plus ? current >= max : current <= min;
+    final delta = plus ? widget.step : -widget.step;
+    final disabled = plus
+        ? widget.current >= widget.max
+        : widget.current <= widget.min;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: disabled ? null : () => _apply(delta),
@@ -768,12 +615,28 @@ class _StepperValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final middle = widget.swipeEnabled
+        ? GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragUpdate: (d) {
+              _dragAccum += d.delta.dx;
+              while (_dragAccum.abs() >= _swipeStepPx) {
+                final dir = _dragAccum > 0 ? 1 : -1;
+                _dragAccum -= dir * _swipeStepPx;
+                _apply(dir * widget.step);
+              }
+            },
+            onHorizontalDragEnd: (_) => _dragAccum = 0,
+            onHorizontalDragCancel: () => _dragAccum = 0,
+            child: widget.child,
+          )
+        : widget.child;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _stepButton(false),
         const SizedBox(width: AppSpacing.sm + 4),
-        Expanded(child: child),
+        Expanded(child: middle),
         const SizedBox(width: AppSpacing.sm + 4),
         _stepButton(true),
       ],

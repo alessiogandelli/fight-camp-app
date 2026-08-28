@@ -53,42 +53,58 @@ class SessionPlan {
   final int restSeconds;
   final int rounds;
 
+  /// Endless plan (Workout.rounds == 0): [extendPlan] appends repetitions of
+  /// the last rest+work pattern while the session runs.
+  final bool endless;
+
   const SessionPlan({
     required this.segments,
     required this.totalSeconds,
     required this.workSeconds,
     required this.restSeconds,
     required this.rounds,
+    this.endless = false,
   });
 }
 
 int _clamp(int v, int min, int max) => v < min ? min : (v > max ? max : v);
 
 Slot _comboToSlot(Combination c) => Slot(
-      comboId: c.id,
-      name: c.name,
-      techniqueIds: c.techniqueIds.toList(),
-      free: false,
-    );
+  comboId: c.id,
+  name: c.name,
+  techniqueIds: c.techniqueIds.toList(),
+  free: false,
+);
 
-Slot _fixedSlot(SlotKind kind, {String name = '', String? image}) =>
-    Slot(name: name, techniqueIds: const [], free: true, kind: kind, image: image);
+Slot _fixedSlot(SlotKind kind, {String name = '', String? image}) => Slot(
+  name: name,
+  techniqueIds: const [],
+  free: true,
+  kind: kind,
+  image: image,
+);
 
-SessionPlan buildPlan(LiveConfig cfg, List<Technique> techniques, List<Combination> combos) {
+SessionPlan buildPlan(
+  LiveConfig cfg,
+  List<Technique> techniques,
+  List<Combination> combos,
+) {
   final comboById = {for (final c in combos) c.id: c};
   final segments = <Segment>[];
   final rounds = cfg.rounds.where((r) => r.duration >= 1).toList();
   final totalRounds = rounds.length;
 
   if (cfg.prepSeconds > 0 && totalRounds > 0) {
-    segments.add(Segment(
-      kind: SegmentKind.prep,
-      duration: cfg.prepSeconds,
-      round: 0,
-      totalRounds: totalRounds,
-      slots: const [],
-      slotInterval: cfg.prepSeconds,
-    ));
+    segments.add(
+      Segment(
+        kind: SegmentKind.prep,
+        duration: cfg.prepSeconds,
+        round: 0,
+        totalRounds: totalRounds,
+        slots: const [],
+        slotInterval: cfg.prepSeconds,
+      ),
+    );
   }
 
   for (var idx = 0; idx < rounds.length; idx++) {
@@ -113,15 +129,36 @@ SessionPlan buildPlan(LiveConfig cfg, List<Technique> techniques, List<Combinati
         default:
           kind = SlotKind.custom;
       }
-      slots = [_fixedSlot(kind, name: r.type == RoundType.custom ? (r.label ?? '') : '', image: r.image)];
+      slots = [
+        _fixedSlot(
+          kind,
+          name: r.type == RoundType.custom ? (r.label ?? '') : '',
+          image: r.image,
+        ),
+      ];
     } else if (r.type == RoundType.random) {
       final rc = r.randomConfig;
       if (rc != null) {
-        final interval = _clamp(r.rotationInterval != 0 ? r.rotationInterval : duration, 5, duration);
+        final interval = _clamp(
+          r.rotationInterval != 0 ? r.rotationInterval : duration,
+          5,
+          duration,
+        );
         final needed = (duration / interval).ceil().clamp(1, 1 << 30);
-        final gen = generateCombos(rc, techniques, rc.count > needed ? rc.count : needed);
+        final gen = generateCombos(
+          rc,
+          techniques,
+          rc.count > needed ? rc.count : needed,
+        );
         var generated = gen
-            .map((g) => Slot(name: g.name, techniqueIds: g.techniqueIds, free: false, kind: SlotKind.random))
+            .map(
+              (g) => Slot(
+                name: g.name,
+                techniqueIds: g.techniqueIds,
+                free: false,
+                kind: SlotKind.random,
+              ),
+            )
             .toList();
         final n = (duration / interval).ceil().clamp(1, 1 << 30);
         slots = [for (var i = 0; i < n; i++) generated[i % generated.length]];
@@ -137,15 +174,26 @@ SessionPlan buildPlan(LiveConfig cfg, List<Technique> techniques, List<Combinati
           .toList();
       final pool = resolved.isNotEmpty ? resolved : [_fixedSlot(SlotKind.free)];
       final singleCombo = pool.length == 1;
-      final interval = _clamp(r.rotationInterval != 0 ? r.rotationInterval : duration, 5, duration);
-      final n = singleCombo ? 1 : (duration / interval).ceil().clamp(1, 1 << 30);
+      final interval = _clamp(
+        r.rotationInterval != 0 ? r.rotationInterval : duration,
+        5,
+        duration,
+      );
+      final n = singleCombo
+          ? 1
+          : (duration / interval).ceil().clamp(1, 1 << 30);
       slotInterval = singleCombo ? duration : interval;
       if (r.rotationOrder == RotationOrder.random && pool.length > 1) {
         final seq = <int>[];
         var lastIdx = -1;
         for (var i = 0; i < n; i++) {
-          final options = [for (var pi = 0; pi < pool.length; pi++) if (pi != lastIdx) pi];
-          final chosen = options.isEmpty ? 0 : options[defaultRngInt(options.length)];
+          final options = [
+            for (var pi = 0; pi < pool.length; pi++)
+              if (pi != lastIdx) pi,
+          ];
+          final chosen = options.isEmpty
+              ? 0
+              : options[defaultRngInt(options.length)];
           seq.add(chosen);
           lastIdx = chosen;
         }
@@ -156,35 +204,42 @@ SessionPlan buildPlan(LiveConfig cfg, List<Technique> techniques, List<Combinati
       }
     }
 
-    segments.add(Segment(
-      kind: SegmentKind.work,
-      duration: duration,
-      round: idx + 1,
-      totalRounds: totalRounds,
-      label: r.type == RoundType.custom ? (r.label ?? '') : null,
-      roundType: r.type,
-      slots: slots,
-      slotInterval: slotInterval,
-    ));
-
-    if (restDuration > 0 && idx < totalRounds - 1) {
-      segments.add(Segment(
-        kind: SegmentKind.rest,
-        duration: restDuration,
+    segments.add(
+      Segment(
+        kind: SegmentKind.work,
+        duration: duration,
         round: idx + 1,
         totalRounds: totalRounds,
-        slots: const [],
-        slotInterval: restDuration,
-      ));
+        label: r.type == RoundType.custom ? (r.label ?? '') : null,
+        roundType: r.type,
+        slots: slots,
+        slotInterval: slotInterval,
+      ),
+    );
+
+    if (restDuration > 0 && idx < totalRounds - 1) {
+      segments.add(
+        Segment(
+          kind: SegmentKind.rest,
+          duration: restDuration,
+          round: idx + 1,
+          totalRounds: totalRounds,
+          slots: const [],
+          slotInterval: restDuration,
+        ),
+      );
     }
   }
 
-  final workSeconds =
-      segments.where((s) => s.kind == SegmentKind.work).fold<int>(0, (a, s) => a + s.duration);
-  final restSeconds =
-      segments.where((s) => s.kind == SegmentKind.rest).fold<int>(0, (a, s) => a + s.duration);
-  final prepSeconds =
-      segments.where((s) => s.kind == SegmentKind.prep).fold<int>(0, (a, s) => a + s.duration);
+  final workSeconds = segments
+      .where((s) => s.kind == SegmentKind.work)
+      .fold<int>(0, (a, s) => a + s.duration);
+  final restSeconds = segments
+      .where((s) => s.kind == SegmentKind.rest)
+      .fold<int>(0, (a, s) => a + s.duration);
+  final prepSeconds = segments
+      .where((s) => s.kind == SegmentKind.prep)
+      .fold<int>(0, (a, s) => a + s.duration);
 
   return SessionPlan(
     segments: segments,
@@ -192,6 +247,63 @@ SessionPlan buildPlan(LiveConfig cfg, List<Technique> techniques, List<Combinati
     workSeconds: workSeconds,
     restSeconds: restSeconds,
     rounds: totalRounds,
+    endless: cfg.endless,
+  );
+}
+
+/// Appends one more rest+work repetition of the last round to an endless plan.
+/// Time coordinates of existing segments are preserved, so the engine can
+/// hot-swap the plan mid-session without moving the clock.
+SessionPlan extendPlan(SessionPlan plan) {
+  if (!plan.endless || plan.segments.isEmpty) return plan;
+  final workIdx = plan.segments.lastIndexWhere(
+    (s) => s.kind == SegmentKind.work,
+  );
+  if (workIdx < 0) return plan;
+  final work = plan.segments[workIdx];
+  final nextRound = work.round + 1;
+  final segs = [...plan.segments];
+  final restIdx = plan.segments.lastIndexWhere(
+    (s) => s.kind == SegmentKind.rest,
+  );
+  if (restIdx >= 0) {
+    final r = plan.segments[restIdx];
+    segs.add(
+      Segment(
+        kind: SegmentKind.rest,
+        duration: r.duration,
+        round: work.round,
+        totalRounds: work.totalRounds,
+        slots: const [],
+        slotInterval: r.duration,
+      ),
+    );
+  }
+  segs.add(
+    Segment(
+      kind: SegmentKind.work,
+      duration: work.duration,
+      round: nextRound,
+      totalRounds: nextRound,
+      label: work.label,
+      roundType: work.roundType,
+      slots: work.slots,
+      slotInterval: work.slotInterval,
+    ),
+  );
+  final workSeconds = segs
+      .where((s) => s.kind == SegmentKind.work)
+      .fold<int>(0, (a, s) => a + s.duration);
+  final restSeconds = segs
+      .where((s) => s.kind == SegmentKind.rest)
+      .fold<int>(0, (a, s) => a + s.duration);
+  return SessionPlan(
+    segments: segs,
+    totalSeconds: workSeconds + restSeconds,
+    workSeconds: workSeconds,
+    restSeconds: restSeconds,
+    rounds: nextRound,
+    endless: true,
   );
 }
 

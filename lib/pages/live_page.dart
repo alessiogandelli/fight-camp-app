@@ -15,7 +15,6 @@ import '../engine/session_engine.dart';
 import '../lib/format.dart';
 import '../lib/haptics.dart';
 import '../lib/session.dart';
-import '../lib/swipe.dart';
 import '../models/types.dart';
 import '../app_args.dart';
 import '../ui/theme.dart';
@@ -138,7 +137,7 @@ class _LivePageState extends State<LivePage> {
                       onStart: engine.start,
                       onExit: () => _confirmExit(context),
                     )
-                  : _buildActiveView(context, engine, plan, cfg, lang),
+                  : _buildActiveView(context, engine, cfg, lang),
             ),
           );
         },
@@ -149,10 +148,12 @@ class _LivePageState extends State<LivePage> {
   Widget _buildActiveView(
     BuildContext context,
     SessionEngine engine,
-    SessionPlan plan,
     LiveConfig cfg,
     Lang lang,
   ) {
+    // Endless sessions hot-swap the engine's plan as rounds are appended;
+    // always render from the live one.
+    final plan = engine.plan;
     final l = AppLocalizations.of(context)!;
     final view = engine.view;
     final segColor = switch (view.segment?.kind) {
@@ -222,23 +223,9 @@ class _LivePageState extends State<LivePage> {
       ),
     );
 
-    // Swipe left = skip, swipe right = previous, long-press = exit. Content
-    // areas are wrapped in this gesture layer so swipe still works wherever
-    // the timer/combo sits, while the tap controls below stay tappable.
-    Widget swipe(Widget child) => GestureDetector(
+    // Long-press = exit (deliberate, gloved). No swipe gestures change state.
+    Widget exitHold(Widget child) => GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onHorizontalDragEnd: (details) {
-        final velocity =
-            details.primaryVelocity ?? details.velocity.pixelsPerSecond.dx;
-        switch (resolveSwipe(velocity)) {
-          case SwipeAction.skip:
-            engine.skip();
-          case SwipeAction.previous:
-            engine.prev();
-          case SwipeAction.none:
-            break;
-        }
-      },
       onLongPress: () => _confirmExit(context),
       child: child,
     );
@@ -324,7 +311,7 @@ class _LivePageState extends State<LivePage> {
     final sessionFrame = Column(
       children: [
         header,
-        Expanded(child: swipe(body)),
+        Expanded(child: exitHold(body)),
         controls,
         const SizedBox(height: 12),
       ],
@@ -1175,7 +1162,12 @@ class ControlsBar extends StatelessWidget {
               ControlCircle(
                 icon: Icons.skip_previous_rounded,
                 size: 72,
-                onTap: done ? null : engine.prev,
+                onTap: done
+                    ? null
+                    : () {
+                        Haptics.light();
+                        engine.prev();
+                      },
                 tooltip: l.livePrevious,
               ),
               const SizedBox(width: AppSpacing.lg),
@@ -1210,7 +1202,12 @@ class ControlsBar extends StatelessWidget {
               ControlCircle(
                 icon: Icons.skip_next_rounded,
                 size: 72,
-                onTap: done ? null : engine.skip,
+                onTap: done
+                    ? null
+                    : () {
+                        Haptics.light();
+                        engine.skip();
+                      },
                 tooltip: l.liveSkip,
               ),
             ],
@@ -1224,7 +1221,10 @@ class ControlsBar extends StatelessWidget {
                 icon: Icons.replay_rounded,
                 onTap: engine.status == EngineStatus.idle
                     ? null
-                    : () => engine.restart(),
+                    : () {
+                        Haptics.light();
+                        engine.restart();
+                      },
               ),
               const SizedBox(width: 14),
               PillButton(

@@ -2,15 +2,19 @@
 import 'package:fight_camp/app_args.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fight_camp/data/store.dart';
+import 'package:fight_camp/lib/session.dart';
 import 'package:fight_camp/main.dart';
 import 'package:fight_camp/models/types.dart';
 import 'package:fight_camp/pages/live_page.dart';
 import 'package:fight_camp/ui/widgets.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> bootApp(WidgetTester tester) async {
-  SharedPreferences.setMockInitialValues({'combat-training:lang': 'it'});
+  SharedPreferences.setMockInitialValues({'fight-camp:lang': 'it'});
   await tester.pumpWidget(const FightCampApp());
   await tester.pumpAndSettle(const Duration(seconds: 1));
   GoRouter.of(tester.element(find.byType(Text).first)).go('/');
@@ -18,12 +22,6 @@ Future<void> bootApp(WidgetTester tester) async {
 }
 
 Future<void> startFreeRound(WidgetTester tester) async {
-  final libero = find.text('Libero');
-  await tester.ensureVisible(libero);
-  await tester.pumpAndSettle();
-  await tester.tap(libero);
-  await tester.pumpAndSettle();
-
   // Train-page start button → navigates to the live idle screen.
   final startBtn = find.widgetWithText(Button, 'AVVIA').hitTestable().last;
   await tester.ensureVisible(startBtn);
@@ -61,6 +59,17 @@ Future<void> startCombinationRound(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> startStretchingWorkout(WidgetTester tester) async {
+  final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
+  final workout = store.data.workouts.firstWhere((w) => w.routineId != null);
+  final cfg = configFromWorkout(workout, store.data.combinations, store.data.techniques, 0);
+  final router = GoRouter.of(tester.element(find.byType(Text).first));
+  router.go('/live', extra: LiveArgs(cfg));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('AVVIA').hitTestable().last);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('live screen renders in landscape without overflow', (
     tester,
@@ -86,8 +95,8 @@ void main() {
 
     // Keep the session chrome tied to the physical ends of the phone: the
     // title at one short edge, and the controls at the charging-port edge.
-    expect(find.text('LIBERO'), findsOneWidget);
-    expect(tester.getCenter(find.text('LIBERO')).dx, greaterThan(1500));
+    expect(find.text('ROUND LIBERI'), findsOneWidget);
+    expect(tester.getCenter(find.text('ROUND LIBERI')).dx, greaterThan(1500));
     expect(
       tester.getCenter(find.byIcon(Icons.pause_rounded)).dx,
       lessThan(300),
@@ -97,7 +106,7 @@ void main() {
     expect(find.byIcon(Icons.skip_previous_rounded), findsOneWidget);
   });
 
-  testWidgets('swiping left on the timer skips the prep segment', (
+  testWidgets('swiping on the timer does not skip the round', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 1800);
@@ -109,11 +118,11 @@ void main() {
     // Prep (3s) is active: header shows PREPARAZIONE.
     expect(find.text('PREPARAZIONE'), findsWidgets);
 
-    // Swipe left across the timer to skip straight to work.
+    // Swipe left across the timer: state must not change (no accidental skips).
     await tester.fling(find.text('3'), const Offset(-300, 0), 1000);
     await tester.pumpAndSettle();
 
-    expect(find.text('ROUND 1 DI 5'), findsOneWidget);
+    expect(find.text('PREPARAZIONE'), findsWidgets);
   });
 
   testWidgets('combination follows the readable landscape timer face', (
@@ -141,9 +150,19 @@ void main() {
           .every((timer) => timer.compact),
       isTrue,
     );
-    expect(
-      tester.widget<PhaseContent>(find.byType(PhaseContent)).compact,
-      isTrue,
-    );
+  });
+
+  testWidgets('stretching workout shows the exercise image and name during work', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await bootApp(tester);
+    await startStretchingWorkout(tester);
+
+    // First stretching exercise: SVG illustration + exercise name on screen.
+    expect(find.byType(SvgPicture), findsWidgets);
+    expect(find.text('PANCAKE'), findsOneWidget);
   });
 }

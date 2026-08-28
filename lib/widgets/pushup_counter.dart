@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -35,9 +36,25 @@ class _PushupCounterSectionState extends State<PushupCounterSection> {
   DetectorState _detector = DetectorState.initial();
   int _sensitivity = 50;
   Timer? _timer;
+  late final ValueListenable<TickerModeData> _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    // The Library branch is kept alive in an IndexedStack (TickerMode=false
+    // when another tab is shown): auto-stop so a started counter can never
+    // keep beeping on other pages.
+    _ticker = TickerMode.getValuesNotifier(context);
+    _ticker.addListener(_onVisibility);
+  }
+
+  void _onVisibility() {
+    if (!_ticker.value.enabled) _stopCamera();
+  }
 
   @override
   void dispose() {
+    _ticker.removeListener(_onVisibility);
     _stopCamera();
     super.dispose();
   }

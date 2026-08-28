@@ -532,6 +532,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String workoutsCombosCount(Object n) {
+    return '$n COMBOS';
+  }
+
+  @override
+  String get workoutsRoutine => 'STRETCHING ROUTINE';
+
+  @override
   String get builderAddRound => 'Add at least one round';
 
   @override
@@ -1020,7 +1028,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryBag => 'Bag';
 
   @override
+  String get libraryTool => 'Tool';
+
+  @override
   String get libraryStretching => 'Stretching';
+
+  @override
+  String get routineNew => 'New stretching routine';
+
+  @override
+  String get routineEdit => 'Edit stretching routine';
+
+  @override
+  String get routineTapHint =>
+      'Tap stretching exercises on the right to build the routine.';
+
+  @override
+  String routineExercisesCount(Object n) {
+    return 'Routine ($n exercises)';
+  }
+
+  @override
+  String get routineGiveName => 'Give the routine a name';
+
+  @override
+  String get routineSaved => 'Routine saved';
 
   @override
   String get progressTitle => 'Progress';

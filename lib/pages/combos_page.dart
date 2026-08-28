@@ -10,13 +10,13 @@ import '../models/types.dart';
 import '../ui/theme.dart';
 import '../ui/toast.dart';
 import '../ui/widgets.dart';
+import '../widgets/pushup_counter.dart';
 import '../l10n/app_localizations.dart';
 
 enum _Filter { all, favorites, boxing, kicks, knees, elbows, defense }
 
-/// Library section: bag combos vs stretching routines (ADR 0002 — same
-/// entity, different technique category).
-enum _Section { bag, stretching }
+/// Library section: bag combos, stretching routines, or the push-up tool.
+enum _Section { bag, stretching, tool }
 
 /// Maps a stretching technique id to its SVG illustration asset.
 String? stretchImageFor(String techniqueId) {
@@ -108,6 +108,7 @@ class _CombosPageState extends State<CombosPage> {
                     options: [
                       (value: _Section.bag, label: l.libraryBag),
                       (value: _Section.stretching, label: l.libraryStretching),
+                      (value: _Section.tool, label: l.libraryTool),
                     ],
                     onChanged: (v) => setState(() {
                       _section = v;
@@ -115,73 +116,77 @@ class _CombosPageState extends State<CombosPage> {
                     }),
                   ),
                   const SizedBox(height: AppSpacing.sm + 2),
-                  TextField(
-                    onChanged: (v) => setState(() => _query = v),
-                    decoration: InputDecoration(
-                      hintText: l.combosSearch,
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: AppColors.mut,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  if (_section == _Section.bag)
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          Colors.black,
-                          Colors.black,
-                          Colors.transparent,
-                        ],
-                        stops: [0.0, 0.07, 0.93, 1.0],
-                      ).createShader(bounds),
-                      blendMode: BlendMode.dstIn,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            const SizedBox(width: AppSpacing.xs),
-                            ChipWidget(
-                              label: l.commonAll,
-                              active: _filter == _Filter.all,
-                              onTap: () =>
-                                  setState(() => _filter = _Filter.all),
-                            ),
-                            const SizedBox(width: 6),
-                            ChipWidget(
-                              label: l.combosFavorites,
-                              active: _filter == _Filter.favorites,
-                              onTap: () =>
-                                  setState(() => _filter = _Filter.favorites),
-                            ),
-                            for (final c in techniqueCategories)
-                              if (c.id != TechniqueCategory.stretching) ...[
-                                const SizedBox(width: 6),
-                                ChipWidget(
-                                  label: categoryLabel(c.id, lang),
-                                  active: _filter == _filterFor(c.id),
-                                  onTap: () => setState(
-                                    () => _filter = _filterFor(c.id),
-                                  ),
-                                ),
-                              ],
-                            const SizedBox(width: AppSpacing.xs),
-                          ],
+                  if (_section == _Section.tool)
+                    PushupCounterSection()
+                  else ...[
+                    TextField(
+                      onChanged: (v) => setState(() => _query = v),
+                      decoration: InputDecoration(
+                        hintText: l.combosSearch,
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppColors.mut,
                         ),
                       ),
                     ),
-                  const SizedBox(height: 12),
-                  if (combos.isEmpty)
-                    EmptyState(title: l.combosEmpty, message: l.combosEmptyMsg)
-                  else ...[
-                    for (var i = 0; i < combos.length; i++) ...[
-                      if (i > 0) const SizedBox(height: AppSpacing.sm + 4),
-                      _ComboCard(
-                        combo: combos[i],
-                        stretchSection: _section == _Section.stretching,
+                    const SizedBox(height: 10),
+                    if (_section == _Section.bag)
+                      ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.black,
+                            Colors.black,
+                            Colors.transparent,
+                          ],
+                          stops: [0.0, 0.07, 0.93, 1.0],
+                        ).createShader(bounds),
+                        blendMode: BlendMode.dstIn,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              const SizedBox(width: AppSpacing.xs),
+                              ChipWidget(
+                                label: l.commonAll,
+                                active: _filter == _Filter.all,
+                                onTap: () =>
+                                    setState(() => _filter = _Filter.all),
+                              ),
+                              const SizedBox(width: 6),
+                              ChipWidget(
+                                label: l.combosFavorites,
+                                active: _filter == _Filter.favorites,
+                                onTap: () =>
+                                    setState(() => _filter = _Filter.favorites),
+                              ),
+                              for (final c in techniqueCategories)
+                                if (c.id != TechniqueCategory.stretching) ...[
+                                  const SizedBox(width: 6),
+                                  ChipWidget(
+                                    label: categoryLabel(c.id, lang),
+                                    active: _filter == _filterFor(c.id),
+                                    onTap: () => setState(
+                                      () => _filter = _filterFor(c.id),
+                                    ),
+                                  ),
+                                ],
+                              const SizedBox(width: AppSpacing.xs),
+                            ],
+                          ),
+                        ),
                       ),
+                    const SizedBox(height: 12),
+                    if (combos.isEmpty)
+                      EmptyState(title: l.combosEmpty, message: l.combosEmptyMsg)
+                    else ...[
+                      for (var i = 0; i < combos.length; i++) ...[
+                        if (i > 0) const SizedBox(height: AppSpacing.sm + 4),
+                        _ComboCard(
+                          combo: combos[i],
+                          stretchSection: _section == _Section.stretching,
+                        ),
+                      ],
                     ],
                   ],
                 ],
@@ -189,18 +194,32 @@ class _CombosPageState extends State<CombosPage> {
             ),
           ),
         ),
-        Positioned(
-          right: 20,
-          bottom: 20,
-          child: FloatingActionButton(
-            heroTag: null,
-            backgroundColor: AppColors.accent,
-            foregroundColor: Colors.white,
-            tooltip: l.combosCreate,
-            onPressed: () => context.go('/library/new'),
-            child: const Icon(Icons.add),
+        if (_section == _Section.bag)
+          Positioned(
+            right: 20,
+            bottom: 20,
+            child: FloatingActionButton(
+              heroTag: null,
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              tooltip: l.combosCreate,
+              onPressed: () => context.go('/library/new'),
+              child: const Icon(Icons.add),
+            ),
           ),
-        ),
+        if (_section == _Section.stretching)
+          Positioned(
+            right: 20,
+            bottom: 20,
+            child: FloatingActionButton(
+              heroTag: null,
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              tooltip: l.routineNew,
+              onPressed: () => context.go('/library/routine/new'),
+              child: const Icon(Icons.add),
+            ),
+          ),
       ],
     );
   }
@@ -352,7 +371,9 @@ class _ComboCardState extends State<_ComboCard> {
         onTapDown: (_) => setState(() => _down = true),
         onTapCancel: () => setState(() => _down = false),
         onTapUp: (_) => setState(() => _down = false),
-        onTap: () => context.go('/library/${combo.id}'),
+        onTap: () => stretchSection
+            ? context.go('/library/routine/${combo.id}')
+            : context.go('/library/${combo.id}'),
         child: ScaleTransition(
           scale: AlwaysStoppedAnimation(_down ? 0.98 : 1.0),
           child: CardWidget(

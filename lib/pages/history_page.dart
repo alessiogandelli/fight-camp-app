@@ -55,11 +55,7 @@ class _HistoryContentState extends State<HistoryContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(children: [
-          SectionTitle(l.historyTitle),
-          const Spacer(),
-          Button(label: l.historyLogOne, size: BtnSize.sm, icon: Icons.add, onTap: () => _logModal(store)),
-        ]),
+        SectionTitle(l.historyTitle),
         TextField(onChanged: (v) => setState(() => _query = v), decoration: InputDecoration(hintText: l.historySearch, prefixIcon: const Icon(Icons.search, color: AppColors.mut))),
         const SizedBox(height: 10),
         Wrap(
@@ -94,8 +90,10 @@ class _HistoryContentState extends State<HistoryContent> {
       ],
     );
   }
+}
 
-  Future<void> _logModal(AppStore store) async {
+/// Opens the "log a manual session" modal and saves the record on confirmation.
+Future<void> showLogSessionModal(BuildContext context, AppStore store) async {
     final lang = store.lang;
     final l = AppLocalizations.of(context)!;
     var type = WorkoutType.other;
@@ -198,7 +196,7 @@ class _HistoryContentState extends State<HistoryContent> {
       }),
     );
 
-    if (saved != true || !mounted) return;
+    if (saved != true || !context.mounted) return;
 
     final dist = double.tryParse(distCtrl.text.replaceAll(',', '.'));
     final pace = (dist != null && dist > 0 && duration > 0) ? (duration / dist).round() : null;
@@ -229,7 +227,6 @@ class _HistoryContentState extends State<HistoryContent> {
     ));
     context.showToast(l.historySessionLogged);
   }
-}
 
 class _DateButton extends StatelessWidget {
   final DateTime? value;

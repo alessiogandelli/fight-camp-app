@@ -5,24 +5,64 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/types.dart';
 import '../models/seed.dart';
 
-const dataKey = 'combat-training:data:v2';
-const activeKey = 'combat-training:active:v2';
-const storageVersion = 4;
+const dataKey = 'fight-camp:data:v3';
+const activeKey = 'fight-camp:active:v3';
+const storageVersion = 6;
+
+/// Seed workout ids that existed before v6 and are replaced by the new
+/// seed list (riscaldamento / corda / circuito / sparring).
+const _v5SeedWorkoutIds = ['workout-basics', 'workout-tabata', 'workout-sharp'];
+
+/// v6: replace the old seed workouts with the new ones, keeping any
+/// workout created by the user.
+AppData _migrateToV6(AppData d) {
+  if (d.version >= 6) return d;
+  final now = DateTime.now().millisecondsSinceEpoch;
+  final fresh = seedWorkouts
+      .map(
+        (w) => Workout(
+          id: w.id,
+          name: w.name,
+          workDuration: w.workDuration,
+          restDuration: w.restDuration,
+          rounds: w.rounds,
+          createdAt: now,
+        ),
+      )
+      .toList();
+  final kept = d.workouts
+      .where(
+        (w) =>
+            !_v5SeedWorkoutIds.contains(w.id) &&
+            !fresh.any((s) => s.id == w.id),
+      )
+      .toList();
+  return AppData(
+    version: 6,
+    techniques: d.techniques,
+    combinations: d.combinations,
+    workouts: [...kept, ...fresh],
+    sessions: d.sessions,
+    plans: d.plans,
+    settings: d.settings,
+  );
+}
 
 Future<AppData> loadData() async {
   try {
     final prefs = await SharedPreferences.getInstance();
-    // Discard pre-blocks-model blobs outright (ADR 0002: no migration).
-    await prefs.remove('combat-training:data:v1');
-    await prefs.remove('combat-training:active:v1');
     final raw = prefs.getString(dataKey);
     if (raw == null) return seedData();
     final parsed = jsonDecode(raw);
     if (parsed is! Map<String, dynamic>) return seedData();
     final appData = AppData.fromJson(parsed);
-    if (appData.techniques.isEmpty && parsed['techniques'] is! List) return seedData();
-    if (appData.version < 1 || appData.version > storageVersion) return seedData();
-    return appData;
+    if (appData.techniques.isEmpty && parsed['techniques'] is! List)
+      return seedData();
+    if (appData.version < 1 || appData.version > storageVersion)
+      return seedData();
+    final migrated = _migrateToV6(appData);
+    if (migrated.version != appData.version) await saveData(migrated);
+    return migrated;
   } catch (_) {
     return seedData();
   }
@@ -41,7 +81,8 @@ Future<ActiveSnapshot?> loadActive() async {
     final raw = prefs.getString(activeKey);
     if (raw == null) return null;
     final parsed = jsonDecode(raw);
-    if (parsed is! Map<String, dynamic> || parsed['config'] == null) return null;
+    if (parsed is! Map<String, dynamic> || parsed['config'] == null)
+      return null;
     return ActiveSnapshot.fromJson(parsed);
   } catch (_) {
     return null;
@@ -65,17 +106,17 @@ Future<void> clearActive() async {
 /// Stored preference wins; otherwise detect the system language (fallback IT).
 Future<Lang> loadLang() async {
   final prefs = await SharedPreferences.getInstance();
-  final stored = prefs.getString('combat-training:lang');
+  final stored = prefs.getString('fight-camp:lang');
   if (stored != null) return LangX.parse(stored);
   return LangX.parse(PlatformDispatcher.instance.locale.languageCode);
 }
 
 Future<void> saveLang(Lang lang) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('combat-training:lang', lang.code);
+  await prefs.setString('fight-camp:lang', lang.code);
 }
 
-const _lastTimerKey = 'combat-training:last-timer:v1';
+const _lastTimerKey = 'fight-camp:last-timer:v1';
 
 Future<Map<String, dynamic>?> loadLastTimer() async {
   try {

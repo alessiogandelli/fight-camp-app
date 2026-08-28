@@ -12,7 +12,8 @@ import 'resolve.dart';
 enum EngineStatus { idle, running, paused, done }
 
 class SessionEngine extends ChangeNotifier {
-  final SessionPlan plan;
+  // Non-final: endless plans are hot-swapped with extended versions mid-session.
+  SessionPlan plan;
   final bool soundOn;
   final bool vibrationOn;
   final void Function(int elapsedMs, EngineStatus status)? onSnapshot;
@@ -26,6 +27,10 @@ class SessionEngine extends ChangeNotifier {
   bool _done = false;
   Timer? _timer;
 
+  /// Endless plans are extended while this much time remains, so round
+  /// previews and jump targets stay valid.
+  static const _extendMarginSec = 60;
+
   SessionEngine(
     this.plan, {
     required this.soundOn,
@@ -33,15 +38,48 @@ class SessionEngine extends ChangeNotifier {
     int initialElapsedMs = 0,
     this.onSnapshot,
     this.onDone,
-  })  : _status = initialElapsedMs > 0 ? EngineStatus.paused : EngineStatus.idle,
-        _accMs = initialElapsedMs.clamp(0, plan.totalSeconds * 1000),
-        _view = resolvePlan(plan, initialElapsedMs / 1000.0),
-        _lastT = (initialElapsedMs / 1000.0).clamp(0.0, plan.totalSeconds.toDouble());
+  }) : _status = EngineStatus.idle,
+       _accMs = 0,
+       _lastT = 0,
+       _view = const ResolvedState(
+         done: false,
+         segIndex: 0,
+         segElapsed: 0,
+         segRemaining: 0,
+         slotIndex: 0,
+         slotRemaining: 0,
+         totalElapsed: 0,
+       ) {
+    _ensureCapacity(initialElapsedMs / 1000.0);
+    _status = initialElapsedMs > 0 ? EngineStatus.paused : EngineStatus.idle;
+    _accMs = initialElapsedMs.clamp(0, plan.totalSeconds * 1000);
+    _view = resolvePlan(plan, initialElapsedMs / 1000.0);
+    _lastT = (initialElapsedMs / 1000.0).clamp(
+      0.0,
+      plan.totalSeconds.toDouble(),
+    );
+  }
 
   EngineStatus get status => _status;
   ResolvedState get view => _view;
 
-  int get totalMs => _accMs + (_resumeAtMs != null ? DateTime.now().millisecondsSinceEpoch - _resumeAtMs! : 0);
+  /// While an endless plan nears its end, append more rounds so [t] always
+  /// stays inside the plan.
+  void _ensureCapacity(double t) {
+    if (!plan.endless) return;
+    var guard = 0;
+    while (t > plan.totalSeconds - _extendMarginSec && guard++ < 1000) {
+      final extended = extendPlan(plan);
+      if (identical(extended, plan)) return;
+      plan = extended;
+    }
+  }
+
+  int get totalMs =>
+      _accMs +
+      (_resumeAtMs != null
+          ? DateTime.now().millisecondsSinceEpoch - _resumeAtMs!
+          : 0);
 
   Future<void> cue(List<CueEvent> evs) async {
     if (evs.any((e) => e is DoneCue)) {
@@ -51,15 +89,14 @@ class SessionEngine extends ChangeNotifier {
     }
     final segs = evs.whereType<SegmentCue>().toList();
     if (segs.isNotEmpty) {
+      // No sound at segment start (ADR-style decision from product brief):
+      // only the countdown blips and warning cues remain audible.
       final s = segs.last;
       if (s.kind == SegmentKind.work) {
-        if (soundOn) await Sound.work();
         await vibrate(250, vibrationOn);
       } else if (s.kind == SegmentKind.rest) {
-        if (soundOn) await Sound.rest();
         await vibrate(120, vibrationOn);
       } else {
-        if (soundOn) await Sound.prep();
         await vibrate(120, vibrationOn);
       }
     }
@@ -98,7 +135,8 @@ class SessionEngine extends ChangeNotifier {
     if (target < 0) target = 0;
     if (target > plan.totalSeconds) target = plan.totalSeconds;
     _accMs = target * 1000;
-    if (_resumeAtMs != null) _resumeAtMs = DateTime.now().millisecondsSinceEpoch;
+    if (_resumeAtMs != null)
+      _resumeAtMs = DateTime.now().millisecondsSinceEpoch;
     _lastT = target.toDouble();
     if (target >= plan.totalSeconds) {
       finish();
@@ -110,12 +148,16 @@ class SessionEngine extends ChangeNotifier {
     if (_resumeAtMs != null && st.segment != null) {
       cue([SegmentCue(st.segment!.kind, st.segment!.round, st.segIndex)]);
     }
-    onSnapshot?.call(target * 1000, _resumeAtMs != null ? EngineStatus.running : EngineStatus.paused);
+    onSnapshot?.call(
+      target * 1000,
+      _resumeAtMs != null ? EngineStatus.running : EngineStatus.paused,
+    );
   }
 
   void _tick() {
     final ms = totalMs;
     final t = ms / 1000.0;
+    if (plan.endless) _ensureCapacity(t);
     if (t >= plan.totalSeconds) {
       finish();
       return;
@@ -142,6 +184,10 @@ class SessionEngine extends ChangeNotifier {
     if (plan.segments.isNotEmpty) {
       final first = plan.segments.first;
       cue([SegmentCue(first.kind, first.round, 0)]);
+      // eventsBetween only fires cues strictly after `from`, so a short first
+      // segment (e.g. the 3s prep countdown) loses its initial count blip
+      // that would land exactly at t=0. Emit it explicitly here.
+      if (first.duration <= 3) cue([CountCue(first.duration)]);
     }
     onSnapshot?.call(0, EngineStatus.running);
     _timer = Timer.periodic(const Duration(milliseconds: 100), (_) => _tick());
@@ -202,8 +248,9 @@ class SessionEngine extends ChangeNotifier {
     if (_status == EngineStatus.idle || _status == EngineStatus.done) return;
     final t = _lastT;
     final st = resolvePlan(plan, t);
-    final target =
-        (st.segElapsed > 2 || st.segIndex == 0) ? segmentStart(plan, st.segIndex) : segmentStart(plan, st.segIndex - 1);
+    final target = (st.segElapsed > 2 || st.segIndex == 0)
+        ? segmentStart(plan, st.segIndex)
+        : segmentStart(plan, st.segIndex - 1);
     jumpTo(target);
   }
 
@@ -219,7 +266,12 @@ class SessionEngine extends ChangeNotifier {
     }
     _view = resolvePlan(plan, 0);
     notifyListeners();
-    onSnapshot?.call(0, _status == EngineStatus.running ? EngineStatus.running : EngineStatus.paused);
+    onSnapshot?.call(
+      0,
+      _status == EngineStatus.running
+          ? EngineStatus.running
+          : EngineStatus.paused,
+    );
   }
 
   @override

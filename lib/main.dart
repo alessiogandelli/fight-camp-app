@@ -14,6 +14,7 @@ import 'pages/complete_page.dart';
 import 'pages/live_page.dart';
 import 'pages/progress_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/stretch_routine_builder_page.dart';
 import 'pages/train_page.dart';
 import 'pages/workouts_page.dart';
 import 'pages/workout_builder_page.dart';
@@ -94,6 +95,14 @@ final GoRouter _router = GoRouter(
             routes: [
               GoRoute(path: 'new', builder: (_, __) => ComboBuilderPage()),
               GoRoute(path: ':id', builder: (_, s) => ComboBuilderPage(comboId: s.pathParameters['id'])),
+              GoRoute(
+                path: 'routine',
+                builder: (_, __) => const StretchRoutineBuilderPage(),
+                routes: [
+                  GoRoute(path: 'new', builder: (_, __) => const StretchRoutineBuilderPage()),
+                  GoRoute(path: ':id', builder: (_, s) => StretchRoutineBuilderPage(routineId: s.pathParameters['id'])),
+                ],
+              ),
             ],
           ),
         ]),
@@ -164,7 +173,7 @@ class ShellScaffold extends StatelessWidget {
                   GestureDetector(
                     onTap: () => context.go('/'),
                     child: const Text.rich(
-                      TextSpan(text: 'COMBAT ', children: [TextSpan(text: 'TRAINING', style: TextStyle(color: AppColors.accent))]),
+                      TextSpan(text: 'FIGHT ', children: [TextSpan(text: 'CAMP', style: TextStyle(color: AppColors.accent))]),
                       style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 1.5),
                     ),
                   ),

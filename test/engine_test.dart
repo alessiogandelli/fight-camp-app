@@ -2,34 +2,68 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fight_camp/engine/plan.dart';
 import 'package:fight_camp/engine/resolve.dart';
+import 'package:fight_camp/lib/session.dart';
 import 'package:fight_camp/models/types.dart';
 
-Technique tech(String id) => Technique(id: id, name: id, shortName: id.toUpperCase(), category: TechniqueCategory.boxing);
+Technique tech(String id) => Technique(
+  id: id,
+  name: id,
+  shortName: id.toUpperCase(),
+  category: TechniqueCategory.boxing,
+);
 final TECHS = [tech('a'), tech('b'), tech('c'), tech('d')];
-Combination combo(String id, List<String> ids) =>
-    Combination(id: id, name: id.toUpperCase(), techniqueIds: ids, favorite: false, createdAt: 0);
-final COMBOS = [combo('c1', ['a', 'b']), combo('c2', ['c', 'd'])];
+Combination combo(String id, List<String> ids) => Combination(
+  id: id,
+  name: id.toUpperCase(),
+  techniqueIds: ids,
+  favorite: false,
+  createdAt: 0,
+);
+final COMBOS = [
+  combo('c1', ['a', 'b']),
+  combo('c2', ['c', 'd']),
+];
 
 LiveConfig basicConfig(int prep) => LiveConfig(
-      name: 'TEST',
-      type: WorkoutType.heavyBag,
-      prepSeconds: prep,
-      rounds: [
-        const RoundBase(duration: 20, restDuration: 10, type: RoundType.combination, combinationIds: ['c1'], rotationInterval: 20),
-        const RoundBase(duration: 20, restDuration: 10, type: RoundType.combination, combinationIds: ['c2'], rotationInterval: 20),
-      ],
-    );
+  name: 'TEST',
+  type: WorkoutType.heavyBag,
+  prepSeconds: prep,
+  rounds: [
+    const RoundBase(
+      duration: 20,
+      restDuration: 10,
+      type: RoundType.combination,
+      combinationIds: ['c1'],
+      rotationInterval: 20,
+    ),
+    const RoundBase(
+      duration: 20,
+      restDuration: 10,
+      type: RoundType.combination,
+      combinationIds: ['c2'],
+      rotationInterval: 20,
+    ),
+  ],
+);
 
 void main() {
   group('buildPlan', () {
-    test('builds prep, work and rest segments and skips rest after the last round', () {
-      final plan = buildPlan(basicConfig(5), TECHS, COMBOS);
-      expect(plan.segments.map((s) => s.kind).toList(), [SegmentKind.prep, SegmentKind.work, SegmentKind.rest, SegmentKind.work]);
-      expect(plan.totalSeconds, 5 + 20 + 10 + 20);
-      expect(plan.workSeconds, 40);
-      expect(plan.restSeconds, 10);
-      expect(plan.rounds, 2);
-    });
+    test(
+      'builds prep, work and rest segments and skips rest after the last round',
+      () {
+        final plan = buildPlan(basicConfig(5), TECHS, COMBOS);
+        expect(plan.segments.map((s) => s.kind).toList(), [
+          SegmentKind.prep,
+          SegmentKind.work,
+          SegmentKind.rest,
+          SegmentKind.work,
+        ]);
+        expect(plan.totalSeconds, 5 + 20 + 10 + 20);
+        expect(plan.workSeconds, 40);
+        expect(plan.restSeconds, 10);
+        expect(plan.rounds, 2);
+      },
+    );
 
     test('omits prep when prepSeconds is 0', () {
       final plan = buildPlan(basicConfig(0), TECHS, COMBOS);
@@ -40,7 +74,15 @@ void main() {
     test('builds rotation slots for sequence rounds', () {
       final cfg = basicConfig(0);
       cfg.rounds.clear();
-      cfg.rounds.add(const RoundBase(duration: 60, restDuration: 0, type: RoundType.sequence, combinationIds: ['c1', 'c2'], rotationInterval: 30));
+      cfg.rounds.add(
+        const RoundBase(
+          duration: 60,
+          restDuration: 0,
+          type: RoundType.sequence,
+          combinationIds: ['c1', 'c2'],
+          rotationInterval: 30,
+        ),
+      );
       final plan = buildPlan(cfg, TECHS, COMBOS);
       final seg = plan.segments[0];
       expect(seg.slots.length, 2);
@@ -92,7 +134,15 @@ void main() {
     test('resolves slot index inside a rotating round', () {
       final cfg = basicConfig(0);
       cfg.rounds.clear();
-      cfg.rounds.add(const RoundBase(duration: 60, restDuration: 0, type: RoundType.sequence, combinationIds: ['c1', 'c2'], rotationInterval: 30));
+      cfg.rounds.add(
+        const RoundBase(
+          duration: 60,
+          restDuration: 0,
+          type: RoundType.sequence,
+          combinationIds: ['c1', 'c2'],
+          rotationInterval: 30,
+        ),
+      );
       final p = buildPlan(cfg, TECHS, COMBOS);
       expect(resolvePlan(p, 10).slotIndex, 0);
       expect(resolvePlan(p, 31).slotIndex, 1);
@@ -106,13 +156,24 @@ void main() {
     SessionPlan rotatingPlan() {
       final cfg = basicConfig(0);
       cfg.rounds.clear();
-      cfg.rounds.add(const RoundBase(duration: 60, restDuration: 0, type: RoundType.sequence, combinationIds: ['c1', 'c2'], rotationInterval: 30));
+      cfg.rounds.add(
+        const RoundBase(
+          duration: 60,
+          restDuration: 0,
+          type: RoundType.sequence,
+          combinationIds: ['c1', 'c2'],
+          rotationInterval: 30,
+        ),
+      );
       return buildPlan(cfg, TECHS, COMBOS);
     }
 
     test('fires segment events when crossing boundaries', () {
       final evs = eventsBetween(plan, 4.9, 5.1);
-      expect(evs.any((e) => e is SegmentCue && e.kind == SegmentKind.work), true);
+      expect(
+        evs.any((e) => e is SegmentCue && e.kind == SegmentKind.work),
+        true,
+      );
     });
 
     test('fires warn at 10 seconds remaining', () {
@@ -127,7 +188,11 @@ void main() {
     });
 
     test('fires done at the end of the plan', () {
-      final evs = eventsBetween(plan, plan.totalSeconds - 0.2, plan.totalSeconds + 0.1);
+      final evs = eventsBetween(
+        plan,
+        plan.totalSeconds - 0.2,
+        plan.totalSeconds + 0.1,
+      );
       expect(evs.any((e) => e is DoneCue), true);
     });
 
@@ -139,6 +204,81 @@ void main() {
 
     test('returns nothing when time does not advance', () {
       expect(eventsBetween(plan, 10, 10), isEmpty);
+    });
+  });
+
+  group('endless plans', () {
+    SessionPlan endlessPlan() => buildPlan(
+      LiveConfig(
+        name: 'SPARRING',
+        type: WorkoutType.intervals,
+        prepSeconds: 0,
+        endless: true,
+        rounds: [
+          for (var i = 0; i < 8; i++)
+            const RoundBase(
+              duration: 90,
+              restDuration: 60,
+              type: RoundType.free,
+            ),
+        ],
+      ),
+      TECHS,
+      COMBOS,
+    );
+
+    test('buildPlan marks the plan endless', () {
+      expect(endlessPlan().endless, true);
+      expect(buildPlan(basicConfig(0), TECHS, COMBOS).endless, false);
+    });
+
+    test('extendPlan appends a rest+work repetition preserving the clock', () {
+      final p = endlessPlan();
+      final totalBefore = p.totalSeconds;
+      final lastWork = p.segments.last;
+      final extended = extendPlan(p);
+      expect(extended.totalSeconds, totalBefore + 60 + 90);
+      expect(extended.segments.length, p.segments.length + 2);
+      expect(
+        extended.segments[extended.segments.length - 2].kind,
+        SegmentKind.rest,
+      );
+      expect(extended.segments.last.kind, SegmentKind.work);
+      expect(extended.segments.last.round, lastWork.round + 1);
+      expect(extended.segments.last.totalRounds, lastWork.round + 1);
+      // Existing time coordinates stay valid after the swap.
+      expect(resolvePlan(extended, 100).segIndex, resolvePlan(p, 100).segIndex);
+    });
+
+    test('extendPlan chains across multiple extensions', () {
+      var p = endlessPlan();
+      final t0 = p.totalSeconds;
+      for (var i = 0; i < 3; i++) {
+        p = extendPlan(p);
+      }
+      expect(p.totalSeconds, t0 + 3 * (90 + 60));
+      expect(p.rounds, 11);
+    });
+
+    test('extendPlan is a no-op for finite plans', () {
+      final p = buildPlan(basicConfig(0), TECHS, COMBOS);
+      expect(identical(extendPlan(p), p), true);
+    });
+
+    test('configFromWorkout expands rounds == 0 into an endless batch', () {
+      final w = const Workout(
+        id: 'workout-sparring',
+        name: 'SPARRING',
+        workDuration: 90,
+        restDuration: 60,
+        rounds: 0,
+        createdAt: 0,
+      );
+      final cfg = configFromWorkout(w, COMBOS, TECHS, 3);
+      expect(cfg.endless, true);
+      expect(cfg.rounds.length, endlessBatchRounds);
+      expect(cfg.rounds.first.duration, 90);
+      expect(cfg.rounds.first.restDuration, 60);
     });
   });
 }

@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> bootApp(
   WidgetTester tester, {
-  Map<String, Object> prefs = const {'combat-training:lang': 'it'},
+  Map<String, Object> prefs = const {'fight-camp:lang': 'it'},
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   await tester.pumpWidget(const FightCampApp());
@@ -22,38 +22,18 @@ Future<void> bootApp(
 }
 
 void main() {
-  testWidgets('timer hero shows big work/rest numbers and preset chips', (
+  testWidgets('timer hero shows big work/rest numbers without presets or tools', (
     tester,
   ) async {
     await bootApp(tester);
-    // Default preset Sacco 3'/1' → 03:00 work, 01:00 rest, ×5
+    // Default setup → 03:00 work, 01:00 rest, ×5
     expect(find.text('03:00'), findsOneWidget);
     expect(find.text('01:00'), findsOneWidget);
     expect(find.text('×5'), findsOneWidget);
-    for (final chip in [
-      '3💪 1💤',
-      '20💪 10💤',
-      '40💪 20💤',
-      'Libero',
-    ]) {
-      expect(find.text(chip), findsOneWidget);
-    }
-    // Tools section present with push-ups inside.
-    expect(find.text('STRUMENTI EXTRA'), findsOneWidget);
-  });
-
-  testWidgets('selecting a tabata preset updates the big numbers', (
-    tester,
-  ) async {
-    await bootApp(tester);
-    final tabata = find.text('20💪 10💤');
-    await tester.ensureVisible(tabata);
-    await tester.pumpAndSettle();
-    await tester.tap(tabata);
-    await tester.pumpAndSettle();
-    expect(find.text('00:20'), findsOneWidget);
-    expect(find.text('00:10'), findsOneWidget);
-    expect(find.text('×8'), findsOneWidget);
+    // No preset chips, no extra-tools card on the Home page.
+    expect(find.text('Libero'), findsNothing);
+    expect(find.text('STRUMENTI EXTRA'), findsNothing);
+    expect(find.text('Ultimo uso'), findsNothing);
   });
 
   testWidgets('tapping the rounds plus button adjusts the value', (tester) async {
@@ -90,16 +70,15 @@ void main() {
     await bootApp(
       tester,
       prefs: {
-        'combat-training:lang': 'it',
-        'combat-training:last-timer:v1': '{"rounds":12,"work":45,"rest":15}',
+        'fight-camp:lang': 'it',
+        'fight-camp:last-timer:v1': '{"rounds":12,"work":45,"rest":15}',
       },
     );
     expect(find.text('×12'), findsOneWidget);
     expect(find.text('00:45'), findsOneWidget);
     expect(find.text('00:15'), findsOneWidget);
-    expect(find.text('Ultimo uso'), findsOneWidget);
     // Store still exposes seed data (regression guard).
     final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
-    expect(store.data.techniques.length, 37);
+    expect(store.data.techniques.length, 38);
   });
 }

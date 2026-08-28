@@ -12,7 +12,7 @@ void main() {
   Future<void> bootApp(WidgetTester tester) async {
     // Seed Italian so label-based finders are deterministic (stored
     // preference wins over system-locale detection).
-    SharedPreferences.setMockInitialValues({'combat-training:lang': 'it'});
+    SharedPreferences.setMockInitialValues({'fight-camp:lang': 'it'});
     await tester.pumpWidget(const FightCampApp());
     await tester.pumpAndSettle(const Duration(seconds: 1));
     // The GoRouter instance is global: force it back to the home tab so
@@ -21,7 +21,9 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 1));
   }
 
-  testWidgets('app boots and tabs render without layout errors', (tester) async {
+  testWidgets('app boots and tabs render without layout errors', (
+    tester,
+  ) async {
     await bootApp(tester);
 
     // Walk through the bottom navigation tabs.
@@ -33,33 +35,38 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 
-  testWidgets('settings page opens from the header gear and edits preferences', (tester) async {
-    await bootApp(tester);
+  testWidgets(
+    'settings page opens from the header gear and edits preferences',
+    (tester) async {
+      await bootApp(tester);
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pumpAndSettle();
 
-    expect(find.text('IMPOSTAZIONI'), findsOneWidget);
-    expect(find.text('COUNTDOWN PREPARAZIONE'), findsOneWidget);
-    // language segmented control present with both options
-    expect(find.text('IT'), findsOneWidget);
-    expect(find.text('EN'), findsOneWidget);
+      expect(find.text('IMPOSTAZIONI'), findsOneWidget);
+      expect(find.text('COUNTDOWN PREPARAZIONE'), findsOneWidget);
+      // language segmented control present with both options
+      expect(find.text('IT'), findsOneWidget);
+      expect(find.text('EN'), findsOneWidget);
 
-    // switch language to EN
-    await tester.tap(find.text('EN'));
-    await tester.pumpAndSettle();
-    expect(find.text('SETTINGS'), findsOneWidget);
-  });
+      // switch language to EN
+      await tester.tap(find.text('EN'));
+      await tester.pumpAndSettle();
+      expect(find.text('SETTINGS'), findsOneWidget);
+    },
+  );
 
   testWidgets('store provider exposes seed data', (tester) async {
     await bootApp(tester);
     final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
-    expect(store.data.techniques.length, 37);
+    expect(store.data.techniques.length, 38);
     expect(store.data.combinations.length, 9);
-    expect(store.data.workouts.length, 4);
-    expect(store.data.presets.length, 4);
+    expect(store.data.workouts.length, 5);
     // stretching plans auto-inserted Mon-Fri
-    expect(store.data.plans.where((p) => p.id.startsWith('plan-stretching-')).length, 5);
+    expect(
+      store.data.plans.where((p) => p.id.startsWith('plan-stretching-')).length,
+      5,
+    );
   });
 
   testWidgets('free round session runs through prep and work', (tester) async {
@@ -68,14 +75,7 @@ void main() {
     addTearDown(tester.view.reset);
     await bootApp(tester);
 
-    // Select the Free preset on the unified timer and start the session.
-    final libero = find.text('Libero');
-    await tester.ensureVisible(libero);
-    await tester.pumpAndSettle();
-    await tester.tap(libero);
-    await tester.pumpAndSettle();
-
-    // Start the session (scroll the button into view first).
+    // Default timer setup (5×3:00/1:00, no combos) and start the session.
     final startBtn = find.widgetWithText(Button, 'AVVIA').hitTestable().last;
     await tester.ensureVisible(startBtn);
     await tester.pumpAndSettle();
