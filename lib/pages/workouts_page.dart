@@ -12,6 +12,32 @@ import '../ui/theme.dart';
 import '../ui/toast.dart';
 import '../ui/widgets.dart';
 import '../l10n/app_localizations.dart';
+import 'workout_builder_page.dart';
+
+Future<void> _openWorkoutBuilder(
+  BuildContext context, {
+  String? workoutId,
+}) async {
+  final store = context.read<AppStore>();
+  final l = AppLocalizations.of(context)!;
+  final result = await showWorkoutBuilderSheet(context, workoutId: workoutId);
+  if (!context.mounted || result == null) return;
+  context.showToast(l.builderSaved);
+  if (result.start) {
+    context.push(
+      '/live',
+      extra: LiveArgs(
+        configFromWorkout(
+          result.workout,
+          store.data.combinations,
+          store.data.techniques,
+          store.data.settings.prepSeconds,
+        ),
+        autostart: true,
+      ),
+    );
+  }
+}
 
 class WorkoutsPage extends StatelessWidget {
   const WorkoutsPage({super.key});
@@ -43,7 +69,7 @@ class WorkoutsPage extends StatelessWidget {
                         label: l.workoutsCreate,
                         icon: Icons.add,
                         size: BtnSize.sm,
-                        onTap: () => context.go('/workouts/new'),
+                        onTap: () => _openWorkoutBuilder(context),
                       ),
                     )
                   else ...[
@@ -65,7 +91,7 @@ class WorkoutsPage extends StatelessWidget {
             backgroundColor: AppColors.accent,
             foregroundColor: Colors.white,
             tooltip: l.workoutsCreate,
-            onPressed: () => context.go('/workouts/new'),
+            onPressed: () => _openWorkoutBuilder(context),
             child: const Icon(Icons.add),
           ),
         ),
@@ -132,7 +158,7 @@ class _WorkoutCardState extends State<_WorkoutCard> {
         onTapDown: (_) => setState(() => _down = true),
         onTapCancel: () => setState(() => _down = false),
         onTapUp: (_) => setState(() => _down = false),
-        onTap: () => context.go('/workouts/${workout.id}'),
+        onTap: () => _openWorkoutBuilder(context, workoutId: workout.id),
         child: ScaleTransition(
           scale: AlwaysStoppedAnimation(_down ? 0.98 : 1.0),
           child: CardWidget(

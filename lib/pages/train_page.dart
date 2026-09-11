@@ -178,7 +178,12 @@ class _TrainPageState extends State<TrainPage> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 672),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, kAppHeaderHeight + 28, 20, 32),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            MediaQuery.of(context).padding.top + kAppHeaderHeight + 28,
+            20,
+            32,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

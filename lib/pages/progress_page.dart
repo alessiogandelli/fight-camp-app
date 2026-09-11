@@ -23,10 +23,6 @@ class ProgressPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
-    final weekSessions = filterSince(store.data.sessions, 7);
-    final vol = volumeStats(weekSessions);
-    final streak = streaks(store.data.sessions);
-    final perWeek = sessionsPerWeek(store.data.sessions);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
@@ -42,14 +38,13 @@ class ProgressPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _PulseCard(
-                streak: streak.current,
-                goalDone: vol.sessions,
-                perWeek: perWeek,
+                weeklyStreak: weeklyStreak(store.data.sessions),
+                thisWeek: sessionsThisWeek(store.data.sessions),
               ),
               const SizedBox(height: AppSpacing.md),
-              _HistoryCard(recent: store.data.sessions),
-              const SizedBox(height: AppSpacing.lg),
               const StatsContent(),
+              const SizedBox(height: AppSpacing.lg),
+              _HistoryCard(recent: store.data.sessions),
             ],
           ),
         ),
@@ -59,128 +54,119 @@ class ProgressPage extends StatelessWidget {
 }
 
 class _PulseCard extends StatelessWidget {
-  final int streak;
-  final int goalDone;
-  final double perWeek;
-  const _PulseCard({
-    required this.streak,
-    required this.goalDone,
-    required this.perWeek,
-  });
+  final int weeklyStreak;
+  final int thisWeek;
+  const _PulseCard({required this.weeklyStreak, required this.thisWeek});
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final reached = goalDone >= kWeeklyGoal;
+    final reached = thisWeek >= kWeeklyGoal;
     return CardWidget(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: _metric(
-                context,
-                value: '$streak',
-                label: l.statsCurrentStreak,
-                color: AppColors.ink,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _metric(
+                    label: l.progressWeeklyStreak,
+                    value: '$weeklyStreak',
+                    unit: l.progressWeeksUnit,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const VerticalDivider(color: AppColors.line, width: 1),
+                Expanded(
+                  child: _metric(
+                    label: l.progressWeekWorkouts,
+                    value: '$thisWeek',
+                    color: reached ? AppColors.go : AppColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.progressWeeklyGoal.toUpperCase(),
+                  style: AppText.micro,
+                ),
+              ),
+              Text(
+                '$thisWeek/$kWeeklyGoal',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: reached ? AppColors.go : AppColors.mut,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: (thisWeek / kWeeklyGoal).clamp(0.0, 1.0),
+              minHeight: 5,
+              backgroundColor: AppColors.line,
+              valueColor: AlwaysStoppedAnimation(
+                reached ? AppColors.go : AppColors.accent,
               ),
             ),
-            const VerticalDivider(color: AppColors.line, width: 1),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    l.progressWeeklyGoal.toUpperCase(),
-                    style: AppText.micro,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$goalDone/$kWeeklyGoal',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: reached ? AppColors.go : AppColors.ink,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(99),
-                    child: LinearProgressIndicator(
-                      value: (goalDone / kWeeklyGoal).clamp(0.0, 1.0),
-                      minHeight: 5,
-                      backgroundColor: AppColors.bg,
-                      valueColor: AlwaysStoppedAnimation(
-                        reached ? AppColors.go : AppColors.accent,
-                      ),
-                    ),
-                  ),
-                  if (reached)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        l.progressGoalReached,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.go,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const VerticalDivider(color: AppColors.line, width: 1),
-            Expanded(
-              child: _metric(
-                context,
-                value: perWeek.toStringAsFixed(1),
-                label: l.statsSessionsPerWeek,
-                color: AppColors.ink,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _metric(
-    BuildContext context, {
-    required String value,
+  Widget _metric({
     required String label,
+    required String value,
+    String? unit,
     required Color color,
-  }) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Text(
-        label.toUpperCase(),
-        style: AppText.micro,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          color: color,
-          fontFeatures: const [FontFeature.tabularFigures()],
+  }) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(label.toUpperCase(), style: AppText.micro, maxLines: 2),
+        const SizedBox(height: AppSpacing.xs),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: color,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            if (unit != null) ...[
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  unit,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.micro,
+                ),
+              ),
+            ],
+          ],
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
 

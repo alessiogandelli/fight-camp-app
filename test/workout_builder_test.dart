@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fight_camp/data/store.dart';
 import 'package:fight_camp/main.dart';
 import 'package:fight_camp/ui/widgets.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,7 +20,11 @@ void main() {
     });
     await tester.pumpWidget(const FightCampApp());
     await tester.pumpAndSettle(const Duration(seconds: 1));
-    GoRouter.of(tester.element(find.byType(Text).first)).go('/workouts/new');
+
+    // Open the Workout tab and launch the builder from its FAB.
+    await tester.tap(find.text('WORKOUT').last);
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+    await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
     // Name the workout.

@@ -1086,6 +1086,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get progressWeekSessions => 'Sessioni settimana';
 
   @override
+  String get progressWeeklyStreak => 'Streak settimanale';
+
+  @override
+  String get progressWeekWorkouts => 'Allenamenti questa settimana';
+
+  @override
+  String get progressWeeksUnit => 'settimane';
+
+  @override
   String get liveExitWorkout => 'Esci dall\'allenamento';
 
   @override

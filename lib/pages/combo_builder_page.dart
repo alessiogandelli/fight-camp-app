@@ -1,6 +1,5 @@
 // Combo builder page ported from src/pages/ComboBuilderPage.tsx.
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../data/store.dart';
@@ -10,6 +9,16 @@ import '../ui/theme.dart';
 import '../ui/toast.dart';
 import '../ui/widgets.dart';
 import '../l10n/app_localizations.dart';
+
+Future<bool?> showComboBuilderSheet(BuildContext context, {String? comboId}) {
+  final l = AppLocalizations.of(context)!;
+  return showAppModal<bool>(
+    context,
+    title: comboId == null ? l.comboNew : l.comboEdit,
+    scrollable: false,
+    builder: (_) => ComboBuilderPage(comboId: comboId),
+  );
+}
 
 class ComboBuilderPage extends StatefulWidget {
   final String? comboId;
@@ -68,8 +77,7 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
       ),
     );
     if (!mounted) return;
-    context.showToast(l.comboSaved);
-    context.go('/library');
+    Navigator.of(context).pop(true);
   }
 
   Future<void> _addCustomTechnique() async {
@@ -154,87 +162,88 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
       byCat.putIfAbsent(tech.category, () => []).add(tech);
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                (widget.comboId == null ? l.comboNew : l.comboEdit)
-                    .toUpperCase(),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 15,
-                  letterSpacing: 1,
-                ),
-              ),
-              if (!_exists)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    l.comboNotFoundMsg,
-                    style: const TextStyle(
-                      color: AppColors.warn,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 14),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 700;
-                  final left = _StepsPanel(
-                    nameController: _name,
-                    steps: _steps,
-                    onReorder: (a, b) => setState(() {
-                      final tmp = _steps[a];
-                      _steps[a] = _steps[b];
-                      _steps[b] = tmp;
-                    }),
-                    onRemove: (i) => setState(() => _steps.removeAt(i)),
-                  );
-                  final right = _LibraryPanel(
-                    byCat: byCat,
-                    onPick: (tech) => setState(() => _steps.add(tech.id)),
-                    onAddNew: _addCustomTechnique,
-                  );
-                  return wide
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: left),
-                            const SizedBox(width: 12),
-                            Expanded(child: right),
-                          ],
-                        )
-                      : Column(
-                          children: [left, const SizedBox(height: 12), right],
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (!_exists)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          l.comboNotFoundMsg,
+                          style: const TextStyle(
+                            color: AppColors.warn,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 14),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final wide = constraints.maxWidth >= 700;
+                        final left = _StepsPanel(
+                          nameController: _name,
+                          steps: _steps,
+                          onReorder: (a, b) => setState(() {
+                            final tmp = _steps[a];
+                            _steps[a] = _steps[b];
+                            _steps[b] = tmp;
+                          }),
+                          onRemove: (i) => setState(() => _steps.removeAt(i)),
                         );
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Button(
-                      label: l.commonCancel,
-                      variant: BtnVariant.ghost,
-                      onTap: () => context.go('/library'),
+                        final right = _LibraryPanel(
+                          byCat: byCat,
+                          onPick: (tech) => setState(() => _steps.add(tech.id)),
+                          onAddNew: _addCustomTechnique,
+                        );
+                        return wide
+                            ? Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(child: left),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: right),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  left,
+                                  const SizedBox(height: 12),
+                                  right,
+                                ],
+                              );
+                      },
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Button(label: l.commonSave, onTap: _save),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: Button(
+                label: l.commonCancel,
+                variant: BtnVariant.ghost,
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Button(label: l.commonSave, onTap: _save),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

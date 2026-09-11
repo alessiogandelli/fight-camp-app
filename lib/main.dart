@@ -9,17 +9,14 @@ import 'l10n/app_localizations.dart';
 import 'lib/haptics.dart';
 import 'models/types.dart';
 import 'pages/combos_page.dart';
-import 'pages/combo_builder_page.dart';
 import 'pages/complete_page.dart';
 import 'pages/history_page.dart';
 import 'pages/live_page.dart';
 import 'pages/onboarding_page.dart';
 import 'pages/progress_page.dart';
 import 'pages/settings_page.dart';
-import 'pages/stretch_routine_builder_page.dart';
 import 'pages/train_page.dart';
 import 'pages/workouts_page.dart';
-import 'pages/workout_builder_page.dart';
 import 'ui/theme.dart';
 import 'ui/toast.dart';
 import 'ui/widgets.dart';
@@ -108,50 +105,12 @@ final GoRouter _router = GoRouter(
             GoRoute(
               path: '/workouts',
               builder: (_, __) => const WorkoutsPage(),
-              routes: [
-                GoRoute(
-                  path: 'new',
-                  builder: (_, __) => const WorkoutBuilderPage(),
-                ),
-                GoRoute(
-                  path: ':id',
-                  builder: (_, s) =>
-                      WorkoutBuilderPage(workoutId: s.pathParameters['id']),
-                ),
-              ],
             ),
           ],
         ),
         StatefulShellBranch(
           routes: [
-            GoRoute(
-              path: '/library',
-              builder: (_, __) => const CombosPage(),
-              routes: [
-                GoRoute(path: 'new', builder: (_, __) => ComboBuilderPage()),
-                GoRoute(
-                  path: ':id',
-                  builder: (_, s) =>
-                      ComboBuilderPage(comboId: s.pathParameters['id']),
-                ),
-                GoRoute(
-                  path: 'routine',
-                  builder: (_, __) => const StretchRoutineBuilderPage(),
-                  routes: [
-                    GoRoute(
-                      path: 'new',
-                      builder: (_, __) => const StretchRoutineBuilderPage(),
-                    ),
-                    GoRoute(
-                      path: ':id',
-                      builder: (_, s) => StretchRoutineBuilderPage(
-                        routineId: s.pathParameters['id'],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            GoRoute(path: '/library', builder: (_, __) => const CombosPage()),
           ],
         ),
         StatefulShellBranch(
@@ -231,13 +190,14 @@ class ShellScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
+        top: !isHome,
         bottom: false,
         child: isHome
             ? Stack(
                 children: [
                   Positioned.fill(child: navigationShell),
                   Positioned(
-                    top: 0,
+                    top: MediaQuery.of(context).padding.top,
                     left: 0,
                     right: 0,
                     child: _header(context, transparent: true),

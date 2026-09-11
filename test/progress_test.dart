@@ -26,9 +26,9 @@ void main() {
     await bootProgress(tester);
 
     // Motivational pulse.
-    expect(find.text('SERIE ATTUALE'), findsOneWidget);
+    expect(find.text('STREAK SETTIMANALE'), findsOneWidget);
+    expect(find.text('ALLENAMENTI QUESTA SETTIMANA'), findsOneWidget);
     expect(find.text('OBIETTIVO SETTIMANALE'), findsOneWidget);
-    expect(find.text('SESSIONI / SETTIMANA'), findsOneWidget);
 
     // Deep analytics and the history entry point.
     expect(find.text('Statistiche'), findsOneWidget);

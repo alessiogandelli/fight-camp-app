@@ -2096,6 +2096,24 @@ abstract class AppLocalizations {
   /// **'Sessions this week'**
   String get progressWeekSessions;
 
+  /// No description provided for @progressWeeklyStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly streak'**
+  String get progressWeeklyStreak;
+
+  /// No description provided for @progressWeekWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts this week'**
+  String get progressWeekWorkouts;
+
+  /// No description provided for @progressWeeksUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'weeks'**
+  String get progressWeeksUnit;
+
   /// No description provided for @liveExitWorkout.
   ///
   /// In en, this message translates to:

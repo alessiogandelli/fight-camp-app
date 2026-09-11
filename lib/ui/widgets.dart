@@ -342,6 +342,7 @@ Future<T?> showAppModal<T>(
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black54,
     builder: (ctx) => Padding(

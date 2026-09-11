@@ -12,6 +12,25 @@ import '../ui/toast.dart';
 import '../ui/widgets.dart';
 import '../widgets/pushup_counter.dart';
 import '../l10n/app_localizations.dart';
+import 'combo_builder_page.dart';
+import 'stretch_routine_builder_page.dart';
+
+Future<void> _openComboBuilder(BuildContext context, {String? comboId}) async {
+  final l = AppLocalizations.of(context)!;
+  final saved = await showComboBuilderSheet(context, comboId: comboId);
+  if (!context.mounted || saved != true) return;
+  context.showToast(l.comboSaved);
+}
+
+Future<void> _openRoutineBuilder(
+  BuildContext context, {
+  String? routineId,
+}) async {
+  final l = AppLocalizations.of(context)!;
+  final saved = await showRoutineBuilderSheet(context, routineId: routineId);
+  if (!context.mounted || saved != true) return;
+  context.showToast(l.routineSaved);
+}
 
 enum _Filter { all, favorites, boxing, kicks, knees, elbows, defense }
 
@@ -187,11 +206,9 @@ class _CombosPageState extends State<CombosPage> {
                               : l.combosCreate,
                           icon: Icons.add,
                           size: BtnSize.sm,
-                          onTap: () => context.go(
-                            _section == _Section.stretching
-                                ? '/library/routine/new'
-                                : '/library/new',
-                          ),
+                          onTap: () => _section == _Section.stretching
+                              ? _openRoutineBuilder(context)
+                              : _openComboBuilder(context),
                         ),
                       )
                     else ...[
@@ -218,7 +235,7 @@ class _CombosPageState extends State<CombosPage> {
               backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
               tooltip: l.combosCreate,
-              onPressed: () => context.go('/library/new'),
+              onPressed: () => _openComboBuilder(context),
               child: const Icon(Icons.add),
             ),
           ),
@@ -231,7 +248,7 @@ class _CombosPageState extends State<CombosPage> {
               backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
               tooltip: l.routineNew,
-              onPressed: () => context.go('/library/routine/new'),
+              onPressed: () => _openRoutineBuilder(context),
               child: const Icon(Icons.add),
             ),
           ),
@@ -394,8 +411,8 @@ class _ComboCardState extends State<_ComboCard> {
         onTapCancel: () => setState(() => _down = false),
         onTapUp: (_) => setState(() => _down = false),
         onTap: () => stretchSection
-            ? context.go('/library/routine/${combo.id}')
-            : context.go('/library/${combo.id}'),
+            ? _openRoutineBuilder(context, routineId: combo.id)
+            : _openComboBuilder(context, comboId: combo.id),
         child: ScaleTransition(
           scale: AlwaysStoppedAnimation(_down ? 0.98 : 1.0),
           child: CardWidget(

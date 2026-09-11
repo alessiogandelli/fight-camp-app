@@ -22,7 +22,9 @@ class Streaks {
 }
 
 Streaks streaks(List<SessionRecord> sessions) {
-  final days = sessions.map((s) => dateKey(DateTime.fromMillisecondsSinceEpoch(s.date))).toSet();
+  final days = sessions
+      .map((s) => dateKey(DateTime.fromMillisecondsSinceEpoch(s.date)))
+      .toSet();
   var longest = 0;
   final sorted = days.toList()..sort();
   var run = 0;
@@ -41,7 +43,8 @@ Streaks streaks(List<SessionRecord> sessions) {
   var current = 0;
   final now = DateTime.now();
   var cursor = startOfDay(now);
-  if (!days.contains(dateKey(cursor))) cursor = cursor.subtract(const Duration(days: 1));
+  if (!days.contains(dateKey(cursor)))
+    cursor = cursor.subtract(const Duration(days: 1));
   while (days.contains(dateKey(cursor))) {
     current += 1;
     cursor = cursor.subtract(const Duration(days: 1));
@@ -50,9 +53,40 @@ Streaks streaks(List<SessionRecord> sessions) {
 }
 
 double sessionsPerWeek(List<SessionRecord> sessions, [int windowWeeks = 4]) {
-  final cutoff = DateTime.now().millisecondsSinceEpoch - windowWeeks * 7 * 86400000;
+  final cutoff =
+      DateTime.now().millisecondsSinceEpoch - windowWeeks * 7 * 86400000;
   final n = sessions.where((s) => s.date >= cutoff).length;
   return ((n / windowWeeks) * 10).round() / 10;
+}
+
+int weeklyStreak(List<SessionRecord> sessions) {
+  final weeks = sessions
+      .map(
+        (s) =>
+            dateKey(startOfWeek(DateTime.fromMillisecondsSinceEpoch(s.date))),
+      )
+      .toSet();
+  var cursor = startOfWeek(DateTime.now());
+  if (!weeks.contains(dateKey(cursor))) {
+    cursor = cursor.subtract(const Duration(days: 7));
+  }
+  var count = 0;
+  while (weeks.contains(dateKey(cursor))) {
+    count += 1;
+    cursor = cursor.subtract(const Duration(days: 7));
+  }
+  return count;
+}
+
+int sessionsThisWeek(List<SessionRecord> sessions) {
+  final key = dateKey(startOfWeek(DateTime.now()));
+  return sessions
+      .where(
+        (s) =>
+            dateKey(startOfWeek(DateTime.fromMillisecondsSinceEpoch(s.date))) ==
+            key,
+      )
+      .length;
 }
 
 class LoadBucket {
@@ -71,20 +105,41 @@ List<LoadBucket> weeklyBuckets(List<SessionRecord> sessions, [int weeks = 8]) {
     final end = start.add(const Duration(days: 7));
     final startMs = start.millisecondsSinceEpoch;
     final endMs = end.millisecondsSinceEpoch;
-    final inRange = sessions.where((s) => s.date >= startMs && s.date < endMs).toList();
-    out.add(LoadBucket(
-      '${start.day}/${start.month}',
-      inRange.fold(0, (a, s) => a + s.load),
-      inRange.length,
-      (inRange.fold(0, (a, s) => a + s.duration) / 60).round(),
-    ));
+    final inRange = sessions
+        .where((s) => s.date >= startMs && s.date < endMs)
+        .toList();
+    out.add(
+      LoadBucket(
+        '${start.day}/${start.month}',
+        inRange.fold(0, (a, s) => a + s.load),
+        inRange.length,
+        (inRange.fold(0, (a, s) => a + s.duration) / 60).round(),
+      ),
+    );
   }
   return out;
 }
 
-const _itMonthsShort = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+const _itMonthsShort = [
+  'gen',
+  'feb',
+  'mar',
+  'apr',
+  'mag',
+  'giu',
+  'lug',
+  'ago',
+  'set',
+  'ott',
+  'nov',
+  'dic',
+];
 
-List<LoadBucket> monthlyBuckets(List<SessionRecord> sessions, {int months = 6, Lang lang = Lang.it}) {
+List<LoadBucket> monthlyBuckets(
+  List<SessionRecord> sessions, {
+  int months = 6,
+  Lang lang = Lang.it,
+}) {
   final out = <LoadBucket>[];
   final now = DateTime.now();
   for (var i = months - 1; i >= 0; i--) {
@@ -102,16 +157,37 @@ List<LoadBucket> monthlyBuckets(List<SessionRecord> sessions, {int months = 6, L
       endYear += 1;
     }
     final end = DateTime(endYear, endMonth, 1);
-    final inRange = sessions.where((s) => s.date >= start.millisecondsSinceEpoch && s.date < end.millisecondsSinceEpoch).toList();
+    final inRange = sessions
+        .where(
+          (s) =>
+              s.date >= start.millisecondsSinceEpoch &&
+              s.date < end.millisecondsSinceEpoch,
+        )
+        .toList();
     final label = lang == Lang.it
         ? _itMonthsShort[start.month - 1]
-        : const ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][start.month - 1];
-    out.add(LoadBucket(
-      label,
-      inRange.fold(0, (a, s) => a + s.load),
-      inRange.length,
-      (inRange.fold(0, (a, s) => a + s.duration) / 60).round(),
-    ));
+        : const [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
+          ][start.month - 1];
+    out.add(
+      LoadBucket(
+        label,
+        inRange.fold(0, (a, s) => a + s.load),
+        inRange.length,
+        (inRange.fold(0, (a, s) => a + s.duration) / 60).round(),
+      ),
+    );
   }
   return out;
 }
@@ -122,16 +198,22 @@ class VolumeStats {
   final int rounds;
   final int workSeconds;
   final int load;
-  const VolumeStats(this.sessions, this.minutes, this.rounds, this.workSeconds, this.load);
+  const VolumeStats(
+    this.sessions,
+    this.minutes,
+    this.rounds,
+    this.workSeconds,
+    this.load,
+  );
 }
 
 VolumeStats volumeStats(List<SessionRecord> sessions) => VolumeStats(
-      sessions.length,
-      (sessions.fold<int>(0, (a, s) => a + s.duration) / 60).round(),
-      sessions.fold(0, (a, s) => a + (s.roundsCompleted ?? 0)),
-      sessions.fold(0, (a, s) => a + (s.workDuration ?? 0)),
-      sessions.fold(0, (a, s) => a + s.load),
-    );
+  sessions.length,
+  (sessions.fold<int>(0, (a, s) => a + s.duration) / 60).round(),
+  sessions.fold(0, (a, s) => a + (s.roundsCompleted ?? 0)),
+  sessions.fold(0, (a, s) => a + (s.workDuration ?? 0)),
+  sessions.fold(0, (a, s) => a + s.load),
+);
 
 List<SessionRecord> filterSince(List<SessionRecord> sessions, [int? days]) {
   if (days == null) return sessions;
@@ -152,8 +234,11 @@ List<NameCount> comboUsageStats(List<SessionRecord> sessions) {
       }
     }
   }
-  final entries = counts.entries.map((e) => NameCount(e.key, e.value.name, e.value.count)).toList()
-    ..sort((a, b) => b.count.compareTo(a.count));
+  final entries =
+      counts.entries
+          .map((e) => NameCount(e.key, e.value.name, e.value.count))
+          .toList()
+        ..sort((a, b) => b.count.compareTo(a.count));
   return entries;
 }
 
@@ -167,7 +252,9 @@ List<NameCount> techniqueUsageStats(List<SessionRecord> sessions) {
     }
   }
   final entries =
-      map.entries.map((e) => NameCount(e.key, names[e.key] ?? '', e.value)).toList()
+      map.entries
+          .map((e) => NameCount(e.key, names[e.key] ?? '', e.value))
+          .toList()
         ..sort((a, b) => b.count.compareTo(a.count));
   return entries;
 }

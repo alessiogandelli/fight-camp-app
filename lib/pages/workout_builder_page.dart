@@ -1,10 +1,8 @@
 // Workout builder: timer editor (work/rest/rounds) + optional combos or
 // routine (mutually exclusive). ADR 0003 — single uniform configuration.
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../app_args.dart';
 import '../data/store.dart';
 import '../lib/format.dart';
 import '../lib/session.dart';
@@ -14,6 +12,25 @@ import '../ui/toast.dart';
 import '../ui/widgets.dart';
 import '../widgets/combo_picker.dart';
 import '../l10n/app_localizations.dart';
+
+class WorkoutBuilderResult {
+  final Workout workout;
+  final bool start;
+  const WorkoutBuilderResult(this.workout, {this.start = false});
+}
+
+Future<WorkoutBuilderResult?> showWorkoutBuilderSheet(
+  BuildContext context, {
+  String? workoutId,
+}) {
+  final l = AppLocalizations.of(context)!;
+  return showAppModal<WorkoutBuilderResult>(
+    context,
+    title: workoutId == null ? l.builderNew : l.builderEdit,
+    scrollable: false,
+    builder: (_) => WorkoutBuilderPage(workoutId: workoutId),
+  );
+}
 
 class WorkoutBuilderPage extends StatefulWidget {
   final String? workoutId;
@@ -83,23 +100,7 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
     );
     store.saveWorkout(workout);
     if (!mounted) return;
-    context.showToast(l.builderSaved);
-    if (start) {
-      context.pushReplacement(
-        '/live',
-        extra: LiveArgs(
-          configFromWorkout(
-            workout,
-            store.data.combinations,
-            store.data.techniques,
-            store.data.settings.prepSeconds,
-          ),
-          autostart: true,
-        ),
-      );
-    } else {
-      context.go('/workouts');
-    }
+    Navigator.of(context).pop(WorkoutBuilderResult(workout, start: start));
   }
 
   int _routineLength(AppStore store) {
@@ -127,232 +128,231 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
     );
     final totals = workoutTotals(effective);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.xl,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 672),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                (widget.workoutId == null ? l.builderNew : l.builderEdit)
-                    .toUpperCase(),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 15,
-                  letterSpacing: 1,
-                ),
-              ),
-              if (!_exists)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.sm),
-                  child: Text(
-                    l.builderNotFound,
-                    style: const TextStyle(
-                      color: AppColors.warn,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: AppSpacing.md),
-              CardWidget(
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 672),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Field(
-                      label: l.builderWorkoutName,
-                      child: TextInput(controller: _name, uppercase: true),
-                    ),
-                    const SizedBox(height: AppSpacing.sm + 4),
-                    Text(
-                      '${workoutTypeMeta(effective.type).icon} ${workoutTypeLabel(effective.type, lang)}',
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.mut,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm + 4),
-              CardWidget(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_hasRoutine) ...[
-                      Text(
-                        l.builderWorkRest(
-                          fmtClock(effective.workDuration),
-                          fmtClock(effective.restDuration),
-                        ),
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          color: AppColors.mut,
+                    if (!_exists)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Text(
+                          l.builderNotFound,
+                          style: const TextStyle(
+                            color: AppColors.warn,
+                            fontSize: 12.5,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${effective.rounds} × ${fmtClock(effective.workDuration)}',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          fontFeatures: [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ] else ...[
-                      Row(
+                    const SizedBox(height: AppSpacing.md),
+                    CardWidget(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Field(
-                              label: l.commonWork,
-                              child: TimeField(
-                                value: _work,
-                                onChanged: (v) => setState(() => _work = v),
-                              ),
+                          Field(
+                            label: l.builderWorkoutName,
+                            child: TextInput(
+                              controller: _name,
+                              uppercase: true,
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Field(
-                              label: l.commonRest,
-                              child: TimeField(
-                                value: _rest,
-                                min: 0,
-                                step: 15,
-                                onChanged: (v) => setState(() => _rest = v),
-                              ),
+                          const SizedBox(height: AppSpacing.sm + 4),
+                          Text(
+                            '${workoutTypeMeta(effective.type).icon} ${workoutTypeLabel(effective.type, lang)}',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              color: AppColors.mut,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.sm + 4),
-                      Field(
-                        label: l.commonRounds,
-                        child: NumStepper(
-                          value: _rounds,
-                          min: 1,
-                          max: 30,
-                          onChanged: (v) => setState(() => _rounds = v),
+                    ),
+                    const SizedBox(height: AppSpacing.sm + 4),
+                    CardWidget(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_hasRoutine) ...[
+                            Text(
+                              l.builderWorkRest(
+                                fmtClock(effective.workDuration),
+                                fmtClock(effective.restDuration),
+                              ),
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: AppColors.mut,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${effective.rounds} × ${fmtClock(effective.workDuration)}',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ] else ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Field(
+                                    label: l.commonWork,
+                                    child: TimeField(
+                                      value: _work,
+                                      onChanged: (v) =>
+                                          setState(() => _work = v),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Field(
+                                    label: l.commonRest,
+                                    child: TimeField(
+                                      value: _rest,
+                                      min: 0,
+                                      step: 15,
+                                      onChanged: (v) =>
+                                          setState(() => _rest = v),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm + 4),
+                            Field(
+                              label: l.commonRounds,
+                              child: NumStepper(
+                                value: _rounds,
+                                min: 1,
+                                max: 30,
+                                onChanged: (v) => setState(() => _rounds = v),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm + 4),
+                    if (!_hasRoutine)
+                      CardWidget(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Button(
+                              label: _comboIds.isEmpty
+                                  ? l.builderSelectCombos
+                                  : '${l.builderSelected(_comboIds.length)} · ${l.commonEdit}',
+                              variant: BtnVariant.outline,
+                              size: BtnSize.sm,
+                              expanded: true,
+                              icon: Icons.format_list_numbered_rounded,
+                              onTap: () async {
+                                final sel = await showComboPicker(
+                                  context,
+                                  selected: _comboIds,
+                                );
+                                if (sel != null && mounted)
+                                  setState(() => _comboIds = sel);
+                              },
+                            ),
+                            if (_comboIds.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Wrap(
+                                spacing: 5,
+                                runSpacing: 5,
+                                children: [
+                                  for (final id in _comboIds)
+                                    ChipWidget(
+                                      label:
+                                          store.data.combinations
+                                              .where((c) => c.id == id)
+                                              .firstOrNull
+                                              ?.name ??
+                                          id,
+                                      active: true,
+                                      onTap: () => setState(
+                                        () => _comboIds = _comboIds
+                                            .where((c) => c != id)
+                                            .toList(),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                    ],
+                    if (!_hasRoutine) const SizedBox(height: AppSpacing.sm + 4),
+                    CardWidget(
+                      child: Field(
+                        label: l.builderChooseRoutine,
+                        child: Select<String>(
+                          value: _routineId ?? '',
+                          options: [
+                            (value: '', label: l.commonNone),
+                            for (final r in store.data.combinations.where(
+                              store.isStretchRoutine,
+                            ))
+                              (value: r.id, label: r.name),
+                          ],
+                          onChanged: (v) => setState(() {
+                            _routineId = v.isEmpty ? null : v;
+                            if (v.isNotEmpty) _comboIds = const [];
+                          }),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      l.builderWorkRest(
+                        fmtClock(totals.work),
+                        fmtClock(totals.rest),
+                      ),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.mut,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm + 4),
-              if (!_hasRoutine)
-                CardWidget(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Button(
-                        label: _comboIds.isEmpty
-                            ? l.builderSelectCombos
-                            : '${l.builderSelected(_comboIds.length)} · ${l.commonEdit}',
-                        variant: BtnVariant.outline,
-                        size: BtnSize.sm,
-                        expanded: true,
-                        icon: Icons.format_list_numbered_rounded,
-                        onTap: () async {
-                          final sel = await showComboPicker(
-                            context,
-                            selected: _comboIds,
-                          );
-                          if (sel != null && mounted)
-                            setState(() => _comboIds = sel);
-                        },
-                      ),
-                      if (_comboIds.isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 5,
-                          runSpacing: 5,
-                          children: [
-                            for (final id in _comboIds)
-                              ChipWidget(
-                                label:
-                                    store.data.combinations
-                                        .where((c) => c.id == id)
-                                        .firstOrNull
-                                        ?.name ??
-                                    id,
-                                active: true,
-                                onTap: () => setState(
-                                  () => _comboIds = _comboIds
-                                      .where((c) => c != id)
-                                      .toList(),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              if (!_hasRoutine) const SizedBox(height: AppSpacing.sm + 4),
-              CardWidget(
-                child: Field(
-                  label: l.builderChooseRoutine,
-                  child: Select<String>(
-                    value: _routineId ?? '',
-                    options: [
-                      (value: '', label: l.commonNone),
-                      for (final r in store.data.combinations.where(
-                        store.isStretchRoutine,
-                      ))
-                        (value: r.id, label: r.name),
-                    ],
-                    onChanged: (v) => setState(() {
-                      _routineId = v.isEmpty ? null : v;
-                      if (v.isNotEmpty) _comboIds = const [];
-                    }),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                l.builderWorkRest(fmtClock(totals.work), fmtClock(totals.rest)),
-                style: const TextStyle(fontSize: 11.5, color: AppColors.mut),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                children: [
-                  Expanded(
-                    child: Button(
-                      label: l.commonCancel,
-                      variant: BtnVariant.ghost,
-                      onTap: () => context.go('/workouts'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Button(
-                      label: l.builderSaveStart,
-                      onTap: () => _save(start: true),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Button(
-                      label: l.commonSave,
-                      variant: BtnVariant.ghost,
-                      onTap: () => _save(),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: Button(
+                label: l.commonCancel,
+                variant: BtnVariant.ghost,
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Button(label: l.commonSave, onTap: () => _save()),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Button(
+          label: l.builderSaveStart,
+          variant: BtnVariant.outline,
+          expanded: true,
+          onTap: () => _save(start: true),
+        ),
+      ],
     );
   }
 }

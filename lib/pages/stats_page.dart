@@ -96,6 +96,50 @@ class _StatsContentState extends State<StatsContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SectionTitle(l.statsMostUsed),
+              if (topCombos.isEmpty)
+                Text(
+                  l.statsMostUsedEmpty,
+                  style: const TextStyle(fontSize: 12, color: AppColors.mut),
+                )
+              else
+                ...topCombos.map(
+                  (c) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            c.name.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${c.count}×',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.accent,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        CardWidget(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               SectionTitle(l.statsWeeklyLoad),
               SizedBox(height: 170, child: _LoadChart(buckets: weekly)),
               const SizedBox(height: 14),
@@ -168,50 +212,6 @@ class _StatsContentState extends State<StatsContent> {
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        CardWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionTitle(l.statsMostUsed),
-              if (topCombos.isEmpty)
-                Text(
-                  l.statsMostUsedEmpty,
-                  style: const TextStyle(fontSize: 12, color: AppColors.mut),
-                )
-              else
-                ...topCombos.map(
-                  (c) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            c.name.toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${c.count}×',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.accent,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -351,7 +351,7 @@ class _TechBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value: max <= 0 ? 0 : nameCount.count / max,
             minHeight: 5,
-            backgroundColor: AppColors.bg,
+            backgroundColor: AppColors.line,
             valueColor: const AlwaysStoppedAnimation(AppColors.accent),
           ),
         ),
