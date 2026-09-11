@@ -113,8 +113,12 @@ SessionSummary buildSummary(
   Set<String> seenComboIds,
   List<Combination> combos,
   List<Technique> techniques,
-  AppLocalizations l,
-) {
+  AppLocalizations l, {
+
+  /// When set (endless sessions stopped early), totals are truncated to how
+  /// much was actually performed instead of the full generated plan.
+  int? elapsedSeconds,
+}) {
   final comboById = {for (final c in combos) c.id: c};
   final techById = {for (final tt in techniques) tt.id: tt};
   final combosUsed = <NameRef>[];
@@ -143,11 +147,37 @@ SessionSummary buildSummary(
       }
     }
   }
+  var totalRounds = plan.rounds;
+  var totalSeconds = plan.totalSeconds;
+  var workSeconds = plan.workSeconds;
+  var restSeconds = plan.restSeconds;
+  if (elapsedSeconds != null) {
+    var acc = 0;
+    var work = 0;
+    var rest = 0;
+    var rounds = 0;
+    for (final seg in plan.segments) {
+      final end = acc + seg.duration;
+      final performed = (elapsedSeconds - acc).clamp(0, seg.duration);
+      if (seg.kind == SegmentKind.work) {
+        work += performed;
+        if (elapsedSeconds >= end) rounds += 1;
+      } else if (seg.kind == SegmentKind.rest) {
+        rest += performed;
+      }
+      acc = end;
+      if (elapsedSeconds <= end) break;
+    }
+    totalRounds = rounds;
+    workSeconds = work;
+    restSeconds = rest;
+    totalSeconds = work + rest;
+  }
   return SessionSummary(
-    totalRounds: plan.rounds,
-    totalSeconds: plan.totalSeconds,
-    workSeconds: plan.workSeconds,
-    restSeconds: plan.restSeconds,
+    totalRounds: totalRounds,
+    totalSeconds: totalSeconds,
+    workSeconds: workSeconds,
+    restSeconds: restSeconds,
     combosUsed: combosUsed,
     techniqueUsage: usage.values.toList(),
   );

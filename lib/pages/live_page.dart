@@ -24,7 +24,16 @@ import '../l10n/app_localizations.dart';
 class LivePage extends StatefulWidget {
   final LiveConfig? config;
   final int? resumeElapsedMs;
-  const LivePage({super.key, this.config, this.resumeElapsedMs});
+
+  /// When true and there is no resume point, start immediately instead of
+  /// showing the idle "ready" screen.
+  final bool autostart;
+  const LivePage({
+    super.key,
+    this.config,
+    this.resumeElapsedMs,
+    this.autostart = false,
+  });
 
   @override
   State<LivePage> createState() => _LivePageState();
@@ -37,6 +46,8 @@ class _LivePageState extends State<LivePage> {
   bool _exited = false;
   int? _resumeMs;
   bool _checkedSnapshot = false;
+  bool _autostart = false;
+  SessionEngine? _engine;
 
   @override
   void initState() {
@@ -58,7 +69,11 @@ class _LivePageState extends State<LivePage> {
 
   Future<void> _init() async {
     if (widget.config != null) {
-      _applyConfig(widget.config!, resumeMs: widget.resumeElapsedMs);
+      _applyConfig(
+        widget.config!,
+        resumeMs: widget.resumeElapsedMs,
+        autostart: widget.autostart,
+      );
     } else {
       final snap = await loadActive();
       if (!mounted) return;
@@ -79,12 +94,14 @@ class _LivePageState extends State<LivePage> {
     LiveConfig config, {
     int? resumeMs,
     bool seenFromPlan = false,
+    bool autostart = false,
   }) {
     final store = context.read<AppStore>();
     _config = config;
     _plan = buildPlan(config, store.data.techniques, store.data.combinations);
     _seenComboIds = {};
     _resumeMs = resumeMs;
+    _autostart = autostart && resumeMs == null;
   }
 
   @override
@@ -107,11 +124,19 @@ class _LivePageState extends State<LivePage> {
         vibrationOn: store.data.settings.vibration && store.vibrationSupported,
         initialElapsedMs: _resumeMs ?? 0,
         onSnapshot: (ms, status) => _onSnapshot(cfg, ms, status),
-        onDone: () => _onDone(),
+        onDone: (ms) => _onDone(ms),
       ),
       child: Consumer<SessionEngine>(
         builder: (context, engine, _) {
           final view = engine.view;
+          _engine = engine;
+          // Routed starts skip the idle "ready" screen: begin immediately.
+          if (_autostart && engine.status == EngineStatus.idle) {
+            _autostart = false;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) engine.start();
+            });
+          }
           // track seen combos
           if (_seenComboIds != null && view.segment?.kind == SegmentKind.work) {
             for (
@@ -226,7 +251,7 @@ class _LivePageState extends State<LivePage> {
     // Long-press = exit (deliberate, gloved). No swipe gestures change state.
     Widget exitHold(Widget child) => GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onLongPress: () => _confirmExit(context),
+      onLongPress: () => _confirmExit(context, engine),
       child: child,
     );
 
@@ -245,7 +270,7 @@ class _LivePageState extends State<LivePage> {
     );
     final controls = ControlsBar(
       engine: engine,
-      onExit: () => _confirmExit(context),
+      onExit: () => _confirmExit(context, engine),
     );
 
     final Widget body;
@@ -359,26 +384,100 @@ class _LivePageState extends State<LivePage> {
     }
   }
 
-  Future<void> _onDone() async {
+  Future<void> _onDone(int elapsedMs) async {
     if (_exited || !mounted) return;
     await clearActive();
+    if (!mounted) return;
     final store = context.read<AppStore>();
+    final l = AppLocalizations.of(context)!;
+    // Use the engine's (possibly hot-swapped) plan, and for endless sessions
+    // truncate the totals to what was actually performed before stopping.
+    final plan = _engine?.plan ?? _plan!;
     final summary = buildSummary(
-      _plan!,
+      plan,
       _seenComboIds ?? {},
       store.data.combinations,
       store.data.techniques,
-      AppLocalizations.of(context)!,
+      l,
+      elapsedSeconds: _config!.endless ? elapsedMs ~/ 1000 : null,
     );
+    // Auto-save: the session is recorded the moment it finishes, so forgetting
+    // to press Save on the completion screen can never lose it. The completion
+    // screen then only edits this record (RPE / notes / feeling).
+    String? sessionId;
+    try {
+      sessionId = uid();
+      store.addSession(
+        SessionRecord(
+          id: sessionId,
+          date: DateTime.now().millisecondsSinceEpoch,
+          type: _config!.type,
+          source: 'timer',
+          workoutId: _config!.workoutId,
+          name: _config!.name.toUpperCase(),
+          roundsCompleted: summary.totalRounds,
+          totalRounds: summary.totalRounds,
+          duration: summary.totalSeconds,
+          workDuration: summary.workSeconds,
+          rpe: null,
+          load: 0,
+          combosUsed: summary.combosUsed,
+          techniqueUsage: summary.techniqueUsage,
+        ),
+      );
+    } catch (_) {
+      sessionId = null;
+    }
     if (!mounted) return;
     context.pushReplacement(
       '/complete',
-      extra: CompleteArgs(_config!, summary),
+      extra: CompleteArgs(_config!, summary, sessionId: sessionId),
     );
   }
 
-  Future<void> _confirmExit(BuildContext context) async {
+  Future<void> _confirmExit(
+    BuildContext context, [
+    SessionEngine? engine,
+  ]) async {
     final l = AppLocalizations.of(context)!;
+    // Endless sessions have no natural finish, so stopping is the completion.
+    if (_config?.endless == true && engine != null) {
+      final choice = await showDialog<_EndlessChoice>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.liveStopSaveTitle),
+          content: Text(l.liveStopSaveMsg),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, _EndlessChoice.discard),
+              child: Text(l.completeDiscard),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, _EndlessChoice.cancel),
+              child: Text(l.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, _EndlessChoice.save),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.accent,
+                textStyle: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              child: Text(l.liveStopAndSave.toUpperCase()),
+            ),
+          ],
+        ),
+      );
+      if (choice == null || choice == _EndlessChoice.cancel) return;
+      if (choice == _EndlessChoice.save) {
+        engine.finish();
+        return;
+      }
+      _exited = true;
+      await clearActive();
+      if (context.mounted) context.go('/');
+      return;
+    }
+
     final ok = await showConfirm(
       context,
       title: l.liveExit,
@@ -392,6 +491,8 @@ class _LivePageState extends State<LivePage> {
     if (context.mounted) context.go('/');
   }
 }
+
+enum _EndlessChoice { save, discard, cancel }
 
 // ---------------- Idle ----------------
 
@@ -1221,7 +1322,15 @@ class ControlsBar extends StatelessWidget {
                 icon: Icons.replay_rounded,
                 onTap: engine.status == EngineStatus.idle
                     ? null
-                    : () {
+                    : () async {
+                        final ok = await showConfirm(
+                          context,
+                          title: l.liveRestartTitle,
+                          message: l.liveRestartMsg,
+                          cancelLabel: l.commonCancel,
+                          confirmLabel: l.liveRestart,
+                        );
+                        if (!ok) return;
                         Haptics.light();
                         engine.restart();
                       },

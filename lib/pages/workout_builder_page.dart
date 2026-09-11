@@ -67,7 +67,8 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
     final l = AppLocalizations.of(context)!;
     final store = context.read<AppStore>();
     if (_name.text.trim().isEmpty) return context.showToast(l.builderGiveName);
-    if (!_hasRoutine && _work < 5) return context.showToast(l.builderMinSeconds);
+    if (!_hasRoutine && _work < 5)
+      return context.showToast(l.builderMinSeconds);
 
     final rounds = _hasRoutine ? _routineLength(store) : _rounds;
     final workout = Workout(
@@ -84,15 +85,27 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
     if (!mounted) return;
     context.showToast(l.builderSaved);
     if (start) {
-      context.pushReplacement('/live', extra: LiveArgs(configFromWorkout(
-          workout, store.data.combinations, store.data.techniques, store.data.settings.prepSeconds)));
+      context.pushReplacement(
+        '/live',
+        extra: LiveArgs(
+          configFromWorkout(
+            workout,
+            store.data.combinations,
+            store.data.techniques,
+            store.data.settings.prepSeconds,
+          ),
+          autostart: true,
+        ),
+      );
     } else {
       context.go('/workouts');
     }
   }
 
   int _routineLength(AppStore store) {
-    final routines = store.data.combinations.where(store.isStretchRoutine).toList();
+    final routines = store.data.combinations
+        .where(store.isStretchRoutine)
+        .toList();
     final r = routines.where((c) => c.id == _routineId).firstOrNull;
     return r?.techniqueIds.length ?? 1;
   }
@@ -115,30 +128,56 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
     final totals = workoutTotals(effective);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xl),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.xl,
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 672),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text((widget.workoutId == null ? l.builderNew : l.builderEdit).toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 1)),
+              Text(
+                (widget.workoutId == null ? l.builderNew : l.builderEdit)
+                    .toUpperCase(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                  letterSpacing: 1,
+                ),
+              ),
               if (!_exists)
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.sm),
-                  child: Text(l.builderNotFound, style: const TextStyle(color: AppColors.warn, fontSize: 12.5)),
+                  child: Text(
+                    l.builderNotFound,
+                    style: const TextStyle(
+                      color: AppColors.warn,
+                      fontSize: 12.5,
+                    ),
+                  ),
                 ),
               const SizedBox(height: AppSpacing.md),
               CardWidget(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Field(label: l.builderWorkoutName, child: TextInput(controller: _name, uppercase: true)),
+                    Field(
+                      label: l.builderWorkoutName,
+                      child: TextInput(controller: _name, uppercase: true),
+                    ),
                     const SizedBox(height: AppSpacing.sm + 4),
                     Text(
                       '${workoutTypeMeta(effective.type).icon} ${workoutTypeLabel(effective.type, lang)}',
-                      style: const TextStyle(fontSize: 11.5, color: AppColors.mut, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.mut,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                      ),
                     ),
                   ],
                 ),
@@ -149,19 +188,61 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (_hasRoutine) ...[
-                      Text(l.builderWorkRest(fmtClock(effective.workDuration), fmtClock(effective.restDuration)),
-                          style: const TextStyle(fontSize: 11.5, color: AppColors.mut)),
+                      Text(
+                        l.builderWorkRest(
+                          fmtClock(effective.workDuration),
+                          fmtClock(effective.restDuration),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.mut,
+                        ),
+                      ),
                       const SizedBox(height: 6),
-                      Text('${effective.rounds} × ${fmtClock(effective.workDuration)}',
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
+                      Text(
+                        '${effective.rounds} × ${fmtClock(effective.workDuration)}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
                     ] else ...[
-                      Row(children: [
-                        Expanded(child: Field(label: l.commonWork, child: TimeField(value: _work, onChanged: (v) => setState(() => _work = v)))),
-                        const SizedBox(width: 10),
-                        Expanded(child: Field(label: l.commonRest, child: TimeField(value: _rest, min: 0, step: 15, onChanged: (v) => setState(() => _rest = v)))),
-                      ]),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Field(
+                              label: l.commonWork,
+                              child: TimeField(
+                                value: _work,
+                                onChanged: (v) => setState(() => _work = v),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Field(
+                              label: l.commonRest,
+                              child: TimeField(
+                                value: _rest,
+                                min: 0,
+                                step: 15,
+                                onChanged: (v) => setState(() => _rest = v),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: AppSpacing.sm + 4),
-                      Field(label: l.commonRounds, child: NumStepper(value: _rounds, min: 1, max: 30, onChanged: (v) => setState(() => _rounds = v))),
+                      Field(
+                        label: l.commonRounds,
+                        child: NumStepper(
+                          value: _rounds,
+                          min: 1,
+                          max: 30,
+                          onChanged: (v) => setState(() => _rounds = v),
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -181,8 +262,12 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                         expanded: true,
                         icon: Icons.format_list_numbered_rounded,
                         onTap: () async {
-                          final sel = await showComboPicker(context, selected: _comboIds);
-                          if (sel != null && mounted) setState(() => _comboIds = sel);
+                          final sel = await showComboPicker(
+                            context,
+                            selected: _comboIds,
+                          );
+                          if (sel != null && mounted)
+                            setState(() => _comboIds = sel);
                         },
                       ),
                       if (_comboIds.isNotEmpty) ...[
@@ -193,9 +278,18 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                           children: [
                             for (final id in _comboIds)
                               ChipWidget(
-                                label: store.data.combinations.where((c) => c.id == id).firstOrNull?.name ?? id,
+                                label:
+                                    store.data.combinations
+                                        .where((c) => c.id == id)
+                                        .firstOrNull
+                                        ?.name ??
+                                    id,
                                 active: true,
-                                onTap: () => setState(() => _comboIds = _comboIds.where((c) => c != id).toList()),
+                                onTap: () => setState(
+                                  () => _comboIds = _comboIds
+                                      .where((c) => c != id)
+                                      .toList(),
+                                ),
                               ),
                           ],
                         ),
@@ -211,7 +305,9 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                     value: _routineId ?? '',
                     options: [
                       (value: '', label: l.commonNone),
-                      for (final r in store.data.combinations.where(store.isStretchRoutine))
+                      for (final r in store.data.combinations.where(
+                        store.isStretchRoutine,
+                      ))
                         (value: r.id, label: r.name),
                     ],
                     onChanged: (v) => setState(() {
@@ -227,13 +323,32 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                 style: const TextStyle(fontSize: 11.5, color: AppColors.mut),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Row(children: [
-                Expanded(child: Button(label: l.commonCancel, variant: BtnVariant.ghost, onTap: () => context.go('/workouts'))),
-                const SizedBox(width: 10),
-                Expanded(child: Button(label: l.builderSaveStart, onTap: () => _save(start: true))),
-                const SizedBox(width: 10),
-                Expanded(child: Button(label: l.commonSave, variant: BtnVariant.ghost, onTap: () => _save())),
-              ]),
+              Row(
+                children: [
+                  Expanded(
+                    child: Button(
+                      label: l.commonCancel,
+                      variant: BtnVariant.ghost,
+                      onTap: () => context.go('/workouts'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Button(
+                      label: l.builderSaveStart,
+                      onTap: () => _save(start: true),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Button(
+                      label: l.commonSave,
+                      variant: BtnVariant.ghost,
+                      onTap: () => _save(),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

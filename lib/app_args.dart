@@ -4,11 +4,19 @@ import 'models/types.dart';
 class LiveArgs {
   final LiveConfig config;
   final int? resumeElapsedMs;
-  LiveArgs(this.config, {this.resumeElapsedMs});
+
+  /// When true and there is no resume point, the session starts immediately
+  /// instead of waiting on the idle "ready" screen (removes the double START).
+  final bool autostart;
+  LiveArgs(this.config, {this.resumeElapsedMs, this.autostart = false});
 }
 
 class CompleteArgs {
   final LiveConfig config;
   final SessionSummary summary;
-  CompleteArgs(this.config, this.summary);
+
+  /// Id of the record already written by auto-save, or null when auto-save
+  /// failed and the completion screen must fall back to a manual save.
+  final String? sessionId;
+  CompleteArgs(this.config, this.summary, {this.sessionId});
 }

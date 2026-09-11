@@ -9,11 +9,16 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('create a workout with a timer config and find it saved', (tester) async {
+  testWidgets('create a workout with a timer config and find it saved', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({'fight-camp:lang': 'it'});
+    SharedPreferences.setMockInitialValues({
+      'fight-camp:lang': 'it',
+      'fight-camp:onboarding-seen': true,
+    });
     await tester.pumpWidget(const FightCampApp());
     await tester.pumpAndSettle(const Duration(seconds: 1));
     GoRouter.of(tester.element(find.byType(Text).first)).go('/workouts/new');

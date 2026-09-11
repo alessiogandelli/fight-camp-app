@@ -178,7 +178,22 @@ class _CombosPageState extends State<CombosPage> {
                       ),
                     const SizedBox(height: 12),
                     if (combos.isEmpty)
-                      EmptyState(title: l.combosEmpty, message: l.combosEmptyMsg)
+                      EmptyState(
+                        title: l.combosEmpty,
+                        message: l.combosEmptyMsg,
+                        action: Button(
+                          label: _section == _Section.stretching
+                              ? l.routineNew
+                              : l.combosCreate,
+                          icon: Icons.add,
+                          size: BtnSize.sm,
+                          onTap: () => context.go(
+                            _section == _Section.stretching
+                                ? '/library/routine/new'
+                                : '/library/new',
+                          ),
+                        ),
+                      )
                     else ...[
                       for (var i = 0; i < combos.length; i++) ...[
                         if (i > 0) const SizedBox(height: AppSpacing.sm + 4),
@@ -263,8 +278,15 @@ class _ComboCardState extends State<_ComboCard> {
         confirmLabel: l.commonDelete,
       );
       if (ok) {
+        final before = store.snapshot;
         store.deleteCombination(combo.id);
-        if (context.mounted) context.showToast(l.combosDeleted);
+        if (context.mounted) {
+          context.showToast(
+            l.combosDeleted,
+            actionLabel: l.commonUndo,
+            onAction: () => store.restore(before),
+          );
+        }
       }
       return ok;
     }
@@ -333,7 +355,7 @@ class _ComboCardState extends State<_ComboCard> {
           ),
         ),
       );
-      context.push('/live', extra: LiveArgs(cfg));
+      context.push('/live', extra: LiveArgs(cfg, autostart: true));
     }
 
     final techniqueNames = [
@@ -465,7 +487,7 @@ class _ComboCardState extends State<_ComboCard> {
                       const SizedBox(width: AppSpacing.sm),
                     ],
                     Button(
-                      label: l.commonNew,
+                      label: l.commonDuplicate,
                       icon: Icons.copy_rounded,
                       variant: BtnVariant.ghost,
                       size: BtnSize.sm,

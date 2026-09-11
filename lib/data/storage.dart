@@ -116,6 +116,25 @@ Future<void> saveLang(Lang lang) async {
   await prefs.setString('fight-camp:lang', lang.code);
 }
 
+const _onboardingKey = 'fight-camp:onboarding-seen';
+
+/// Whether the first-run onboarding has already been shown.
+Future<bool> loadOnboardingSeen() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_onboardingKey) ?? false;
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<void> saveOnboardingSeen() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingKey, true);
+  } catch (_) {}
+}
+
 const _lastTimerKey = 'fight-camp:last-timer:v1';
 
 Future<Map<String, dynamic>?> loadLastTimer() async {

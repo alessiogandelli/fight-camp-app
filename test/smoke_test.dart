@@ -12,7 +12,10 @@ void main() {
   Future<void> bootApp(WidgetTester tester) async {
     // Seed Italian so label-based finders are deterministic (stored
     // preference wins over system-locale detection).
-    SharedPreferences.setMockInitialValues({'fight-camp:lang': 'it'});
+    SharedPreferences.setMockInitialValues({
+      'fight-camp:lang': 'it',
+      'fight-camp:onboarding-seen': true,
+    });
     await tester.pumpWidget(const FightCampApp());
     await tester.pumpAndSettle(const Duration(seconds: 1));
     // The GoRouter instance is global: force it back to the home tab so
@@ -62,11 +65,8 @@ void main() {
     expect(store.data.techniques.length, 39);
     expect(store.data.combinations.length, 21);
     expect(store.data.workouts.length, 6);
-    // stretching plans auto-inserted Mon-Fri
-    expect(
-      store.data.plans.where((p) => p.id.startsWith('plan-stretching-')).length,
-      5,
-    );
+    // No plans are auto-inserted any more: the user owns their schedule.
+    expect(store.data.plans, isEmpty);
   });
 
   testWidgets('free round session runs through prep and work', (tester) async {
@@ -76,14 +76,11 @@ void main() {
     await bootApp(tester);
 
     // Default timer setup (5×3:00/1:00, no combos) and start the session.
+    // Starting from a routed config auto-starts: there is no second START.
     final startBtn = find.widgetWithText(Button, 'AVVIA').hitTestable().last;
     await tester.ensureVisible(startBtn);
     await tester.pumpAndSettle();
     await tester.tap(startBtn);
-    await tester.pumpAndSettle();
-
-    // Idle screen shows the start button.
-    await tester.tap(find.text('AVVIA').hitTestable().last);
     await tester.pumpAndSettle();
 
     // Prep countdown is active (default prep 3s) — header shows PREPARAZIONE

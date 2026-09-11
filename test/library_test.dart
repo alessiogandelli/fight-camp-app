@@ -13,7 +13,10 @@ void main() {
     tester.view.physicalSize = const Size(800, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({'fight-camp:lang': 'it'});
+    SharedPreferences.setMockInitialValues({
+      'fight-camp:lang': 'it',
+      'fight-camp:onboarding-seen': true,
+    });
     await tester.pumpWidget(const FightCampApp());
     await tester.pumpAndSettle(const Duration(seconds: 1));
     GoRouter.of(tester.element(find.byType(Text).first)).go('/library');

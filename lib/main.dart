@@ -11,7 +11,9 @@ import 'models/types.dart';
 import 'pages/combos_page.dart';
 import 'pages/combo_builder_page.dart';
 import 'pages/complete_page.dart';
+import 'pages/history_page.dart';
 import 'pages/live_page.dart';
+import 'pages/onboarding_page.dart';
 import 'pages/progress_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/stretch_routine_builder_page.dart';
@@ -55,6 +57,9 @@ class FightCampApp extends StatelessWidget {
             value: store,
             child: Consumer<AppStore>(
               builder: (context, s, _) {
+                // Expose the store to the router's redirect so it can gate the
+                // first-run onboarding without rebuilding the router.
+                _storeRef = s;
                 return MaterialApp.router(
                   routerConfig: _router,
                   theme: buildTheme(),
@@ -78,9 +83,18 @@ class FightCampApp extends StatelessWidget {
 
 final _rootKey = GlobalKey<NavigatorState>();
 
+/// Set by [FightCampApp] once the store has loaded, so the router can read the
+/// onboarding flag synchronously during redirects.
+AppStore? _storeRef;
+
 final GoRouter _router = GoRouter(
   navigatorKey: _rootKey,
   initialLocation: '/',
+  redirect: (context, state) {
+    final seen = _storeRef?.onboardingSeen ?? true;
+    if (!seen && state.matchedLocation != '/onboarding') return '/onboarding';
+    return null;
+  },
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
@@ -145,6 +159,12 @@ final GoRouter _router = GoRouter(
             GoRoute(
               path: '/progress',
               builder: (_, __) => const ProgressPage(),
+              routes: [
+                GoRoute(
+                  path: 'history',
+                  builder: (_, __) => const HistoryPage(),
+                ),
+              ],
             ),
           ],
         ),
@@ -156,6 +176,11 @@ final GoRouter _router = GoRouter(
       builder: (_, __) => const SettingsPage(),
     ),
     GoRoute(
+      path: '/onboarding',
+      parentNavigatorKey: _rootKey,
+      builder: (_, __) => const OnboardingPage(),
+    ),
+    GoRoute(
       path: '/live',
       parentNavigatorKey: _rootKey,
       builder: (_, s) {
@@ -163,6 +188,7 @@ final GoRouter _router = GoRouter(
         return LivePage(
           config: args?.config,
           resumeElapsedMs: args?.resumeElapsedMs,
+          autostart: args?.autostart ?? false,
         );
       },
     ),

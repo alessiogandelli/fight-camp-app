@@ -103,7 +103,7 @@ class _TrainPageState extends State<TrainPage> {
         ),
       ),
     );
-    context.push('/live', extra: LiveArgs(cfg));
+    context.push('/live', extra: LiveArgs(cfg, autostart: true));
   }
 
   @override

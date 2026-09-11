@@ -965,7 +965,7 @@ abstract class AppLocalizations {
   /// No description provided for @liveSoundHint.
   ///
   /// In en, this message translates to:
-  /// **'Keep sound on — bells mark rounds, beeps mark combinations.'**
+  /// **'Keep sound on — beeps count down the last seconds and mark each combination.'**
   String get liveSoundHint;
 
   /// No description provided for @liveGetReady.
@@ -2107,6 +2107,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Give the workout a name'**
   String get builderGiveName;
+
+  /// No description provided for @liveStopAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop & save'**
+  String get liveStopAndSave;
+
+  /// No description provided for @liveStopSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End session'**
+  String get liveStopSaveTitle;
+
+  /// No description provided for @liveStopSaveMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the session and save it to Progress?'**
+  String get liveStopSaveMsg;
+
+  /// No description provided for @liveRestartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart session?'**
+  String get liveRestartTitle;
+
+  /// No description provided for @liveRestartMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'The timer will start over from the first round.'**
+  String get liveRestartMsg;
+
+  /// No description provided for @completeSavedToProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to Progress'**
+  String get completeSavedToProgress;
+
+  /// No description provided for @completeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get completeDone;
+
+  /// No description provided for @completeAddDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Add details (optional)'**
+  String get completeAddDetails;
+
+  /// No description provided for @completeRpeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — skip if you want'**
+  String get completeRpeOptional;
+
+  /// No description provided for @completeRpeEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'1 = easy'**
+  String get completeRpeEasy;
+
+  /// No description provided for @completeRpeMax.
+  ///
+  /// In en, this message translates to:
+  /// **'10 = max'**
+  String get completeRpeMax;
+
+  /// No description provided for @completeAutoSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save automatically — tap Done to retry'**
+  String get completeAutoSaveFailed;
+
+  /// No description provided for @commonUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get commonUndo;
+
+  /// No description provided for @commonDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get commonDuplicate;
+
+  /// No description provided for @comboDeleteTechniqueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete technique'**
+  String get comboDeleteTechniqueTitle;
+
+  /// No description provided for @comboDeleteTechniqueMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this technique? It will be removed from your combinations.'**
+  String get comboDeleteTechniqueMsg;
+
+  /// No description provided for @progressWeeklyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly goal'**
+  String get progressWeeklyGoal;
+
+  /// No description provided for @progressGoalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly goal reached'**
+  String get progressGoalReached;
+
+  /// No description provided for @progressViewHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get progressViewHistory;
+
+  /// No description provided for @onboardingTitle1.
+  ///
+  /// In en, this message translates to:
+  /// **'Train with a timer'**
+  String get onboardingTitle1;
+
+  /// No description provided for @onboardingBody1.
+  ///
+  /// In en, this message translates to:
+  /// **'Set work, rest and rounds. Big numbers and loud cues — no need to touch the phone.'**
+  String get onboardingBody1;
+
+  /// No description provided for @onboardingTitle2.
+  ///
+  /// In en, this message translates to:
+  /// **'Your combinations, on screen'**
+  String get onboardingTitle2;
+
+  /// No description provided for @onboardingBody2.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick combinations from the Library and the app walks you through every technique, round after round.'**
+  String get onboardingBody2;
+
+  /// No description provided for @onboardingTitle3.
+  ///
+  /// In en, this message translates to:
+  /// **'See yourself improve'**
+  String get onboardingTitle3;
+
+  /// No description provided for @onboardingBody3.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaks, volume and history — Progress shows the work you put in over time.'**
+  String get onboardingBody3;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start training'**
+  String get onboardingStart;
+
+  /// No description provided for @settingsHowItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get settingsHowItWorks;
 }
 
 class _AppLocalizationsDelegate

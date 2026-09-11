@@ -20,7 +20,8 @@ class WorkoutsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
     final l = AppLocalizations.of(context)!;
-    final workouts = [...store.data.workouts]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final workouts = [...store.data.workouts]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Stack(
       children: [
@@ -38,14 +39,19 @@ class WorkoutsPage extends StatelessWidget {
                     EmptyState(
                       title: l.workoutsEmpty,
                       message: l.workoutsEmptyMsg,
+                      action: Button(
+                        label: l.workoutsCreate,
+                        icon: Icons.add,
+                        size: BtnSize.sm,
+                        onTap: () => context.go('/workouts/new'),
+                      ),
                     )
-                  else
-                    ...[
-                      for (var i = 0; i < workouts.length; i++) ...[
-                        if (i > 0) const SizedBox(height: AppSpacing.sm + 4),
-                        _WorkoutCard(workout: workouts[i]),
-                      ],
+                  else ...[
+                    for (var i = 0; i < workouts.length; i++) ...[
+                      if (i > 0) const SizedBox(height: AppSpacing.sm + 4),
+                      _WorkoutCard(workout: workouts[i]),
                     ],
+                  ],
                 ],
               ),
             ),
@@ -95,8 +101,15 @@ class _WorkoutCardState extends State<_WorkoutCard> {
         confirmLabel: l.commonDelete,
       );
       if (ok) {
+        final before = store.snapshot;
         store.deleteWorkout(workout.id);
-        if (context.mounted) context.showToast(l.workoutsDeleted);
+        if (context.mounted) {
+          context.showToast(
+            l.workoutsDeleted,
+            actionLabel: l.commonUndo,
+            onAction: () => store.restore(before),
+          );
+        }
       }
       return ok;
     }
@@ -129,36 +142,84 @@ class _WorkoutCardState extends State<_WorkoutCard> {
               children: [
                 Row(
                   children: [
-                    Text(workoutTypeMeta(workout.type).icon, style: const TextStyle(fontSize: 18)),
+                    Text(
+                      workoutTypeMeta(workout.type).icon,
+                      style: const TextStyle(fontSize: 18),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(workout.name.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, letterSpacing: 0.6)),
+                      child: Text(
+                        workout.name.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13.5,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
                     ),
-                    Text(totals.total > 0 ? fmtClock(totals.total) : '—',
-                        style: const TextStyle(fontSize: 12, color: AppColors.mut, fontFeatures: [FontFeature.tabularFigures()])),
+                    Text(
+                      totals.total > 0 ? fmtClock(totals.total) : '—',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.mut,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(summarizeWorkout(workout, l), style: const TextStyle(fontSize: 11.5, color: AppColors.mut)),
+                Text(
+                  summarizeWorkout(workout, l),
+                  style: const TextStyle(fontSize: 11.5, color: AppColors.mut),
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     Button(
                       label: l.commonStart,
                       size: BtnSize.sm,
-                      onTap: () => context.push('/live', extra: LiveArgs(configFromWorkout(
-                          workout, store.data.combinations, store.data.techniques, store.data.settings.prepSeconds))),
+                      onTap: () => context.push(
+                        '/live',
+                        extra: LiveArgs(
+                          configFromWorkout(
+                            workout,
+                            store.data.combinations,
+                            store.data.techniques,
+                            store.data.settings.prepSeconds,
+                          ),
+                          autostart: true,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    IconButton2(Icons.copy_rounded, onTap: () {
-                      final copy = store.duplicateWorkout(workout.id);
-                      context.showToast(copy != null ? l.workoutsDuplicated : l.comboNotFoundMsg);
-                    }),
+                    IconButton2(
+                      Icons.copy_rounded,
+                      onTap: () {
+                        final copy = store.duplicateWorkout(workout.id);
+                        context.showToast(
+                          copy != null
+                              ? l.workoutsDuplicated
+                              : l.comboNotFoundMsg,
+                        );
+                      },
+                    ),
                     const Spacer(),
-                    Text(l.commonEdit.toUpperCase(),
-                        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppColors.mut)),
-                    const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.mut),
+                    Text(
+                      l.commonEdit.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: AppColors.mut,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: AppColors.mut,
+                    ),
                   ],
                 ),
               ],

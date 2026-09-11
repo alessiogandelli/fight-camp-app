@@ -14,7 +14,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> bootApp(WidgetTester tester) async {
-  SharedPreferences.setMockInitialValues({'fight-camp:lang': 'it'});
+  SharedPreferences.setMockInitialValues({
+    'fight-camp:lang': 'it',
+    'fight-camp:onboarding-seen': true,
+  });
   await tester.pumpWidget(const FightCampApp());
   await tester.pumpAndSettle(const Duration(seconds: 1));
   GoRouter.of(tester.element(find.byType(Text).first)).go('/');
@@ -22,15 +25,11 @@ Future<void> bootApp(WidgetTester tester) async {
 }
 
 Future<void> startFreeRound(WidgetTester tester) async {
-  // Train-page start button → navigates to the live idle screen.
+  // Train-page start button → the session auto-starts (no idle screen).
   final startBtn = find.widgetWithText(Button, 'AVVIA').hitTestable().last;
   await tester.ensureVisible(startBtn);
   await tester.pumpAndSettle();
   await tester.tap(startBtn);
-  await tester.pumpAndSettle();
-
-  // Idle-screen start button → actually starts the session.
-  await tester.tap(find.text('AVVIA').hitTestable().last);
   await tester.pumpAndSettle();
 }
 
@@ -62,7 +61,12 @@ Future<void> startCombinationRound(WidgetTester tester) async {
 Future<void> startStretchingWorkout(WidgetTester tester) async {
   final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
   final workout = store.data.workouts.firstWhere((w) => w.routineId != null);
-  final cfg = configFromWorkout(workout, store.data.combinations, store.data.techniques, 0);
+  final cfg = configFromWorkout(
+    workout,
+    store.data.combinations,
+    store.data.techniques,
+    0,
+  );
   final router = GoRouter.of(tester.element(find.byType(Text).first));
   router.go('/live', extra: LiveArgs(cfg));
   await tester.pumpAndSettle();
@@ -106,9 +110,7 @@ void main() {
     expect(find.byIcon(Icons.skip_previous_rounded), findsOneWidget);
   });
 
-  testWidgets('swiping on the timer does not skip the round', (
-    tester,
-  ) async {
+  testWidgets('swiping on the timer does not skip the round', (tester) async {
     tester.view.physicalSize = const Size(800, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -152,17 +154,18 @@ void main() {
     );
   });
 
-  testWidgets('stretching workout shows the exercise image and name during work', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(800, 1800);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    await bootApp(tester);
-    await startStretchingWorkout(tester);
+  testWidgets(
+    'stretching workout shows the exercise image and name during work',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await bootApp(tester);
+      await startStretchingWorkout(tester);
 
-    // First stretching exercise: SVG illustration + exercise name on screen.
-    expect(find.byType(SvgPicture), findsWidgets);
-    expect(find.text('PANCAKE'), findsOneWidget);
-  });
+      // First stretching exercise: SVG illustration + exercise name on screen.
+      expect(find.byType(SvgPicture), findsWidgets);
+      expect(find.text('PANCAKE'), findsOneWidget);
+    },
+  );
 }

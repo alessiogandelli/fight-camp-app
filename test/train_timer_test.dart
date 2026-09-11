@@ -10,7 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> bootApp(
   WidgetTester tester, {
-  Map<String, Object> prefs = const {'fight-camp:lang': 'it'},
+  Map<String, Object> prefs = const {
+    'fight-camp:lang': 'it',
+    'fight-camp:onboarding-seen': true,
+  },
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   await tester.pumpWidget(const FightCampApp());
@@ -80,6 +83,7 @@ void main() {
       tester,
       prefs: {
         'fight-camp:lang': 'it',
+        'fight-camp:onboarding-seen': true,
         'fight-camp:last-timer:v1': '{"rounds":12,"work":45,"rest":15}',
       },
     );

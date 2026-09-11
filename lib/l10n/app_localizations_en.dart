@@ -471,7 +471,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveSoundHint =>
-      'Keep sound on — bells mark rounds, beeps mark combinations.';
+      'Keep sound on — beeps count down the last seconds and mark each combination.';
 
   @override
   String get liveGetReady => 'Get ready';
@@ -1085,4 +1085,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get builderGiveName => 'Give the workout a name';
+
+  @override
+  String get liveStopAndSave => 'Stop & save';
+
+  @override
+  String get liveStopSaveTitle => 'End session';
+
+  @override
+  String get liveStopSaveMsg => 'Stop the session and save it to Progress?';
+
+  @override
+  String get liveRestartTitle => 'Restart session?';
+
+  @override
+  String get liveRestartMsg =>
+      'The timer will start over from the first round.';
+
+  @override
+  String get completeSavedToProgress => 'Saved to Progress';
+
+  @override
+  String get completeDone => 'Done';
+
+  @override
+  String get completeAddDetails => 'Add details (optional)';
+
+  @override
+  String get completeRpeOptional => 'Optional — skip if you want';
+
+  @override
+  String get completeRpeEasy => '1 = easy';
+
+  @override
+  String get completeRpeMax => '10 = max';
+
+  @override
+  String get completeAutoSaveFailed =>
+      'Couldn\'t save automatically — tap Done to retry';
+
+  @override
+  String get commonUndo => 'Undo';
+
+  @override
+  String get commonDuplicate => 'Duplicate';
+
+  @override
+  String get comboDeleteTechniqueTitle => 'Delete technique';
+
+  @override
+  String get comboDeleteTechniqueMsg =>
+      'Delete this technique? It will be removed from your combinations.';
+
+  @override
+  String get progressWeeklyGoal => 'Weekly goal';
+
+  @override
+  String get progressGoalReached => 'Weekly goal reached';
+
+  @override
+  String get progressViewHistory => 'View all';
+
+  @override
+  String get onboardingTitle1 => 'Train with a timer';
+
+  @override
+  String get onboardingBody1 =>
+      'Set work, rest and rounds. Big numbers and loud cues — no need to touch the phone.';
+
+  @override
+  String get onboardingTitle2 => 'Your combinations, on screen';
+
+  @override
+  String get onboardingBody2 =>
+      'Pick combinations from the Library and the app walks you through every technique, round after round.';
+
+  @override
+  String get onboardingTitle3 => 'See yourself improve';
+
+  @override
+  String get onboardingBody3 =>
+      'Streaks, volume and history — Progress shows the work you put in over time.';
+
+  @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingStart => 'Start training';
+
+  @override
+  String get settingsHowItWorks => 'How it works';
 }

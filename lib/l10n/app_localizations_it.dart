@@ -475,7 +475,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get liveSoundHint =>
-      'Tieni il suono attivo: le campane segnano i round, i bip segnano le combinazioni.';
+      'Tieni il suono attivo: i bip contano gli ultimi secondi e segnano ogni combinazione.';
 
   @override
   String get liveGetReady => 'Preparati';
@@ -1090,4 +1090,96 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get builderGiveName => 'Dai un nome all\'allenamento';
+
+  @override
+  String get liveStopAndSave => 'Ferma e salva';
+
+  @override
+  String get liveStopSaveTitle => 'Termina sessione';
+
+  @override
+  String get liveStopSaveMsg => 'Fermare la sessione e salvarla nei Progressi?';
+
+  @override
+  String get liveRestartTitle => 'Ricominciare la sessione?';
+
+  @override
+  String get liveRestartMsg => 'Il timer ripartirà dal primo round.';
+
+  @override
+  String get completeSavedToProgress => 'Salvato in Progressi';
+
+  @override
+  String get completeDone => 'Fatto';
+
+  @override
+  String get completeAddDetails => 'Aggiungi dettagli (facoltativo)';
+
+  @override
+  String get completeRpeOptional => 'Facoltativo — salta se vuoi';
+
+  @override
+  String get completeRpeEasy => '1 = facile';
+
+  @override
+  String get completeRpeMax => '10 = massimo';
+
+  @override
+  String get completeAutoSaveFailed =>
+      'Salvataggio automatico non riuscito — tocca Fatto per riprovare';
+
+  @override
+  String get commonUndo => 'Annulla';
+
+  @override
+  String get commonDuplicate => 'Duplica';
+
+  @override
+  String get comboDeleteTechniqueTitle => 'Elimina tecnica';
+
+  @override
+  String get comboDeleteTechniqueMsg =>
+      'Eliminare questa tecnica? Verrà rimossa dalle tue combinazioni.';
+
+  @override
+  String get progressWeeklyGoal => 'Obiettivo settimanale';
+
+  @override
+  String get progressGoalReached => 'Obiettivo settimanale raggiunto';
+
+  @override
+  String get progressViewHistory => 'Vedi tutto';
+
+  @override
+  String get onboardingTitle1 => 'Allenati con il timer';
+
+  @override
+  String get onboardingBody1 =>
+      'Imposta lavoro, pausa e round. Numeri grandi e segnali sonori: nessun bisogno di toccare il telefono.';
+
+  @override
+  String get onboardingTitle2 => 'Le tue combinazioni, sullo schermo';
+
+  @override
+  String get onboardingBody2 =>
+      'Scegli le combinazioni dalla Libreria e l\'app ti guida tra ogni tecnica, round dopo round.';
+
+  @override
+  String get onboardingTitle3 => 'Vediti migliorare';
+
+  @override
+  String get onboardingBody3 =>
+      'Serie, volume e storico: i Progressi mostrano il lavoro che fai nel tempo.';
+
+  @override
+  String get onboardingSkip => 'Salta';
+
+  @override
+  String get onboardingNext => 'Avanti';
+
+  @override
+  String get onboardingStart => 'Inizia ad allenarti';
+
+  @override
+  String get settingsHowItWorks => 'Come funziona';
 }

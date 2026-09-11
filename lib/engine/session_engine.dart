@@ -17,7 +17,10 @@ class SessionEngine extends ChangeNotifier {
   final bool soundOn;
   final bool vibrationOn;
   final void Function(int elapsedMs, EngineStatus status)? onSnapshot;
-  final VoidCallback? onDone;
+
+  /// Called when the session ends, with the actual elapsed time (which for an
+  /// endless session stopped early is less than the generated plan length).
+  final void Function(int elapsedMs)? onDone;
 
   EngineStatus _status;
   ResolvedState _view;
@@ -116,6 +119,7 @@ class SessionEngine extends ChangeNotifier {
 
   void finish() {
     if (_done) return;
+    final elapsedMs = totalMs;
     _done = true;
     _accMs = plan.totalSeconds * 1000;
     _resumeAtMs = null;
@@ -127,7 +131,7 @@ class SessionEngine extends ChangeNotifier {
     notifyListeners();
     cue([DoneCue()]);
     onSnapshot?.call(plan.totalSeconds * 1000, EngineStatus.done);
-    onDone?.call();
+    onDone?.call(elapsedMs);
   }
 
   void jumpTo(int sec) {
