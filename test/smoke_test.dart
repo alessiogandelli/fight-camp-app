@@ -59,9 +59,9 @@ void main() {
   testWidgets('store provider exposes seed data', (tester) async {
     await bootApp(tester);
     final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
-    expect(store.data.techniques.length, 38);
-    expect(store.data.combinations.length, 9);
-    expect(store.data.workouts.length, 5);
+    expect(store.data.techniques.length, 39);
+    expect(store.data.combinations.length, 21);
+    expect(store.data.workouts.length, 6);
     // stretching plans auto-inserted Mon-Fri
     expect(
       store.data.plans.where((p) => p.id.startsWith('plan-stretching-')).length,
