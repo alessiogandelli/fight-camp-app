@@ -39,29 +39,39 @@ class FightCampApp extends StatelessWidget {
     return FutureProvider<AppStore?>(
       create: (_) => AppStore.create(),
       initialData: null,
-      child: Consumer<AppStore?>(builder: (context, store, _) {
-        if (store == null) {
-          return MaterialApp(
-            theme: buildTheme(),
-            home: const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.accent))),
-          );
-        }
-        return ChangeNotifierProvider.value(
-          value: store,
-          child: Consumer<AppStore>(builder: (context, s, _) {
-            return MaterialApp.router(
-              routerConfig: _router,
+      child: Consumer<AppStore?>(
+        builder: (context, store, _) {
+          if (store == null) {
+            return MaterialApp(
               theme: buildTheme(),
-              // The store's language (system-detected on first launch, then
-              // user-settable) drives localization for both lookup systems.
-              locale: Locale(s.lang.code),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              builder: (context, child) => ToastProvider(child: child ?? const SizedBox.shrink()),
+              home: const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(color: AppColors.accent),
+                ),
+              ),
             );
-          }),
-        );
-      }),
+          }
+          return ChangeNotifierProvider.value(
+            value: store,
+            child: Consumer<AppStore>(
+              builder: (context, s, _) {
+                return MaterialApp.router(
+                  routerConfig: _router,
+                  theme: buildTheme(),
+                  // The store's language (system-detected on first launch, then
+                  // user-settable) drives localization for both lookup systems.
+                  locale: Locale(s.lang.code),
+                  localizationsDelegates:
+                      AppLocalizations.localizationsDelegates,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  builder: (context, child) =>
+                      ToastProvider(child: child ?? const SizedBox.shrink()),
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -73,42 +83,71 @@ final GoRouter _router = GoRouter(
   initialLocation: '/',
   routes: [
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) => ShellScaffold(navigationShell: navigationShell),
+      builder: (context, state, navigationShell) =>
+          ShellScaffold(navigationShell: navigationShell),
       branches: [
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/', builder: (_, __) => const TrainPage()),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(
-            path: '/workouts',
-            builder: (_, __) => const WorkoutsPage(),
-            routes: [
-              GoRoute(path: 'new', builder: (_, __) => const WorkoutBuilderPage()),
-              GoRoute(path: ':id', builder: (_, s) => WorkoutBuilderPage(workoutId: s.pathParameters['id'])),
-            ],
-          ),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(
-            path: '/library',
-            builder: (_, __) => const CombosPage(),
-            routes: [
-              GoRoute(path: 'new', builder: (_, __) => ComboBuilderPage()),
-              GoRoute(path: ':id', builder: (_, s) => ComboBuilderPage(comboId: s.pathParameters['id'])),
-              GoRoute(
-                path: 'routine',
-                builder: (_, __) => const StretchRoutineBuilderPage(),
-                routes: [
-                  GoRoute(path: 'new', builder: (_, __) => const StretchRoutineBuilderPage()),
-                  GoRoute(path: ':id', builder: (_, s) => StretchRoutineBuilderPage(routineId: s.pathParameters['id'])),
-                ],
-              ),
-            ],
-          ),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/progress', builder: (_, __) => const ProgressPage()),
-        ]),
+        StatefulShellBranch(
+          routes: [GoRoute(path: '/', builder: (_, __) => const TrainPage())],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/workouts',
+              builder: (_, __) => const WorkoutsPage(),
+              routes: [
+                GoRoute(
+                  path: 'new',
+                  builder: (_, __) => const WorkoutBuilderPage(),
+                ),
+                GoRoute(
+                  path: ':id',
+                  builder: (_, s) =>
+                      WorkoutBuilderPage(workoutId: s.pathParameters['id']),
+                ),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/library',
+              builder: (_, __) => const CombosPage(),
+              routes: [
+                GoRoute(path: 'new', builder: (_, __) => ComboBuilderPage()),
+                GoRoute(
+                  path: ':id',
+                  builder: (_, s) =>
+                      ComboBuilderPage(comboId: s.pathParameters['id']),
+                ),
+                GoRoute(
+                  path: 'routine',
+                  builder: (_, __) => const StretchRoutineBuilderPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'new',
+                      builder: (_, __) => const StretchRoutineBuilderPage(),
+                    ),
+                    GoRoute(
+                      path: ':id',
+                      builder: (_, s) => StretchRoutineBuilderPage(
+                        routineId: s.pathParameters['id'],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/progress',
+              builder: (_, __) => const ProgressPage(),
+            ),
+          ],
+        ),
       ],
     ),
     GoRoute(
@@ -121,7 +160,10 @@ final GoRouter _router = GoRouter(
       parentNavigatorKey: _rootKey,
       builder: (_, s) {
         final args = s.extra as LiveArgs?;
-        return LivePage(config: args?.config, resumeElapsedMs: args?.resumeElapsedMs);
+        return LivePage(
+          config: args?.config,
+          resumeElapsedMs: args?.resumeElapsedMs,
+        );
       },
     ),
     GoRoute(
@@ -135,12 +177,16 @@ final GoRouter _router = GoRouter(
   ],
 );
 
-const _tabs = <String, ({IconData icon, String Function(AppLocalizations l) label})>{
-  '/': (icon: Icons.flash_on_rounded, label: _navTrain),
-  '/workouts': (icon: Icons.calendar_month_rounded, label: _navWorkouts),
-  '/library': (icon: Icons.format_list_numbered_rounded, label: _navLibrary),
-  '/progress': (icon: Icons.bar_chart_rounded, label: _navProgress),
-};
+const _tabs =
+    <String, ({IconData icon, String Function(AppLocalizations l) label})>{
+      '/': (icon: Icons.flash_on_rounded, label: _navTrain),
+      '/workouts': (icon: Icons.calendar_month_rounded, label: _navWorkouts),
+      '/library': (
+        icon: Icons.format_list_numbered_rounded,
+        label: _navLibrary,
+      ),
+      '/progress': (icon: Icons.bar_chart_rounded, label: _navProgress),
+    };
 
 String _navTrain(AppLocalizations l) => l.navTrain;
 String _navWorkouts(AppLocalizations l) => l.navWorkouts;
@@ -155,52 +201,53 @@ class ShellScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     context.watch<AppStore>();
     final l = AppLocalizations.of(context)!;
+    final isHome = navigationShell.currentIndex == 0;
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
-              decoration: const BoxDecoration(
-                color: Color(0xE609090B),
-                border: Border(bottom: BorderSide(color: AppColors.line)),
-              ),
-              child: Row(
+        child: isHome
+            ? Stack(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.go('/'),
-                    child: const Text.rich(
-                      TextSpan(text: 'FIGHT ', children: [TextSpan(text: 'CAMP', style: TextStyle(color: AppColors.accent))]),
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 1.5),
-                    ),
+                  Positioned.fill(child: navigationShell),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: _header(context, transparent: true),
                   ),
-                  const Spacer(),
-                  IconButton2(Icons.settings_outlined, size: 22, onTap: () => context.push('/settings')),
+                ],
+              )
+            : Column(
+                children: [
+                  _header(context, transparent: false),
+                  Expanded(child: navigationShell),
                 ],
               ),
-            ),
-            Expanded(child: navigationShell),
-          ],
-        ),
       ),
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
           backgroundColor: AppColors.panel,
           indicatorColor: Colors.transparent,
           height: 64,
-          labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-                color: states.contains(WidgetState.selected) ? AppColors.accent : AppColors.mut,
-              )),
-          iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(
-                size: 22,
-                color: states.contains(WidgetState.selected) ? AppColors.accent : AppColors.mut,
-              )),
+          labelTextStyle: WidgetStateProperty.resolveWith(
+            (states) => TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.accent
+                  : AppColors.mut,
+            ),
+          ),
+          iconTheme: WidgetStateProperty.resolveWith(
+            (states) => IconThemeData(
+              size: 22,
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.accent
+                  : AppColors.mut,
+            ),
+          ),
         ),
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
@@ -223,4 +270,45 @@ class ShellScaffold extends StatelessWidget {
       ),
     );
   }
+
+  Widget _header(BuildContext context, {required bool transparent}) =>
+      Container(
+        height: kAppHeaderHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: transparent
+            ? null
+            : const BoxDecoration(
+                color: Color(0xE609090B),
+                border: Border(bottom: BorderSide(color: AppColors.line)),
+              ),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => context.go('/'),
+              child: const Text.rich(
+                TextSpan(
+                  text: 'FIGHT ',
+                  children: [
+                    TextSpan(
+                      text: 'CAMP',
+                      style: TextStyle(color: AppColors.accent),
+                    ),
+                  ],
+                ),
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+            const Spacer(),
+            IconButton2(
+              Icons.settings_outlined,
+              size: 22,
+              onTap: () => context.push('/settings'),
+            ),
+          ],
+        ),
+      );
 }

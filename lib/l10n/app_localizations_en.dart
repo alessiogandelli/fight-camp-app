@@ -356,6 +356,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get trainReady => 'Ready to\nfight?';
+
+  @override
+  String get trainReadySub => 'Set up your workout';
+
+  @override
+  String get trainTotalDuration => 'Total duration';
+
+  @override
+  String trainSelections(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n selections',
+      one: '1 selection',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get trainNoWorkouts => 'No saved workouts yet.';
 
   @override

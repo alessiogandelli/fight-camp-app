@@ -357,6 +357,26 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get trainReady => 'Pronto\na combattere?';
+
+  @override
+  String get trainReadySub => 'Imposta il tuo allenamento';
+
+  @override
+  String get trainTotalDuration => 'Durata totale';
+
+  @override
+  String trainSelections(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n selezioni',
+      one: '1 selezione',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get trainNoWorkouts => 'Nessun allenamento salvato.';
 
   @override

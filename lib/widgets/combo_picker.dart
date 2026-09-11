@@ -107,19 +107,27 @@ class _ComboPickerBodyState extends State<_ComboPickerBody> {
             padding: const EdgeInsets.only(top: 12),
             child: Row(
               children: [
-                ChipWidget(
-                  label: l.commonClear,
-                  active: false,
-                  onTap: () => setState(() => _selected.clear()),
+                Expanded(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      ChipWidget(
+                        label: l.commonClear,
+                        active: false,
+                        onTap: () => setState(() => _selected.clear()),
+                      ),
+                      ChipWidget(
+                        label: l.pickerSelectAll,
+                        active: false,
+                        onTap: () => setState(
+                          () => _selected.addAll(combos.map((c) => c.id)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 6),
-                ChipWidget(
-                  label: l.pickerSelectAll,
-                  active: false,
-                  onTap: () =>
-                      setState(() => _selected.addAll(combos.map((c) => c.id))),
-                ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Button(
                   label: l.pickerDone(_selected.length),
                   onTap: () => Navigator.of(context).pop(_selected.toList()),

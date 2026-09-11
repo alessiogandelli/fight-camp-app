@@ -145,6 +145,17 @@
       "n": {}
     }
   },
+  "trainReady": "Pronto\na combattere?",
+  "trainReadySub": "Imposta il tuo allenamento",
+  "trainTotalDuration": "Durata totale",
+  "trainSelections": "{n, plural, =1{1 selezione} other{{n} selezioni}}",
+  "@trainSelections": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "trainNoWorkouts": "Nessun allenamento salvato.",
   "trainCreateWorkout": "Crea un allenamento",
   "trainFixed": "Fissa",

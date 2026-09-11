@@ -2,7 +2,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -10,6 +9,7 @@ import '../app_args.dart';
 import '../data/storage.dart';
 import '../data/store.dart';
 import '../lib/format.dart';
+import '../lib/haptics.dart';
 import '../models/types.dart';
 import '../ui/theme.dart';
 import '../ui/toast.dart';
@@ -46,10 +46,7 @@ class TrainPage extends StatefulWidget {
 class _TrainPageState extends State<TrainPage> {
   ActiveSnapshot? _active;
   late TimerSetup _setup;
-  bool _useCombos = false;
   List<String> _comboIds = [];
-  int _rotationInterval = 30;
-  RotationOrder _rotationOrder = RotationOrder.sequential;
 
   @override
   void initState() {
@@ -68,40 +65,30 @@ class _TrainPageState extends State<TrainPage> {
           rest: last.rest,
         );
         if (j['comboIds'] is List && (j['comboIds'] as List).isNotEmpty) {
-          _useCombos = true;
           _comboIds = [...(j['comboIds'] as List).map((e) => e.toString())];
-          _rotationInterval = (j['rotationInterval'] ?? 30) as int;
-          _rotationOrder = j['rotationOrder'] == 'random'
-              ? RotationOrder.random
-              : RotationOrder.sequential;
         }
       });
     });
   }
 
-  void refreshActive() async {
-    final snap = await loadActive();
-    if (mounted) setState(() => _active = snap);
-  }
+  int get _totalSeconds =>
+      _setup.rounds * _setup.work + (_setup.rounds - 1) * _setup.rest;
 
   Future<void> _start() async {
     final l = AppLocalizations.of(context)!;
     final store = context.read<AppStore>();
     if (_setup.work < 5) return context.showToast(l.builderMinSeconds);
 
+    final useCombos = _comboIds.isNotEmpty;
     unawaited(
       saveLastTimer({
         ..._setup.toJson(),
-        'comboIds': _useCombos ? _comboIds : <String>[],
-        'rotationInterval': _rotationInterval,
-        'rotationOrder': _rotationOrder.name,
+        'comboIds': useCombos ? _comboIds : <String>[],
       }),
     );
 
     final cfg = LiveConfig(
-      name: _useCombos && _comboIds.isNotEmpty
-          ? l.trainHeavyBagName
-          : l.trainFreeRounds,
+      name: useCombos ? l.trainHeavyBagName : l.trainFreeRounds,
       type: WorkoutType.heavyBag,
       prepSeconds: store.data.settings.prepSeconds,
       rounds: List.generate(
@@ -109,12 +96,10 @@ class _TrainPageState extends State<TrainPage> {
         (i) => RoundBase(
           duration: _setup.work,
           restDuration: i < _setup.rounds - 1 ? _setup.rest : 0,
-          type: _useCombos && _comboIds.isNotEmpty
-              ? RoundType.combination
-              : RoundType.free,
+          type: useCombos ? RoundType.combination : RoundType.free,
           combinationIds: _comboIds,
-          rotationInterval: _rotationInterval,
-          rotationOrder: _rotationOrder,
+          rotationInterval: 30,
+          rotationOrder: RotationOrder.sequential,
         ),
       ),
     );
@@ -123,40 +108,38 @@ class _TrainPageState extends State<TrainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final store = context.watch<AppStore>();
-    final lang = store.lang;
-
+    final l = AppLocalizations.of(context)!;
     return Column(
       children: [
-        if (_active != null)
-          _constrain(
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.md),
-              child: _activeBanner(lang),
-            ),
-          ),
-        _constrain(
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            child: _numbersSection(lang),
-          ),
-        ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: _constrain(
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _combosSection(lang),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _hero(l),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.md,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_active != null) ...[
+                        _activeBanner(l),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      _settingsCard(l),
+                      const SizedBox(height: AppSpacing.sm + 4),
+                      _combosRow(l),
+                      const SizedBox(height: AppSpacing.sm + 4),
+                      _statsRow(l),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -164,7 +147,7 @@ class _TrainPageState extends State<TrainPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
-              AppSpacing.sm,
+              0,
               AppSpacing.md,
               AppSpacing.md,
             ),
@@ -182,239 +165,315 @@ class _TrainPageState extends State<TrainPage> {
     ),
   );
 
-  Widget _activeBanner(Lang lang) {
-    final l = AppLocalizations.of(context)!;
-    return CardWidget(
-      color: AppColors.accent.withAlpha(24),
-      padding: const EdgeInsets.all(14),
+  Widget _hero(AppLocalizations l) => Container(
+    width: double.infinity,
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF2A1416), AppColors.bg],
+      ),
+    ),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 672),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, kAppHeaderHeight + 28, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.trainReady.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 34,
+                  height: 1.05,
+                  fontWeight: FontWeight.w900,
+                  fontStyle: FontStyle.italic,
+                  letterSpacing: 0.5,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                l.trainReadySub,
+                style: const TextStyle(fontSize: 14, color: AppColors.mut),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Widget _activeBanner(AppLocalizations l) => CardWidget(
+    color: AppColors.accent.withAlpha(24),
+    padding: const EdgeInsets.all(14),
+    child: Row(
+      children: [
+        const Icon(Icons.play_circle_outline_rounded, color: AppColors.accent),
+        const SizedBox(width: AppSpacing.sm + 4),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.trainInProgress.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: AppColors.accent,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _active!.config.name.toUpperCase(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Button(
+          label: l.commonResume,
+          size: BtnSize.sm,
+          onTap: () => context.push(
+            '/live',
+            extra: LiveArgs(
+              _active!.config,
+              resumeElapsedMs: _active!.totalElapsedMs,
+            ),
+          ),
+        ),
+        IconButton2(
+          Icons.close,
+          onTap: () async {
+            await clearActive();
+            if (mounted) setState(() => _active = null);
+          },
+        ),
+      ],
+    ),
+  );
+
+  Widget _settingsCard(AppLocalizations l) => CardWidget(
+    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+    child: Column(
+      children: [
+        _settingRow(
+          icon: Icons.fitness_center_rounded,
+          color: AppColors.accent,
+          label: l.commonWork,
+          value: fmtClock(_setup.work),
+          current: _setup.work,
+          min: 5,
+          max: 600,
+          step: 5,
+          onChanged: (v) => setState(() => _setup.work = v),
+        ),
+        const _RowDivider(),
+        _settingRow(
+          icon: Icons.local_cafe_rounded,
+          color: AppColors.rest,
+          label: l.commonRest,
+          value: _setup.rest > 0 ? fmtClock(_setup.rest) : '—',
+          current: _setup.rest,
+          min: 0,
+          max: 300,
+          step: 5,
+          onChanged: (v) => setState(() => _setup.rest = v),
+        ),
+        const _RowDivider(),
+        _settingRow(
+          icon: Icons.refresh_rounded,
+          color: AppColors.ink,
+          label: l.commonRounds,
+          value: '${_setup.rounds}',
+          current: _setup.rounds,
+          min: 1,
+          max: 30,
+          step: 1,
+          onChanged: (v) => setState(() => _setup.rounds = v),
+        ),
+      ],
+    ),
+  );
+
+  Widget _settingRow({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required String value,
+    required int current,
+    required int min,
+    required int max,
+    required int step,
+    required ValueChanged<int> onChanged,
+  }) {
+    final canDec = current > min;
+    final canInc = current < max;
+    void apply(int delta) {
+      final v = (current + delta).clamp(min, max);
+      if (v == current) return;
+      onChanged(v);
+      Haptics.selection();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          const Icon(
-            Icons.play_circle_outline_rounded,
-            color: AppColors.accent,
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: color.withAlpha(30),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 21),
           ),
-          const SizedBox(width: AppSpacing.sm + 4),
+          const SizedBox(width: AppSpacing.sm + 6),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l.trainInProgress.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                    color: AppColors.accent,
-                  ),
+                  label,
+                  style: const TextStyle(fontSize: 12, color: AppColors.mut),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _active!.config.name.toUpperCase(),
+                  value,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.ink,
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
             ),
           ),
-          Button(
-            label: l.commonResume,
-            size: BtnSize.sm,
-            onTap: () => context.push(
-              '/live',
-              extra: LiveArgs(
-                _active!.config,
-                resumeElapsedMs: _active!.totalElapsedMs,
-              ),
-            ),
-          ),
-          IconButton2(
-            Icons.close,
-            onTap: () async {
-              await clearActive();
-              if (mounted) setState(() => _active = null);
-            },
-          ),
+          _CircleStep(plus: false, enabled: canDec, onTap: () => apply(-step)),
+          const SizedBox(width: AppSpacing.sm),
+          _CircleStep(plus: true, enabled: canInc, onTap: () => apply(step)),
         ],
       ),
     );
   }
 
-  Widget _numbersSection(Lang lang) {
-    final l = AppLocalizations.of(context)!;
-    if (MediaQuery.orientationOf(context) == Orientation.landscape) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: _StepperValue(
-              step: 5,
-              min: 5,
-              max: 600,
-              current: _setup.work,
-              onChanged: (v) => setState(() {
-                _setup.work = v;
-              }),
-              child: _bigNumber(
-                fmtClock(_setup.work),
-                l.commonWork.toUpperCase(),
-                AppColors.accent,
+  Widget _combosRow(AppLocalizations l) {
+    final subtitle = _comboIds.isEmpty
+        ? '${l.trainFreeRounds} · ${l.commonEdit.toUpperCase()}'
+        : '${l.trainSelections(_comboIds.length).toUpperCase()} · '
+              '${l.commonEdit.toUpperCase()}';
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        final sel = await showComboPicker(context, selected: _comboIds);
+        if (sel != null && mounted) setState(() => _comboIds = sel);
+      },
+      child: CardWidget(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        child: Row(
+          children: [
+            Icon(
+              Icons.format_list_numbered_rounded,
+              color: _comboIds.isEmpty ? AppColors.mut : AppColors.ink,
+              size: 22,
+            ),
+            const SizedBox(width: AppSpacing.sm + 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.trainCombinations,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0,
+                      color: AppColors.mut,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          _roundsControl(),
-          Expanded(
-            child: _StepperValue(
-              step: 5,
-              min: 0,
-              max: 300,
-              current: _setup.rest,
-              onChanged: (v) => setState(() {
-                _setup.rest = v;
-              }),
-              child: _bigNumber(
-                _setup.rest > 0 ? fmtClock(_setup.rest) : '—',
-                l.commonRest.toUpperCase(),
-                AppColors.rest,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _StepperValue(
-          step: 5,
-          min: 5,
-          max: 600,
-          current: _setup.work,
-          onChanged: (v) => setState(() {
-            _setup.work = v;
-          }),
-          child: _bigNumber(
-            fmtClock(_setup.work),
-            l.commonWork.toUpperCase(),
-            AppColors.accent,
-          ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.mut),
+          ],
         ),
-        const SizedBox(height: AppSpacing.md),
-        _StepperValue(
-          step: 5,
-          min: 0,
-          max: 300,
-          current: _setup.rest,
-          onChanged: (v) => setState(() {
-            _setup.rest = v;
-          }),
-          child: _bigNumber(
-            _setup.rest > 0 ? fmtClock(_setup.rest) : '—',
-            l.commonRest.toUpperCase(),
-            AppColors.rest,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _roundsControl(),
-      ],
+      ),
     );
   }
 
-  Widget _combosSection(Lang lang) {
-    final l = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _statsRow(AppLocalizations l) => CardWidget(
+    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+    child: Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l.trainCombosToggle,
-                style: const TextStyle(fontSize: 13.5),
-              ),
-            ),
-            Toggle(
-              value: _useCombos,
-              onChanged: (v) => setState(() => _useCombos = v),
-            ),
-          ],
+        Expanded(
+          child: _stat(
+            icon: Icons.access_time_rounded,
+            value: fmtClock(_totalSeconds),
+            label: l.trainTotalDuration,
+          ),
         ),
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 160),
-          crossFadeState: _useCombos
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          firstChild: const SizedBox(width: double.infinity),
-          secondChild: Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Button(
-                  label: _comboIds.isEmpty
-                      ? l.pickerTitle
-                      : '${l.trainSelected(_comboIds.length)} · ${l.commonEdit}',
-                  variant: BtnVariant.outline,
-                  size: BtnSize.sm,
-                  expanded: true,
-                  icon: Icons.format_list_numbered_rounded,
-                  onTap: () async {
-                    final sel = await showComboPicker(
-                      context,
-                      selected: _comboIds,
-                    );
-                    if (sel != null && mounted) setState(() => _comboIds = sel);
-                  },
-                ),
-                if (_comboIds.length > 1) ...[
-                  const SizedBox(height: AppSpacing.sm + 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Field(
-                          label: l.trainRotateEvery,
-                          child: TimeField(
-                            value: _rotationInterval,
-                            min: 5,
-                            max: 600,
-                            step: 5,
-                            onChanged: (v) =>
-                                setState(() => _rotationInterval = v),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Field(
-                          label: l.trainOrder,
-                          child: Segmented<RotationOrder>(
-                            value: _rotationOrder,
-                            options: [
-                              (
-                                value: RotationOrder.sequential,
-                                label: l.commonSequential,
-                              ),
-                              (
-                                value: RotationOrder.random,
-                                label: l.commonRandom,
-                              ),
-                            ],
-                            onChanged: (v) =>
-                                setState(() => _rotationOrder = v),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
+        Container(width: 1, height: 38, color: AppColors.line),
+        Expanded(
+          child: _stat(
+            icon: Icons.repeat_rounded,
+            value: '${_setup.rounds}',
+            label: l.commonRounds,
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
+
+  Widget _stat({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) => Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(icon, size: 22, color: AppColors.mut),
+      const SizedBox(width: AppSpacing.sm + 2),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.1,
+              color: AppColors.mut,
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
 
   Widget _startButton() {
     final l = AppLocalizations.of(context)!;
@@ -426,220 +485,46 @@ class _TrainPageState extends State<TrainPage> {
       onTap: _start,
     );
   }
+}
 
-  Widget _roundsControl() {
-    final l = AppLocalizations.of(context)!;
-    final landscape =
-        MediaQuery.orientationOf(context) == Orientation.landscape;
-    final number = _bigNumber(
-      '×${_setup.rounds}',
-      l.commonRounds.toUpperCase(),
-      AppColors.ink,
-    );
-    if (landscape) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _roundButton(false),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '×${_setup.rounds}',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.ink,
-                  ),
-                ),
-                Text(
-                  l.commonRounds.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.4,
-                    color: AppColors.mut,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _roundButton(true),
-        ],
-      );
-    }
-    return _StepperValue(
-      step: 1,
-      min: 1,
-      max: 30,
-      current: _setup.rounds,
-      swipeEnabled: false,
-      onChanged: (v) => setState(() {
-        _setup.rounds = v;
-      }),
-      child: number,
-    );
-  }
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
 
-  Widget _roundButton(bool plus) {
-    final delta = plus ? 1 : -1;
-    final disabled = plus ? _setup.rounds >= 30 : _setup.rounds <= 1;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: disabled
-          ? null
-          : () {
-              var v = _setup.rounds + delta;
-              if (v < 1) v = 1;
-              if (v > 30) v = 30;
-              if (v == _setup.rounds) return;
-              setState(() {
-                _setup.rounds = v;
-              });
-              HapticFeedback.selectionClick();
-            },
-      child: Container(
-        width: 40,
-        height: 40,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.line),
-          color: AppColors.panel,
-        ),
-        child: Icon(
-          plus ? Icons.add_rounded : Icons.remove_rounded,
-          size: 20,
-          color: disabled ? AppColors.line : AppColors.ink,
-        ),
-      ),
-    );
-  }
-
-  Widget _bigNumber(String value, String label, Color color) => Column(
-    children: [
-      FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          value,
-          softWrap: false,
-          maxLines: 1,
-          style: TextStyle(
-            fontSize: 46,
-            fontWeight: FontWeight.w900,
-            color: color,
-            height: 1.0,
-            fontFeatures: const [],
-          ),
-        ),
-      ),
-      const SizedBox(height: AppSpacing.xs),
-      Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.6,
-          color: AppColors.mut,
-        ),
-      ),
-    ],
+  @override
+  Widget build(BuildContext context) => const Padding(
+    padding: EdgeInsets.only(left: 64, right: 14),
+    child: Divider(height: 1, thickness: 1, color: AppColors.line),
   );
 }
 
-/// A widget whose value is adjusted with −/+ buttons flanking its child.
-/// When [swipeEnabled], dragging horizontally on [child] also steps the value
-/// (right = increase, left = decrease) — handy with boxing gloves on.
-class _StepperValue extends StatefulWidget {
-  final Widget child;
-  final int step;
-  final int min;
-  final int max;
-  final int current;
-  final ValueChanged<int> onChanged;
-  final bool swipeEnabled;
-  const _StepperValue({
-    required this.child,
-    required this.step,
-    required this.min,
-    required this.max,
-    required this.current,
-    required this.onChanged,
-    this.swipeEnabled = true,
+class _CircleStep extends StatelessWidget {
+  final bool plus;
+  final bool enabled;
+  final VoidCallback onTap;
+  const _CircleStep({
+    required this.plus,
+    required this.enabled,
+    required this.onTap,
   });
 
   @override
-  State<_StepperValue> createState() => _StepperValueState();
-}
-
-class _StepperValueState extends State<_StepperValue> {
-  static const _swipeStepPx = 56.0;
-  double _dragAccum = 0;
-
-  void _apply(int delta) {
-    var v = widget.current + delta;
-    if (v < widget.min) v = widget.min;
-    if (v > widget.max) v = widget.max;
-    if (v == widget.current) return;
-    widget.onChanged(v);
-    HapticFeedback.selectionClick();
-  }
-
-  Widget _stepButton(bool plus) {
-    final delta = plus ? widget.step : -widget.step;
-    final disabled = plus
-        ? widget.current >= widget.max
-        : widget.current <= widget.min;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: disabled ? null : () => _apply(delta),
-      child: Container(
-        width: 44,
-        height: 44,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.line),
-          color: AppColors.panel,
-        ),
-        child: Icon(
-          plus ? Icons.add_rounded : Icons.remove_rounded,
-          size: 22,
-          color: disabled ? AppColors.line : AppColors.ink,
-        ),
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: enabled ? onTap : null,
+    child: Container(
+      width: 40,
+      height: 40,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.panel2,
+        border: Border.all(color: AppColors.line),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final middle = widget.swipeEnabled
-        ? GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onHorizontalDragUpdate: (d) {
-              _dragAccum += d.delta.dx;
-              while (_dragAccum.abs() >= _swipeStepPx) {
-                final dir = _dragAccum > 0 ? 1 : -1;
-                _dragAccum -= dir * _swipeStepPx;
-                _apply(dir * widget.step);
-              }
-            },
-            onHorizontalDragEnd: (_) => _dragAccum = 0,
-            onHorizontalDragCancel: () => _dragAccum = 0,
-            child: widget.child,
-          )
-        : widget.child;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _stepButton(false),
-        const SizedBox(width: AppSpacing.sm + 4),
-        Expanded(child: middle),
-        const SizedBox(width: AppSpacing.sm + 4),
-        _stepButton(true),
-      ],
-    );
-  }
+      child: Icon(
+        plus ? Icons.add_rounded : Icons.remove_rounded,
+        size: 20,
+        color: enabled ? AppColors.ink : AppColors.line,
+      ),
+    ),
+  );
 }

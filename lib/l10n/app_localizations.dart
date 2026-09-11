@@ -758,6 +758,30 @@ abstract class AppLocalizations {
   /// **'{n} selected'**
   String trainSelected(Object n);
 
+  /// No description provided for @trainReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to\nfight?'**
+  String get trainReady;
+
+  /// No description provided for @trainReadySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your workout'**
+  String get trainReadySub;
+
+  /// No description provided for @trainTotalDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Total duration'**
+  String get trainTotalDuration;
+
+  /// No description provided for @trainSelections.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 selection} other{{n} selections}}'**
+  String trainSelections(int n);
+
   /// No description provided for @trainNoWorkouts.
   ///
   /// In en, this message translates to:

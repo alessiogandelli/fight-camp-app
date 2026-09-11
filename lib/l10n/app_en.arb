@@ -145,6 +145,17 @@
       "n": {}
     }
   },
+  "trainReady": "Ready to\nfight?",
+  "trainReadySub": "Set up your workout",
+  "trainTotalDuration": "Total duration",
+  "trainSelections": "{n, plural, =1{1 selection} other{{n} selections}}",
+  "@trainSelections": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "trainNoWorkouts": "No saved workouts yet.",
   "trainCreateWorkout": "Create a workout",
   "trainFixed": "Fixed",
