@@ -60,6 +60,8 @@ class Technique {
   String nameIn(Lang lang) => lang == Lang.en ? (nameEn ?? name) : name;
   String shortIn(Lang lang) =>
       lang == Lang.en ? (shortNameEn ?? shortName) : shortName;
+  String? descriptionIn(Lang lang) =>
+      lang == Lang.en ? (descriptionEn ?? description) : description;
 
   factory Technique.fromJson(Map<String, dynamic> j) => Technique(
     id: j['id'] as String,

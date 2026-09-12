@@ -1199,6 +1199,7 @@ class NextPreviewRow extends StatelessWidget {
     } else {
       detail = null;
     }
+    final image = slot?.image;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1220,6 +1221,10 @@ class NextPreviewRow extends StatelessWidget {
               color: AppColors.mut,
             ),
           ),
+          if (image != null) ...[
+            const SizedBox(height: 8),
+            SvgPicture.asset(image, width: 80, height: 80),
+          ],
           if (detail != null) ...[
             const SizedBox(height: 6),
             Text(

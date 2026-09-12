@@ -7,7 +7,7 @@ import '../models/seed.dart';
 
 const dataKey = 'fight-camp:data:v3';
 const activeKey = 'fight-camp:active:v3';
-const storageVersion = 6;
+const storageVersion = 7;
 
 /// Seed workout ids that existed before v6 and are replaced by the new
 /// seed list (riscaldamento / corda / circuito / sparring).
@@ -48,6 +48,40 @@ AppData _migrateToV6(AppData d) {
   );
 }
 
+/// Seed techniques added after v6: stretching exercises appended to existing
+/// installs that predate them.
+const _v7NewTechniqueIds = [
+  't-butterfly',
+  't-forward-fold',
+  't-calf',
+  't-quad',
+  't-triceps',
+  't-chest',
+  't-neck',
+  't-wrist',
+  't-pigeon',
+];
+
+/// v7: append the new stretching techniques, keeping everything the user has.
+AppData _migrateToV7(AppData d) {
+  if (d.version >= 7) return d;
+  final existing = {for (final t in d.techniques) t.id};
+  final added = seedTechniques
+      .where(
+        (t) => _v7NewTechniqueIds.contains(t.id) && !existing.contains(t.id),
+      )
+      .toList();
+  return AppData(
+    version: 7,
+    techniques: [...d.techniques, ...added],
+    combinations: d.combinations,
+    workouts: d.workouts,
+    sessions: d.sessions,
+    plans: d.plans,
+    settings: d.settings,
+  );
+}
+
 Future<AppData> loadData() async {
   try {
     final prefs = await SharedPreferences.getInstance();
@@ -60,7 +94,7 @@ Future<AppData> loadData() async {
       return seedData();
     if (appData.version < 1 || appData.version > storageVersion)
       return seedData();
-    final migrated = _migrateToV6(appData);
+    final migrated = _migrateToV7(_migrateToV6(appData));
     if (migrated.version != appData.version) await saveData(migrated);
     return migrated;
   } catch (_) {

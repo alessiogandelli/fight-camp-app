@@ -50,4 +50,65 @@ void main() {
     expect(w.rounds, 3);
     expect(w.combinationIds, isEmpty);
   });
+
+  testWidgets('create a routine from the workout builder and select it', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({
+      'fight-camp:lang': 'it',
+      'fight-camp:onboarding-seen': true,
+    });
+    await tester.pumpWidget(const FightCampApp());
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    await tester.tap(find.text('WORKOUT').last);
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    // Name the workout, then open the routine builder from inside it.
+    await tester.enterText(find.byType(TextField).first, 'ROUTINE WORKOUT');
+    await tester.pumpAndSettle();
+
+    final newRoutine = find
+        .widgetWithText(Button, 'NUOVA ROUTINE')
+        .hitTestable();
+    await tester.ensureVisible(newRoutine);
+    await tester.tap(newRoutine);
+    await tester.pumpAndSettle();
+
+    // Routine builder: name it and add one exercise from the catalog.
+    await tester.enterText(find.byType(TextField).last, 'TEST ROUTINE');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('PANCAKE'));
+    await tester.pumpAndSettle();
+
+    final saveRoutine = find.widgetWithText(Button, 'SALVA').hitTestable().last;
+    await tester.ensureVisible(saveRoutine);
+    await tester.tap(saveRoutine);
+    await tester.pumpAndSettle();
+
+    // The new routine is now selected in the workout builder.
+    expect(find.text('TEST ROUTINE'), findsWidgets);
+
+    // Save the workout and confirm the routine reference persisted.
+    final saveWorkout = find.widgetWithText(Button, 'SALVA').hitTestable().last;
+    await tester.ensureVisible(saveWorkout);
+    await tester.tap(saveWorkout);
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 4));
+
+    final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
+    final routine = store.data.combinations.firstWhere(
+      (c) => c.name == 'TEST ROUTINE',
+    );
+    final w = store.data.workouts.firstWhere(
+      (w) => w.name == 'ROUTINE WORKOUT',
+    );
+    expect(w.routineId, routine.id);
+    expect(w.rounds, 1);
+  });
 }

@@ -62,7 +62,7 @@ void main() {
   testWidgets('store provider exposes seed data', (tester) async {
     await bootApp(tester);
     final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
-    expect(store.data.techniques.length, 39);
+    expect(store.data.techniques.length, 48);
     expect(store.data.combinations.length, 21);
     expect(store.data.workouts.length, 6);
     // No plans are auto-inserted any more: the user owns their schedule.

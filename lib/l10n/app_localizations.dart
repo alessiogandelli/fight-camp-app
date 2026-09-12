@@ -590,6 +590,24 @@ abstract class AppLocalizations {
   /// **'Build your first combination from the technique library.'**
   String get combosEmptyMsg;
 
+  /// No description provided for @stretchesSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search exercises…'**
+  String get stretchesSearch;
+
+  /// No description provided for @stretchesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises'**
+  String get stretchesEmpty;
+
+  /// No description provided for @stretchesEmptyMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'No stretching exercise matches your search.'**
+  String get stretchesEmptyMsg;
+
   /// No description provided for @combosCreate.
   ///
   /// In en, this message translates to:
@@ -2059,6 +2077,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit stretching routine'**
   String get routineEdit;
+
+  /// No description provided for @builderNewRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'New routine'**
+  String get builderNewRoutine;
 
   /// No description provided for @routineTapHint.
   ///

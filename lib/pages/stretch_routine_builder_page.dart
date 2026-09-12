@@ -13,12 +13,12 @@ import '../ui/toast.dart';
 import '../ui/widgets.dart';
 import '../l10n/app_localizations.dart';
 
-Future<bool?> showRoutineBuilderSheet(
+Future<String?> showRoutineBuilderSheet(
   BuildContext context, {
   String? routineId,
 }) {
   final l = AppLocalizations.of(context)!;
-  return showAppModal<bool>(
+  return showAppModal<String>(
     context,
     title: routineId == null ? l.routineNew : l.routineEdit,
     scrollable: false,
@@ -78,7 +78,7 @@ class _StretchRoutineBuilderPageState extends State<StretchRoutineBuilderPage> {
       ),
     );
     if (!mounted) return;
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(_id);
   }
 
   @override

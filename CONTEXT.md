@@ -17,13 +17,13 @@ Una configurazione **singola e uniforme** del Timer (lavoro, pausa, round sempre
 Una lista ordinata di Tecniche da eseguire al sacco. Vive nella Libreria.
 
 ### Routine
-Una lista ordinata di esercizi di **stretching**. Concetto distinto dalla Combo: la Combo è una sequenza di colpi, la Routine è un blocco di esercizi fisici. Vive nella Libreria.
+Una lista ordinata di esercizi di **stretching**. Concetto distinto dalla Combo: la Combo è una sequenza di colpi, la Routine è un blocco di esercizi fisici. Vive nel **Workout**: si sceglie, crea o modifica mentre si configura un Workout, non nella Libreria.
 
 ### Tecnica
 Un movimento elementare con nome e categoria (pugni, calci, ginocchia, gomitate, difesa/movimento, stretching). È l'atomo di cui sono fatte le Combo e le Routine.
 
 ### Libreria
-La tab che contiene le liste ordinate di movimenti e lo strumento extra, in tre sezioni: **Sacco** (Combo), **Stretching** (Routine), **Tool** (flessioni).
+La tab che contiene le liste ordinate di movimenti e lo strumento extra, in tre sezioni: **Sacco** (Combo), **Stretching** (catalogo degli esercizi di stretching, di sola consultazione), **Tool** (flessioni).
 
 ### Tool
 Strumento extra non basato sul Timer (attualmente solo il contatore di flessioni). Vive nella sezione Tool della Libreria.

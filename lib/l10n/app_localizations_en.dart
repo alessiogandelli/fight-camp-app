@@ -264,6 +264,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Build your first combination from the technique library.';
 
   @override
+  String get stretchesSearch => 'Search exercises…';
+
+  @override
+  String get stretchesEmpty => 'No exercises';
+
+  @override
+  String get stretchesEmptyMsg => 'No stretching exercise matches your search.';
+
+  @override
   String get combosCreate => 'Create combination';
 
   @override
@@ -1058,6 +1067,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get routineEdit => 'Edit stretching routine';
+
+  @override
+  String get builderNewRoutine => 'New routine';
 
   @override
   String get routineTapHint =>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Standing quad stretch">
+  <rect x="0" y="0" width="240" height="240" rx="16" fill="#121216"/>
+  <rect x="4" y="4" width="232" height="232" rx="12" fill="none" stroke="#26262e" stroke-width="2"/>
+  <line x1="24" y1="196" x2="216" y2="196" stroke="#26262e" stroke-width="3" stroke-linecap="round"/>
+  <path d="M166 156 L180 146 L186 162" stroke="#ff4d4d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <g stroke="#f4f4f1" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M118 142 L120 172 L116 194"/>
+    <path d="M118 142 L148 166 L170 134"/>
+    <path d="M118 142 L116 100"/>
+    <path d="M120 116 L150 132 L170 136"/>
+    <path d="M114 108 L84 128"/>
+    <circle cx="116" cy="78" r="13" fill="#121216"/>
+  </g>
+  <g font-family="sans-serif" font-size="11" font-weight="700" fill="#9a9aa5">
+    <text x="120" y="226" text-anchor="middle">QUAD</text>
+  </g>
+</svg>

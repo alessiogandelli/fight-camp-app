@@ -264,6 +264,16 @@ class AppLocalizationsIt extends AppLocalizations {
       'Crea la tua prima combinazione dalla libreria tecniche.';
 
   @override
+  String get stretchesSearch => 'Cerca esercizi…';
+
+  @override
+  String get stretchesEmpty => 'Nessun esercizio';
+
+  @override
+  String get stretchesEmptyMsg =>
+      'Nessun esercizio di stretching corrisponde alla ricerca.';
+
+  @override
   String get combosCreate => 'Crea combinazione';
 
   @override
@@ -1063,6 +1073,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get routineEdit => 'Modifica routine di stretching';
+
+  @override
+  String get builderNewRoutine => 'Nuova routine';
 
   @override
   String get routineTapHint =>

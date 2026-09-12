@@ -92,12 +92,14 @@ class SessionEngine extends ChangeNotifier {
     }
     final segs = evs.whereType<SegmentCue>().toList();
     if (segs.isNotEmpty) {
-      // No sound at segment start (ADR-style decision from product brief):
-      // only the countdown blips and warning cues remain audible.
+      // A distinct cue announces each work/rest phase; the prep countdown is
+      // left to its 3-2-1 blips. All of it is gated by the sound setting.
       final s = segs.last;
       if (s.kind == SegmentKind.work) {
+        if (soundOn) await Sound.work();
         await vibrate(250, vibrationOn);
       } else if (s.kind == SegmentKind.rest) {
+        if (soundOn) await Sound.rest();
         await vibrate(120, vibrationOn);
       } else {
         await vibrate(120, vibrationOn);

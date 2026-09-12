@@ -12,6 +12,7 @@ import '../ui/toast.dart';
 import '../ui/widgets.dart';
 import '../widgets/combo_picker.dart';
 import '../l10n/app_localizations.dart';
+import 'stretch_routine_builder_page.dart';
 
 class WorkoutBuilderResult {
   final Workout workout;
@@ -109,6 +110,27 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
         .toList();
     final r = routines.where((c) => c.id == _routineId).firstOrNull;
     return r?.techniqueIds.length ?? 1;
+  }
+
+  Future<void> _newRoutine() async {
+    final l = AppLocalizations.of(context)!;
+    final id = await showRoutineBuilderSheet(context);
+    if (!mounted || id == null) return;
+    setState(() {
+      _routineId = id;
+      _comboIds = const [];
+    });
+    context.showToast(l.routineSaved);
+  }
+
+  Future<void> _editRoutine() async {
+    final l = AppLocalizations.of(context)!;
+    final id = _routineId;
+    if (id == null) return;
+    final saved = await showRoutineBuilderSheet(context, routineId: id);
+    if (!mounted || saved == null) return;
+    setState(() => _routineId = saved);
+    context.showToast(l.routineSaved);
   }
 
   @override
@@ -294,22 +316,48 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                       ),
                     if (!_hasRoutine) const SizedBox(height: AppSpacing.sm + 4),
                     CardWidget(
-                      child: Field(
-                        label: l.builderChooseRoutine,
-                        child: Select<String>(
-                          value: _routineId ?? '',
-                          options: [
-                            (value: '', label: l.commonNone),
-                            for (final r in store.data.combinations.where(
-                              store.isStretchRoutine,
-                            ))
-                              (value: r.id, label: r.name),
-                          ],
-                          onChanged: (v) => setState(() {
-                            _routineId = v.isEmpty ? null : v;
-                            if (v.isNotEmpty) _comboIds = const [];
-                          }),
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Field(
+                            label: l.builderChooseRoutine,
+                            child: Select<String>(
+                              value: _routineId ?? '',
+                              options: [
+                                (value: '', label: l.commonNone),
+                                for (final r in store.data.combinations.where(
+                                  store.isStretchRoutine,
+                                ))
+                                  (value: r.id, label: r.name),
+                              ],
+                              onChanged: (v) => setState(() {
+                                _routineId = v.isEmpty ? null : v;
+                                if (v.isNotEmpty) _comboIds = const [];
+                              }),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Button(
+                                  label: l.builderNewRoutine,
+                                  variant: BtnVariant.ghost,
+                                  size: BtnSize.sm,
+                                  icon: Icons.add,
+                                  onTap: _newRoutine,
+                                ),
+                              ),
+                              if (_routineId != null) ...[
+                                const SizedBox(width: 8),
+                                IconButton2(
+                                  Icons.edit_outlined,
+                                  onTap: _editRoutine,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),

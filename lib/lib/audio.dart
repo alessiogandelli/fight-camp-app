@@ -14,7 +14,13 @@ class CuePart {
   final int partials;
   final String wave; // 'triangle' | 'square' | 'sine'
   final double offset;
-  const CuePart(this.freq, this.durationSec, this.partials, this.wave, {this.offset = 0});
+  const CuePart(
+    this.freq,
+    this.durationSec,
+    this.partials,
+    this.wave, {
+    this.offset = 0,
+  });
 }
 
 final cueParts = <String, List<CuePart>>{
@@ -38,13 +44,26 @@ final cueParts = <String, List<CuePart>>{
   ],
   // double beep
   'warn': [
-    CuePart(1320, 0.12, 1, 'square'),
-    CuePart(1320, 0.12, 1, 'square', offset: 0.16),
+    CuePart(1320, 0.12, 2, 'triangle'),
+    CuePart(1320, 0.12, 2, 'triangle', offset: 0.16),
   ],
   // short blip
-  'count': [CuePart(1760, 0.09, 1, 'square')],
+  'count': [CuePart(1760, 0.09, 2, 'triangle')],
   // tiny click for slot change
   'slot': [CuePart(2200, 0.05, 1, 'sine')],
+};
+
+// Every cue is peak-normalized on its own, so without this map a 50 ms click
+// would hit as hard as the multi-harmonic bells. These roughly balance the
+// perceived loudness across the bank.
+const _cueGain = <String, double>{
+  'prep': 1.0,
+  'work': 1.0,
+  'rest': 0.9,
+  'done': 1.0,
+  'warn': 0.7,
+  'count': 0.6,
+  'slot': 0.35,
 };
 
 double _osc(String wave, double phase) {
@@ -59,7 +78,7 @@ double _osc(String wave, double phase) {
   }
 }
 
-Uint8List renderWav(List<CuePart> parts) {
+Uint8List renderWav(List<CuePart> parts, {double gain = 1.0}) {
   var totalSamples = 0;
   for (final p in parts) {
     final end = ((p.offset + p.durationSec) * sampleRate).ceil();
@@ -87,7 +106,7 @@ Uint8List renderWav(List<CuePart> parts) {
     if (a > peak) peak = a;
   }
   for (var i = 0; i < totalSamples; i++) {
-    pcm[i] = (data[i] / peak * 32000).round().clamp(-32768, 32767);
+    pcm[i] = (data[i] / peak * 32000 * gain).round().clamp(-32768, 32767);
   }
   final bytes = BytesBuilder();
   void str(String s) => bytes.add(s.codeUnits);
@@ -121,17 +140,37 @@ Uint8List renderWav(List<CuePart> parts) {
 
 class Sound {
   static final Map<String, Uint8List> _bank = {
-    for (final e in cueParts.entries) e.key: renderWav(e.value),
+    for (final e in cueParts.entries)
+      e.key: renderWav(e.value, gain: _cueGain[e.key] ?? 1.0),
   };
-  static final List<AudioPlayer> _pool =
-      List.generate(4, (_) => AudioPlayer(playerId: 'cue-${_uid()}'));
+  static final List<AudioPlayer> _pool = List.generate(
+    4,
+    (_) => AudioPlayer(playerId: 'cue-${_uid()}'),
+  );
   static int _next = 0;
+  static bool _primed = false;
 
   static String _uid() =>
       '${DateTime.now().microsecondsSinceEpoch}-${math.Random().nextInt(999999)}';
 
-  /// No-op on mobile (no autoplay restrictions), kept for API parity.
-  static Future<void> unlock() async {}
+  /// Warms the audio session and preloads each pooled player so the first cue
+  /// of a session fires without the usual cold-start lag. Idempotent.
+  static Future<void> unlock() async {
+    if (_primed) return;
+    _primed = true;
+    final first = _bank['slot'];
+    for (final p in _pool) {
+      try {
+        await p.setReleaseMode(ReleaseMode.stop);
+        if (first != null) {
+          await p.setVolume(0);
+          await p.play(BytesSource(first, mimeType: 'audio/wav'));
+          await p.stop();
+          await p.setVolume(1);
+        }
+      } catch (_) {}
+    }
+  }
 
   static Future<void> _play(String name) async {
     final bytes = _bank[name];
