@@ -60,13 +60,13 @@ class DetectorState {
   });
 
   factory DetectorState.initial() => const DetectorState(
-        phase: PushupPhase.up,
-        refBright: 128,
-        refDark: 128,
-        smoothed: 128,
-        lastCountAt: 0,
-        downSince: 0,
-      );
+    phase: PushupPhase.up,
+    refBright: 128,
+    refDark: 128,
+    smoothed: 128,
+    lastCountAt: 0,
+    downSince: 0,
+  );
 
   double get delta => refBright - refDark;
 }
@@ -77,14 +77,23 @@ class StepResult {
   const StepResult(this.state, this.counted);
 }
 
-StepResult stepDetector(DetectorState prev, double luminance, double now, DetectorParams p) {
+StepResult stepDetector(
+  DetectorState prev,
+  double luminance,
+  double now,
+  DetectorParams p,
+) {
   final lum = luminance.clamp(0.0, 255.0).toDouble();
   final smoothed = prev.smoothed + (lum - prev.smoothed) * p.emaAlpha;
 
   // Slowly adapting references for the "bright" (up) and "dark" (down) ends.
   const adapt = 0.02;
-  final refBright = smoothed > prev.refBright ? smoothed : prev.refBright + (smoothed - prev.refBright) * adapt;
-  final refDark = smoothed < prev.refDark ? smoothed : prev.refDark + (smoothed - prev.refDark) * adapt;
+  final refBright = smoothed > prev.refBright
+      ? smoothed
+      : prev.refBright + (smoothed - prev.refBright) * adapt;
+  final refDark = smoothed < prev.refDark
+      ? smoothed
+      : prev.refDark + (smoothed - prev.refDark) * adapt;
 
   final delta = refBright - refDark;
   if (delta < p.minDelta) {

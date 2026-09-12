@@ -236,23 +236,24 @@ class _TrainPageState extends State<TrainPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Text(
-                l.trainReady.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 28,
-                  height: 1.05,
-                  fontWeight: FontWeight.w900,
-                  fontStyle: FontStyle.italic,
-                  letterSpacing: 0.5,
-                  color: AppColors.ink,
+                Text(
+                  l.trainReady.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 28,
+                    height: 1.05,
+                    fontWeight: FontWeight.w900,
+                    fontStyle: FontStyle.italic,
+                    letterSpacing: 0.5,
+                    color: AppColors.ink,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                l.trainReadySub,
-                style: const TextStyle(fontSize: 13, color: AppColors.mut),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  l.trainReadySub,
+                  style: const TextStyle(fontSize: 13, color: AppColors.mut),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -591,30 +592,29 @@ class _HeroTime extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 15, color: color),
-                const SizedBox(width: 7),
-                Text(
-                  label.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                    color: AppColors.mut,
-                  ),
-                ),
-              ],
+      Row(
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 7),
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+              color: AppColors.mut,
             ),
-            const SizedBox(height: 4),
-            GestureDetector(
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
               key: Key('$keyId-value'),
               behavior: HitTestBehavior.opaque,
               onTap: onTapValue,
@@ -634,36 +634,34 @@ class _HeroTime extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 6),
-            _Scrubber(
-              key: Key('$keyId-scrubber'),
-              current: current,
-              min: min,
-              max: max,
-              step: step,
-              color: color,
-              onChanged: onChanged,
-            ),
-          ],
-        ),
-      ),
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _CircleStep(
-            key: Key('$keyId-plus'),
-            plus: true,
-            enabled: current < cap,
-            onTap: () => _bump(current, step, min, cap, onChanged),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(width: 8),
           _CircleStep(
             key: Key('$keyId-minus'),
             plus: false,
+            size: 30,
             enabled: current > min,
             onTap: () => _bump(current, -step, min, cap, onChanged),
           ),
+          const SizedBox(width: 8),
+          _CircleStep(
+            key: Key('$keyId-plus'),
+            plus: true,
+            size: 30,
+            enabled: current < cap,
+            onTap: () => _bump(current, step, min, cap, onChanged),
+          ),
         ],
+      ),
+      const SizedBox(height: 8),
+      _Scrubber(
+        key: Key('$keyId-scrubber'),
+        current: current,
+        min: min,
+        max: max,
+        step: step,
+        color: color,
+        onChanged: onChanged,
       ),
     ],
   );

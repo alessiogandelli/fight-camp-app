@@ -5,7 +5,11 @@ import 'package:fight_camp/lib/pushups_detector.dart';
 const bright = 200.0;
 const dark = 40.0;
 
-int run(List<double> lums, [DetectorParams params = defaultParams, double startNow = 0]) {
+int run(
+  List<double> lums, [
+  DetectorParams params = defaultParams,
+  double startNow = 0,
+]) {
   var d = DetectorState.initial();
   var t = startNow;
   var counts = 0;
@@ -29,7 +33,13 @@ void main() {
     });
 
     test('counts multiple reps for repeated cycles', () {
-      final lums = [...brightN(30), ...darkN(20), ...brightN(30), ...darkN(20), ...brightN(30)];
+      final lums = [
+        ...brightN(30),
+        ...darkN(20),
+        ...brightN(30),
+        ...darkN(20),
+        ...brightN(30),
+      ];
       expect(run(lums), 2);
     });
 
@@ -43,19 +53,34 @@ void main() {
     });
 
     test('respects the cooldown between reps', () {
-      final lums = [...brightN(30), ...darkN(20), ...brightN(30), ...darkN(2), ...brightN(30)];
+      final lums = [
+        ...brightN(30),
+        ...darkN(20),
+        ...brightN(30),
+        ...darkN(2),
+        ...brightN(30),
+      ];
       expect(run(lums), 1);
     });
   });
 
   group('paramsForSensitivity', () {
     test('lowers minDelta as sensitivity rises', () {
-      expect(paramsForSensitivity(100).minDelta < paramsForSensitivity(0).minDelta, true);
+      expect(
+        paramsForSensitivity(100).minDelta < paramsForSensitivity(0).minDelta,
+        true,
+      );
     });
 
     test('clamps sensitivity to 0..100', () {
-      expect(paramsForSensitivity(-10).minDelta, paramsForSensitivity(0).minDelta);
-      expect(paramsForSensitivity(200).minDelta, paramsForSensitivity(100).minDelta);
+      expect(
+        paramsForSensitivity(-10).minDelta,
+        paramsForSensitivity(0).minDelta,
+      );
+      expect(
+        paramsForSensitivity(200).minDelta,
+        paramsForSensitivity(100).minDelta,
+      );
     });
   });
 }

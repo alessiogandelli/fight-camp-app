@@ -1,5 +1,5 @@
-// Progress: a motivational pulse at the top, deep analytics below, and a
-// dedicated History page reached from a recent-sessions card.
+// Progress: the training story in order — weekly anchor, consistency, volume,
+// trend, what's being trained, personal records — then the session history.
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -14,15 +14,22 @@ import '../ui/widgets.dart';
 import 'history_page.dart';
 import 'stats_page.dart';
 
-/// The weekly target shown in the pulse. Deliberately fixed for now.
-const int kWeeklyGoal = 4;
-
-class ProgressPage extends StatelessWidget {
+class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
+
+  @override
+  State<ProgressPage> createState() => _ProgressPageState();
+}
+
+class _ProgressPageState extends State<ProgressPage> {
+  StatsRange _range = StatsRange.week;
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
+    final lang = store.lang;
+    final l = AppLocalizations.of(context)!;
+    final sessions = store.data.sessions;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
@@ -37,137 +44,58 @@ class ProgressPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _PulseCard(
-                weeklyStreak: weeklyStreak(store.data.sessions),
-                thisWeek: sessionsThisWeek(store.data.sessions),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              const StatsContent(),
-              const SizedBox(height: AppSpacing.lg),
-              _HistoryCard(recent: store.data.sessions),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PulseCard extends StatelessWidget {
-  final int weeklyStreak;
-  final int thisWeek;
-  const _PulseCard({required this.weeklyStreak, required this.thisWeek});
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final reached = thisWeek >= kWeeklyGoal;
-    return CardWidget(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _metric(
-                    label: l.progressWeeklyStreak,
-                    value: '$weeklyStreak',
-                    unit: l.progressWeeksUnit,
-                    color: AppColors.ink,
+              SectionTitle(l.progressTitle),
+              if (sessions.isEmpty)
+                EmptyState(
+                  title: l.historyEmpty,
+                  message: l.progressEmptyMsg,
+                  action: Button(
+                    label: l.historyLogOne,
+                    icon: Icons.add,
+                    size: BtnSize.sm,
+                    onTap: () => showLogSessionModal(context, store),
+                  ),
+                )
+              else ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: Segmented<StatsRange>(
+                    value: _range,
+                    options: [
+                      (value: StatsRange.week, label: l.statsWeek),
+                      (value: StatsRange.weeks4, label: l.stats4Weeks),
+                      (value: StatsRange.all, label: l.statsAllTime),
+                    ],
+                    onChanged: (v) => setState(() => _range = v),
                   ),
                 ),
-                const VerticalDivider(color: AppColors.line, width: 1),
-                Expanded(
-                  child: _metric(
-                    label: l.progressWeekWorkouts,
-                    value: '$thisWeek',
-                    color: reached ? AppColors.go : AppColors.ink,
-                  ),
+                const SizedBox(height: AppSpacing.md),
+                WeeklyHero(sessions: sessions),
+                const SizedBox(height: AppSpacing.md),
+                ConsistencyCard(
+                  sessions: sessions,
+                  plans: store.data.plans,
+                  range: _range,
                 ),
+                const SizedBox(height: AppSpacing.md),
+                VolumeCard(sessions: sessions, range: _range, lang: lang),
+                const SizedBox(height: AppSpacing.md),
+                TrendCard(sessions: sessions, range: _range),
+                const SizedBox(height: AppSpacing.md),
+                CombinationsCard(sessions: sessions, range: _range),
+                const SizedBox(height: AppSpacing.md),
+                RecordsCard(sessions: sessions),
+                const SizedBox(height: AppSpacing.md),
+                DetailStatsCard(sessions: sessions, lang: lang),
+                const SizedBox(height: AppSpacing.lg),
+                _HistoryCard(recent: sessions),
               ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l.progressWeeklyGoal.toUpperCase(),
-                  style: AppText.micro,
-                ),
-              ),
-              Text(
-                '$thisWeek/$kWeeklyGoal',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: reached ? AppColors.go : AppColors.mut,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: (thisWeek / kWeeklyGoal).clamp(0.0, 1.0),
-              minHeight: 5,
-              backgroundColor: AppColors.line,
-              valueColor: AlwaysStoppedAnimation(
-                reached ? AppColors.go : AppColors.accent,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
-
-  Widget _metric({
-    required String label,
-    required String value,
-    String? unit,
-    required Color color,
-  }) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(label.toUpperCase(), style: AppText.micro, maxLines: 2),
-        const SizedBox(height: AppSpacing.xs),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: color,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-            if (unit != null) ...[
-              const SizedBox(width: AppSpacing.xs),
-              Flexible(
-                child: Text(
-                  unit,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.micro,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ],
-    ),
-  );
 }
 
 class _HistoryCard extends StatelessWidget {

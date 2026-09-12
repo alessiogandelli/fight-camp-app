@@ -824,6 +824,104 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statsNextWeek => 'Settimana successiva';
 
   @override
+  String get statsWeek => 'Settimana';
+
+  @override
+  String get stats4Weeks => '4 settimane';
+
+  @override
+  String get progressThisWeek => 'Questa settimana';
+
+  @override
+  String get progressTraining => 'Allenamento';
+
+  @override
+  String get progressVsLastWeek => 'vs scorsa settimana';
+
+  @override
+  String get progressSameAsLastWeek => 'come scorsa settimana';
+
+  @override
+  String get progressFirstWeek => 'prima settimana';
+
+  @override
+  String get progressConsistency => 'Costanza';
+
+  @override
+  String progressActiveDays(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n giorni attivi',
+      one: '1 giorno attivo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressVolume => 'Volume di allenamento';
+
+  @override
+  String get progressMinutes => 'minuti';
+
+  @override
+  String get progressVolumeNote => 'Minuti di allenamento per settimana.';
+
+  @override
+  String get progressTrend => 'Progresso';
+
+  @override
+  String get progressTotals => 'Totali';
+
+  @override
+  String get progressVsPrev => 'vs periodo precedente';
+
+  @override
+  String get progressNoBaseline =>
+      'Nessun periodo precedente con cui confrontare.';
+
+  @override
+  String get progressCombos => 'Combinazioni';
+
+  @override
+  String get progressCombosEmptyTitle => 'Nessuna combinazione ancora';
+
+  @override
+  String get progressCombosEmptyMsg =>
+      'Le combo usate nelle sessioni al sacco compariranno qui, in ordine di frequenza.';
+
+  @override
+  String get progressRecords => 'Record personali';
+
+  @override
+  String get progressRecordMaxRounds => 'Round in una sessione';
+
+  @override
+  String get progressRecordLongestSession => 'Sessione più lunga';
+
+  @override
+  String get progressRecordCombos => 'Combinazioni totali';
+
+  @override
+  String get progressRecordStreak => 'Serie più lunga';
+
+  @override
+  String get progressDaysUnit => 'giorni';
+
+  @override
+  String get progressDetail => 'Dettaglio';
+
+  @override
+  String get progressTechniques => 'Tecniche più allenate';
+
+  @override
+  String get progressNow => 'Adesso';
+
+  @override
+  String get progressEmptyMsg =>
+      'Completa o registra una sessione e i tuoi progressi compariranno qui.';
+
+  @override
   String get completeSelectRpe => 'Seleziona prima un RPE';
 
   @override

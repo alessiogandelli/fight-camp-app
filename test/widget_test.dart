@@ -10,7 +10,12 @@ void main() {
       type: WorkoutType.heavyBag,
       prepSeconds: 10,
       rounds: const [
-        RoundBase(duration: 180, restDuration: 60, type: RoundType.combination, combinationIds: ['combo-01']),
+        RoundBase(
+          duration: 180,
+          restDuration: 60,
+          type: RoundType.combination,
+          combinationIds: ['combo-01'],
+        ),
         RoundBase(duration: 180, restDuration: 0, type: RoundType.free),
       ],
     );

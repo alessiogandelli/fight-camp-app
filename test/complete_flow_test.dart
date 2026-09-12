@@ -125,7 +125,7 @@ void main() {
     await tester.tap(find.text('FATTO').hitTestable().last);
     await tester.pumpAndSettle(const Duration(seconds: 1));
     expect(store.data.sessions.length, 1);
-    expect(find.text('STREAK SETTIMANALE'), findsOneWidget);
+    expect(find.text('QUESTA SETTIMANA'), findsOneWidget);
   });
 
   testWidgets('completion fallback creates once and then updates', (

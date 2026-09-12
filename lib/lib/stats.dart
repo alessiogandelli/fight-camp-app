@@ -94,8 +94,18 @@ class LoadBucket {
   final int load;
   final int sessions;
   final int minutes;
-  const LoadBucket(this.label, this.load, this.sessions, this.minutes);
+  final int rounds;
+  const LoadBucket(
+    this.label,
+    this.load,
+    this.sessions,
+    this.minutes, [
+    this.rounds = 0,
+  ]);
 }
+
+int _roundsOf(List<SessionRecord> sessions) =>
+    sessions.fold(0, (a, s) => a + (s.roundsCompleted ?? 0));
 
 List<LoadBucket> weeklyBuckets(List<SessionRecord> sessions, [int weeks = 8]) {
   final out = <LoadBucket>[];
@@ -114,6 +124,7 @@ List<LoadBucket> weeklyBuckets(List<SessionRecord> sessions, [int weeks = 8]) {
         inRange.fold(0, (a, s) => a + s.load),
         inRange.length,
         (inRange.fold(0, (a, s) => a + s.duration) / 60).round(),
+        _roundsOf(inRange),
       ),
     );
   }
@@ -186,6 +197,7 @@ List<LoadBucket> monthlyBuckets(
         inRange.fold(0, (a, s) => a + s.load),
         inRange.length,
         (inRange.fold(0, (a, s) => a + s.duration) / 60).round(),
+        _roundsOf(inRange),
       ),
     );
   }
@@ -283,5 +295,109 @@ BagStats bagStats(List<SessionRecord> sessions) {
     bag.length,
     bag.fold(0, (a, s) => a + (s.roundsCompleted ?? 0)),
     bag.fold(0, (a, s) => a + (s.workDuration ?? s.duration)),
+  );
+}
+
+/// The three training-oriented time windows shown on Progressi.
+enum StatsRange { week, weeks4, all }
+
+/// A half-open time window ([start] inclusive, [end] exclusive). A null bound
+/// means "no bound" (beginning of time / now).
+class StatsPeriod {
+  final DateTime? start;
+  final DateTime? end;
+  const StatsPeriod(this.start, this.end);
+
+  bool contains(int ms) {
+    if (start != null && ms < start!.millisecondsSinceEpoch) return false;
+    if (end != null && ms >= end!.millisecondsSinceEpoch) return false;
+    return true;
+  }
+}
+
+/// Window for [range]: the current calendar week, the 4 calendar weeks ending
+/// today, or all of history.
+StatsPeriod periodFor(StatsRange range, {DateTime? now}) {
+  final n = now ?? DateTime.now();
+  switch (range) {
+    case StatsRange.week:
+      return StatsPeriod(startOfWeek(n), null);
+    case StatsRange.weeks4:
+      return StatsPeriod(
+        startOfWeek(n).subtract(const Duration(days: 21)),
+        null,
+      );
+    case StatsRange.all:
+      return const StatsPeriod(null, null);
+  }
+}
+
+/// The window immediately before [range] (same length), or null for all-time.
+StatsPeriod? previousPeriodFor(StatsRange range, {DateTime? now}) {
+  final n = now ?? DateTime.now();
+  switch (range) {
+    case StatsRange.week:
+      final thisWeek = startOfWeek(n);
+      return StatsPeriod(thisWeek.subtract(const Duration(days: 7)), thisWeek);
+    case StatsRange.weeks4:
+      final start = startOfWeek(n).subtract(const Duration(days: 21));
+      return StatsPeriod(start.subtract(const Duration(days: 28)), start);
+    case StatsRange.all:
+      return null;
+  }
+}
+
+List<SessionRecord> sessionsInPeriod(
+  List<SessionRecord> sessions,
+  StatsPeriod period,
+) => sessions.where((s) => period.contains(s.date)).toList();
+
+/// Whole-percent change from [previous] to [current]. Null when there is no
+/// baseline to compare against (previous is zero), so callers can hide
+/// statistically meaningless deltas.
+int? percentChange(num current, num previous) {
+  if (previous <= 0) return null;
+  return ((current - previous) / previous * 100).round();
+}
+
+/// Total number of combinations performed across [sessions].
+int combosUsedCount(List<SessionRecord> sessions) =>
+    sessions.fold(0, (a, s) => a + (s.combosUsed?.length ?? 0));
+
+class PersonalRecords {
+  final int maxRounds;
+  final int longestSessionSeconds;
+  final int totalCombos;
+  final int longestStreak;
+
+  const PersonalRecords({
+    required this.maxRounds,
+    required this.longestSessionSeconds,
+    required this.totalCombos,
+    required this.longestStreak,
+  });
+
+  bool get isEmpty =>
+      maxRounds == 0 &&
+      longestSessionSeconds == 0 &&
+      totalCombos == 0 &&
+      longestStreak == 0;
+}
+
+PersonalRecords personalRecords(List<SessionRecord> sessions) {
+  var maxRounds = 0;
+  var longest = 0;
+  var combos = 0;
+  for (final s in sessions) {
+    final r = s.roundsCompleted ?? 0;
+    if (r > maxRounds) maxRounds = r;
+    if (s.duration > longest) longest = s.duration;
+    combos += s.combosUsed?.length ?? 0;
+  }
+  return PersonalRecords(
+    maxRounds: maxRounds,
+    longestSessionSeconds: longest,
+    totalCombos: combos,
+    longestStreak: streaks(sessions).longest,
   );
 }

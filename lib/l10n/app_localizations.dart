@@ -1598,6 +1598,180 @@ abstract class AppLocalizations {
   /// **'Next week'**
   String get statsNextWeek;
 
+  /// No description provided for @statsWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get statsWeek;
+
+  /// No description provided for @stats4Weeks.
+  ///
+  /// In en, this message translates to:
+  /// **'4 weeks'**
+  String get stats4Weeks;
+
+  /// No description provided for @progressThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get progressThisWeek;
+
+  /// No description provided for @progressTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get progressTraining;
+
+  /// No description provided for @progressVsLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'vs last week'**
+  String get progressVsLastWeek;
+
+  /// No description provided for @progressSameAsLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'same as last week'**
+  String get progressSameAsLastWeek;
+
+  /// No description provided for @progressFirstWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'first week'**
+  String get progressFirstWeek;
+
+  /// No description provided for @progressConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get progressConsistency;
+
+  /// No description provided for @progressActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 active day} other{{n} active days}}'**
+  String progressActiveDays(num n);
+
+  /// No description provided for @progressVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Training volume'**
+  String get progressVolume;
+
+  /// No description provided for @progressMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'minutes'**
+  String get progressMinutes;
+
+  /// No description provided for @progressVolumeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Training minutes per week.'**
+  String get progressVolumeNote;
+
+  /// No description provided for @progressTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get progressTrend;
+
+  /// No description provided for @progressTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get progressTotals;
+
+  /// No description provided for @progressVsPrev.
+  ///
+  /// In en, this message translates to:
+  /// **'vs previous period'**
+  String get progressVsPrev;
+
+  /// No description provided for @progressNoBaseline.
+  ///
+  /// In en, this message translates to:
+  /// **'No previous period to compare against.'**
+  String get progressNoBaseline;
+
+  /// No description provided for @progressCombos.
+  ///
+  /// In en, this message translates to:
+  /// **'Combinations'**
+  String get progressCombos;
+
+  /// No description provided for @progressCombosEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No combinations yet'**
+  String get progressCombosEmptyTitle;
+
+  /// No description provided for @progressCombosEmptyMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Combos used in bag sessions will show up here, ranked by frequency.'**
+  String get progressCombosEmptyMsg;
+
+  /// No description provided for @progressRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal records'**
+  String get progressRecords;
+
+  /// No description provided for @progressRecordMaxRounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounds in a session'**
+  String get progressRecordMaxRounds;
+
+  /// No description provided for @progressRecordLongestSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest session'**
+  String get progressRecordLongestSession;
+
+  /// No description provided for @progressRecordCombos.
+  ///
+  /// In en, this message translates to:
+  /// **'Total combinations'**
+  String get progressRecordCombos;
+
+  /// No description provided for @progressRecordStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest streak'**
+  String get progressRecordStreak;
+
+  /// No description provided for @progressDaysUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get progressDaysUnit;
+
+  /// No description provided for @progressDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Detail'**
+  String get progressDetail;
+
+  /// No description provided for @progressTechniques.
+  ///
+  /// In en, this message translates to:
+  /// **'Most trained techniques'**
+  String get progressTechniques;
+
+  /// No description provided for @progressNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get progressNow;
+
+  /// No description provided for @progressEmptyMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete or log a session and your progress will appear here.'**
+  String get progressEmptyMsg;
+
   /// No description provided for @completeSelectRpe.
   ///
   /// In en, this message translates to:

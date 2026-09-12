@@ -1,4 +1,6 @@
-// Stats page ported from src/pages/StatsPage.tsx.
+// Training-analytics sections rendered inside the Progress page. The page owns
+// the selected range; each section derives its own slice of the shared session
+// list so the whole screen stays consistent.
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,261 +8,532 @@ import 'package:provider/provider.dart';
 import '../data/store.dart';
 import '../lib/format.dart';
 import '../lib/stats.dart';
+import '../l10n/app_localizations.dart';
 import '../models/types.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
-import '../l10n/app_localizations.dart';
 
-enum _Range { d7, d30, all }
+/// Fixed weekly target shown in the hero. Deliberately not configurable yet.
+const int kWeeklyGoal = 4;
 
-/// Stats section embedded in the Progress page (no scrolling of its own).
-class StatsContent extends StatefulWidget {
-  const StatsContent({super.key});
+// ---------------------------------------------------------------------------
+// 1. Weekly overview (hero)
+// ---------------------------------------------------------------------------
+
+/// Always the current calendar week: the stable "how much did I train" anchor
+/// at the top of the page, independent of the analytics range below.
+class WeeklyHero extends StatelessWidget {
+  final List<SessionRecord> sessions;
+  const WeeklyHero({super.key, required this.sessions});
 
   @override
-  State<StatsContent> createState() => _StatsContentState();
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    final current = sessionsInPeriod(
+      sessions,
+      periodFor(StatsRange.week, now: now),
+    );
+    final previous = sessionsInPeriod(
+      sessions,
+      previousPeriodFor(StatsRange.week, now: now)!,
+    );
+    final vol = volumeStats(current);
+    final diff = vol.sessions - previous.length;
+    final hasBaseline = previous.isNotEmpty;
+    final reached = vol.sessions >= kWeeklyGoal;
+
+    Widget comparison;
+    if (!hasBaseline) {
+      comparison = Text(
+        l.progressFirstWeek.toUpperCase(),
+        style: AppText.micro,
+      );
+    } else if (diff == 0) {
+      comparison = Text(
+        l.progressSameAsLastWeek.toUpperCase(),
+        style: AppText.micro,
+      );
+    } else {
+      final up = diff > 0;
+      final color = up ? AppColors.go : AppColors.warn;
+      comparison = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            '${up ? '+' : ''}$diff',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              l.progressVsLastWeek,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10.5,
+                color: AppColors.mut,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return CardWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.progressThisWeek.toUpperCase(), style: AppText.overline),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '${vol.sessions}',
+                style: const TextStyle(
+                  fontSize: 44,
+                  height: 1,
+                  fontWeight: FontWeight.w900,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Flexible(
+                child: Text(
+                  l.unitSessions.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.micro,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          comparison,
+          const SizedBox(height: AppSpacing.md),
+          const Divider(height: 1, color: AppColors.line),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _InlineStat(
+                  label: l.progressTraining,
+                  value: fmtMinutes(vol.minutes * 60),
+                ),
+              ),
+              Expanded(
+                child: _InlineStat(
+                  label: l.statsRounds,
+                  value: '${vol.rounds}',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.progressWeeklyGoal.toUpperCase(),
+                  style: AppText.micro,
+                ),
+              ),
+              Text(
+                '${vol.sessions}/$kWeeklyGoal',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: reached ? AppColors.go : AppColors.mut,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.pill),
+            child: LinearProgressIndicator(
+              value: (vol.sessions / kWeeklyGoal).clamp(0.0, 1.0),
+              minHeight: 5,
+              backgroundColor: AppColors.line,
+              valueColor: AlwaysStoppedAnimation(
+                reached ? AppColors.go : AppColors.accent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _StatsContentState extends State<StatsContent> {
-  _Range _range = _Range.d7;
-  int _weekOffset = 0;
+// ---------------------------------------------------------------------------
+// 2. Consistency
+// ---------------------------------------------------------------------------
+
+/// Compact activity strip: one row per week, one marker per day. Trained days
+/// are filled, planned days are outlined, today is ringed. Tapping an empty day
+/// plans it, tapping a plan toggles it, long-pressing deletes it.
+class ConsistencyCard extends StatelessWidget {
+  final List<SessionRecord> sessions;
+  final List<WeekPlanItem> plans;
+  final StatsRange range;
+  const ConsistencyCard({
+    super.key,
+    required this.sessions,
+    required this.plans,
+    required this.range,
+  });
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
-    final lang = store.lang;
     final l = AppLocalizations.of(context)!;
-    final sessions = filterSince(store.data.sessions, switch (_range) {
-      _Range.d7 => 7,
-      _Range.d30 => 30,
-      _ => null,
-    });
+    final lang = store.lang;
+    final now = DateTime.now();
+    final thisWeek = startOfWeek(now);
+    final todayKey = dateKey(now);
 
-    if (store.data.sessions.isEmpty) {
-      return Column(
-        children: [EmptyState(title: l.statsTitle, message: l.statsEmpty)],
+    final trained = {
+      for (final s in sessions)
+        dateKey(DateTime.fromMillisecondsSinceEpoch(s.date)),
+    };
+    final planByDay = <String, WeekPlanItem>{
+      for (final p in plans) p.dateKey: p,
+    };
+
+    final weeksToShow = _weeksToShow(sessions, range, thisWeek);
+    final period = periodFor(range, now: now);
+    final periodSessions = sessionsInPeriod(sessions, period);
+    final activeDays = {
+      for (final s in periodSessions)
+        dateKey(DateTime.fromMillisecondsSinceEpoch(s.date)),
+    }.length;
+
+    return CardWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionTitle(l.progressConsistency),
+          Row(
+            children: [
+              const SizedBox(width: 34),
+              for (var i = 0; i < 7; i++)
+                Expanded(
+                  child: Text(
+                    weekdayShort(thisWeek.add(Duration(days: i)), lang),
+                    textAlign: TextAlign.center,
+                    style: AppText.micro,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          for (var w = weeksToShow - 1; w >= 0; w--) ...[
+            _WeekRow(
+              weekStart: thisWeek.subtract(Duration(days: w * 7)),
+              label: w == 0 ? l.progressNow.toUpperCase() : 'W-$w',
+              trained: trained,
+              planByDay: planByDay,
+              todayKey: todayKey,
+              lang: lang,
+              onTapDay: (day, plan) {
+                if (plan != null) {
+                  store.togglePlan(plan.id);
+                } else {
+                  _addPlan(context, store, lang, day);
+                }
+              },
+              onLongPressPlan: (plan) => store.deletePlan(plan.id),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            '${l.progressActiveDays(activeDays)} · '
+            '${periodSessions.length} '
+            '${periodSessions.length == 1 ? l.unitSession : l.unitSessions}',
+            style: const TextStyle(fontSize: 11, color: AppColors.mut),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _weeksToShow(
+    List<SessionRecord> sessions,
+    StatsRange range,
+    DateTime thisWeek,
+  ) {
+    if (range == StatsRange.week) return 1;
+    if (range == StatsRange.weeks4) return 4;
+    if (sessions.isEmpty) return 1;
+    final earliest = sessions
+        .map((s) => startOfWeek(DateTime.fromMillisecondsSinceEpoch(s.date)))
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+    final weeks = thisWeek.difference(earliest).inDays ~/ 7 + 1;
+    return weeks.clamp(1, 8);
+  }
+}
+
+class _WeekRow extends StatelessWidget {
+  final DateTime weekStart;
+  final String label;
+  final Set<String> trained;
+  final Map<String, WeekPlanItem> planByDay;
+  final String todayKey;
+  final Lang lang;
+  final void Function(DateTime day, WeekPlanItem? plan) onTapDay;
+  final void Function(WeekPlanItem plan) onLongPressPlan;
+
+  const _WeekRow({
+    required this.weekStart,
+    required this.label,
+    required this.trained,
+    required this.planByDay,
+    required this.todayKey,
+    required this.lang,
+    required this.onTapDay,
+    required this.onLongPressPlan,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(width: 34, child: Text(label, style: AppText.micro)),
+        for (var i = 0; i < 7; i++)
+          Expanded(
+            child: _DayCell(
+              trained: trained.contains(
+                dateKey(weekStart.add(Duration(days: i))),
+              ),
+              plan: planByDay[dateKey(weekStart.add(Duration(days: i)))],
+              today: dateKey(weekStart.add(Duration(days: i))) == todayKey,
+              onTap: () {
+                final day = weekStart.add(Duration(days: i));
+                onTapDay(day, planByDay[dateKey(day)]);
+              },
+              onLongPress: () {
+                final plan =
+                    planByDay[dateKey(weekStart.add(Duration(days: i)))];
+                if (plan != null) onLongPressPlan(plan);
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _DayCell extends StatelessWidget {
+  final bool trained;
+  final WeekPlanItem? plan;
+  final bool today;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  const _DayCell({
+    required this.trained,
+    required this.plan,
+    required this.today,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final planned = plan != null;
+    Widget marker;
+    if (trained) {
+      marker = Container(
+        width: 12,
+        height: 12,
+        decoration: const BoxDecoration(
+          color: AppColors.accent,
+          shape: BoxShape.circle,
+        ),
+      );
+    } else if (planned) {
+      marker = Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: plan!.done ? AppColors.go.withAlpha(60) : Colors.transparent,
+          border: Border.all(
+            color: plan!.done
+                ? AppColors.go.withAlpha(160)
+                : AppColors.accent.withAlpha(130),
+            width: 1.5,
+          ),
+        ),
+      );
+    } else {
+      marker = Container(
+        width: 5,
+        height: 5,
+        decoration: const BoxDecoration(
+          color: AppColors.line,
+          shape: BoxShape.circle,
+        ),
       );
     }
 
-    final vol = volumeStats(sessions);
-    final weekly = weeklyBuckets(store.data.sessions);
-    final monthly = monthlyBuckets(store.data.sessions, lang: lang);
-    final streak = streaks(store.data.sessions);
-    final perWeek = sessionsPerWeek(store.data.sessions);
-    final bag = bagStats(store.data.sessions);
-    final topCombos = comboUsageStats(store.data.sessions).take(6).toList();
-    final techUsage = techniqueUsageStats(
-      store.data.sessions,
-    ).take(10).toList();
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      onLongPress: planned ? onLongPress : null,
+      child: SizedBox(
+        height: 26,
+        child: Center(
+          child: Container(
+            width: 20,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: today
+                ? BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.accent.withAlpha(150)),
+                  )
+                : null,
+            child: marker,
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            SectionTitle(l.statsTitle),
-            const Spacer(),
-            SizedBox(
-              width: 260,
-              child: Segmented<_Range>(
-                value: _range,
-                options: [
-                  (value: _Range.d7, label: l.stats7days),
-                  (value: _Range.d30, label: l.stats30days),
-                  (value: _Range.all, label: l.statsAllTime),
-                ],
-                onChanged: (v) => setState(() => _range = v),
-              ),
-            ),
-          ],
-        ),
-        GridView.count(
-          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 1.9,
-          children: [
-            StatCard(label: l.statsSessions, value: '${vol.sessions}'),
-            StatCard(
-              label: l.statsTrainingTime,
-              value: fmtMinutes(vol.minutes * 60),
-            ),
-            StatCard(label: l.statsRounds, value: '${vol.rounds}'),
-            StatCard(label: l.statsWorkTime, value: fmtClock(vol.workSeconds)),
-          ],
-        ),
-        const SizedBox(height: 16),
-        CardWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+// ---------------------------------------------------------------------------
+// 3. Volume
+// ---------------------------------------------------------------------------
+
+/// Training minutes over time. The old "load" chart used RPE, which is
+/// optional and therefore almost always zero; minutes are always available.
+class VolumeCard extends StatelessWidget {
+  final List<SessionRecord> sessions;
+  final StatsRange range;
+  final Lang lang;
+  const VolumeCard({
+    super.key,
+    required this.sessions,
+    required this.range,
+    required this.lang,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final isAll = range == StatsRange.all;
+    final buckets = isAll
+        ? monthlyBuckets(sessions, months: 6, lang: lang)
+        : weeklyBuckets(sessions, 8);
+    final values = [for (final b in buckets) b.minutes];
+    final current = values.isEmpty ? 0 : values.last;
+    final previous = values.length >= 2 ? values[values.length - 2] : 0;
+    final delta = percentChange(current, previous);
+    final currentLabel = buckets.isEmpty ? '' : buckets.last.label;
+
+    return CardWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionTitle(l.progressVolume),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
-              SectionTitle(l.statsMostUsed),
-              if (topCombos.isEmpty)
-                Text(
-                  l.statsMostUsedEmpty,
-                  style: const TextStyle(fontSize: 12, color: AppColors.mut),
-                )
-              else
-                ...topCombos.map(
-                  (c) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
+              Text(
+                '$current',
+                style: const TextStyle(
+                  fontSize: 28,
+                  height: 1,
+                  fontWeight: FontWeight.w900,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              const Text('min', style: AppText.micro),
+              if (delta != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
+                        _DeltaPill(delta: delta),
+                        const SizedBox(width: 5),
+                        Flexible(
                           child: Text(
-                            c.name.toUpperCase(),
+                            l.progressVsPrev,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 10,
+                              color: AppColors.mut,
+                              fontWeight: FontWeight.w600,
                             ),
-                          ),
-                        ),
-                        Text(
-                          '${c.count}×',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.accent,
-                            fontFeatures: [FontFeature.tabularFigures()],
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
+              ],
             ],
           ),
-        ),
-        const SizedBox(height: 12),
-        CardWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionTitle(l.statsWeeklyLoad),
-              SizedBox(height: 170, child: _LoadChart(buckets: weekly)),
-              const SizedBox(height: 14),
-              SectionTitle(l.statsMonthlyLoad),
-              SizedBox(height: 150, child: _LoadChart(buckets: monthly)),
-              const SizedBox(height: 8),
-              Text(
-                l.statsLoadNote,
-                style: const TextStyle(fontSize: 11, color: AppColors.mut),
-              ),
-            ],
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            height: 140,
+            child: _VolumeChart(buckets: buckets, values: values),
           ),
-        ),
-        const SizedBox(height: 12),
-        CardWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionTitle(l.statsConsistency),
-              // Current streak lives in the Progress pulse above; here we
-              // show the long-run consistency figures.
-              Row(
-                children: [
-                  Expanded(
-                    child: StatCard(
-                      label: l.statsLongestStreak,
-                      value: '${streak.longest}',
-                      sub: l.unitSessions,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: StatCard(
-                      label: l.statsSessionsPerWeek,
-                      value: perWeek.toStringAsFixed(1),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            currentLabel.isEmpty
+                ? l.progressVolumeNote
+                : '${l.progressVolumeNote} · $currentLabel',
+            style: const TextStyle(fontSize: 11, color: AppColors.mut),
           ),
-        ),
-        const SizedBox(height: 12),
-        CardWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionTitle(l.statsHeavyBag),
-              Row(
-                children: [
-                  Expanded(
-                    child: StatCard(
-                      label: l.statsBagSessions,
-                      value: '${bag.sessions}',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: StatCard(
-                      label: l.statsBagRounds,
-                      value: '${bag.rounds}',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: StatCard(
-                      label: l.statsBagTime,
-                      value: fmtClock(bag.seconds),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        CardWidget(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionTitle(l.statsTechFreq),
-              if (techUsage.isEmpty)
-                Text(
-                  l.statsTechEmpty,
-                  style: const TextStyle(fontSize: 12, color: AppColors.mut),
-                )
-              else
-                ...techUsage.map(
-                  (tc) => _TechBar(
-                    nameCount: tc,
-                    max: techUsage.first.count,
-                    lang: lang,
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        WeeklyOverview(
-          weekOffset: _weekOffset,
-          onWeekChange: (d) => setState(() => _weekOffset = d),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _LoadChart extends StatelessWidget {
+class _VolumeChart extends StatelessWidget {
   final List<LoadBucket> buckets;
-  const _LoadChart({required this.buckets});
+  final List<int> values;
+  const _VolumeChart({required this.buckets, required this.values});
 
   @override
   Widget build(BuildContext context) {
-    final maxY =
-        buckets.fold<int>(1, (a, b) => b.load > a ? b.load : a).toDouble() *
-        1.15;
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        maxY: maxY < 1 ? 1 : maxY,
-        barTouchData: BarTouchData(enabled: false),
+    if (buckets.isEmpty) return const SizedBox.shrink();
+    final maxValue = values.fold<int>(1, (a, b) => b > a ? b : a);
+    final maxY = (maxValue == 0 ? 1 : maxValue) * 1.25;
+    final lastIndex = values.length - 1;
+    final step = values.length > 6 ? 2 : 1;
+
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: lastIndex.toDouble(),
+        minY: 0,
+        maxY: maxY,
+        lineTouchData: const LineTouchData(enabled: false),
         gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -276,32 +549,524 @@ class _LoadChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              getTitlesWidget: (value, meta) => Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  buckets[value.toInt() % buckets.length].label,
-                  style: const TextStyle(fontSize: 9, color: AppColors.mut),
-                ),
-              ),
+              reservedSize: 22,
+              getTitlesWidget: (value, meta) {
+                final i = value.toInt();
+                if (i < 0 || i > lastIndex) return const SizedBox.shrink();
+                if (i % step != 0 && i != lastIndex) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    buckets[i].label,
+                    style: const TextStyle(fontSize: 9, color: AppColors.mut),
+                  ),
+                );
+              },
             ),
           ),
         ),
-        barGroups: [
-          for (var i = 0; i < buckets.length; i++)
-            BarChartGroupData(
-              x: i,
-              barRods: [
-                BarChartRodData(
-                  toY: buckets[i].load.toDouble(),
-                  width: 18,
-                  borderRadius: BorderRadius.circular(4),
-                  color: AppColors.accent.withAlpha(220),
+        lineBarsData: [
+          LineChartBarData(
+            spots: [
+              for (var i = 0; i < values.length; i++)
+                FlSpot(i.toDouble(), values[i].toDouble()),
+            ],
+            isCurved: true,
+            curveSmoothness: 0.25,
+            color: AppColors.accent,
+            barWidth: 2.5,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                radius: index == lastIndex ? 4 : 2,
+                color: AppColors.accent,
+                strokeWidth: 2,
+                strokeColor: AppColors.bg,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.accent.withAlpha(70),
+                  AppColors.accent.withAlpha(0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 4. Progress / trend
+// ---------------------------------------------------------------------------
+
+/// Change versus the previous equivalent period. For all-time there is no
+/// baseline, so it falls back to plain totals.
+class TrendCard extends StatelessWidget {
+  final List<SessionRecord> sessions;
+  final StatsRange range;
+  const TrendCard({super.key, required this.sessions, required this.range});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final isAll = range == StatsRange.all;
+    final current = sessionsInPeriod(sessions, periodFor(range));
+    final previousPeriod = previousPeriodFor(range);
+    final previous = previousPeriod == null
+        ? const <SessionRecord>[]
+        : sessionsInPeriod(sessions, previousPeriod);
+
+    final vol = volumeStats(current);
+    final prevVol = volumeStats(previous);
+    final combos = combosUsedCount(current);
+    final prevCombos = combosUsedCount(previous);
+    final hasBaseline = previous.isNotEmpty;
+
+    final rows = <({String label, String value, int? delta})>[
+      (
+        label: l.statsTrainingTime,
+        value: fmtMinutes(vol.minutes * 60),
+        delta: hasBaseline ? percentChange(vol.minutes, prevVol.minutes) : null,
+      ),
+      (
+        label: l.statsRounds,
+        value: '${vol.rounds}',
+        delta: hasBaseline ? percentChange(vol.rounds, prevVol.rounds) : null,
+      ),
+      (
+        label: l.statsSessions,
+        value: '${vol.sessions}',
+        delta: hasBaseline
+            ? percentChange(vol.sessions, prevVol.sessions)
+            : null,
+      ),
+      (
+        label: l.statsWorkTime,
+        value: fmtClock(vol.workSeconds),
+        delta: hasBaseline
+            ? percentChange(vol.workSeconds, prevVol.workSeconds)
+            : null,
+      ),
+      (
+        label: l.progressCombos,
+        value: '$combos',
+        delta: hasBaseline ? percentChange(combos, prevCombos) : null,
+      ),
+    ];
+
+    return CardWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionTitle(isAll ? l.progressTotals : l.progressTrend),
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const Divider(height: 1, color: AppColors.line),
+            _TrendRow(
+              label: rows[i].label,
+              value: rows[i].value,
+              delta: rows[i].delta,
+              showDelta: !isAll,
+            ),
+          ],
+          if (!isAll && !hasBaseline) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l.progressNoBaseline,
+              style: const TextStyle(fontSize: 11, color: AppColors.mut),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final int? delta;
+  final bool showDelta;
+  const _TrendRow({
+    required this.label,
+    required this.value,
+    required this.delta,
+    required this.showDelta,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w800,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          if (showDelta) ...[
+            const SizedBox(width: AppSpacing.sm),
+            SizedBox(
+              width: 58,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: _DeltaPill(delta: delta),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DeltaPill extends StatelessWidget {
+  final int? delta;
+  const _DeltaPill({required this.delta});
+
+  @override
+  Widget build(BuildContext context) {
+    final d = delta;
+    if (d == null) {
+      return const Text(
+        '—',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: AppColors.mut,
+        ),
+      );
+    }
+    final flat = d == 0;
+    final up = d > 0;
+    final color = flat ? AppColors.mut : (up ? AppColors.go : AppColors.warn);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          flat
+              ? Icons.remove_rounded
+              : (up
+                    ? Icons.arrow_upward_rounded
+                    : Icons.arrow_downward_rounded),
+          size: 12,
+          color: color,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          '${d.abs()}%',
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w800,
+            color: color,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 5. Combinations
+// ---------------------------------------------------------------------------
+
+class CombinationsCard extends StatelessWidget {
+  final List<SessionRecord> sessions;
+  final StatsRange range;
+  const CombinationsCard({
+    super.key,
+    required this.sessions,
+    required this.range,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final current = sessionsInPeriod(sessions, periodFor(range));
+    final top = comboUsageStats(current).take(6).toList();
+
+    return CardWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionTitle(l.statsMostUsed),
+          if (top.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.bg.withAlpha(60),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.progressCombosEmptyTitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    l.progressCombosEmptyMsg,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.mut,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            for (var i = 0; i < top.length; i++)
+              Padding(
+                padding: EdgeInsets.only(bottom: i == top.length - 1 ? 0 : 10),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      child: Text(
+                        '${i + 1}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: i == 0 ? AppColors.accent : AppColors.mut,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        top[i].name.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      '${top[i].count}×',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.accent,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6. Personal records
+// ---------------------------------------------------------------------------
+
+class RecordsCard extends StatelessWidget {
+  final List<SessionRecord> sessions;
+  const RecordsCard({super.key, required this.sessions});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final rec = personalRecords(sessions);
+    final items = <({String value, String? unit, String label})>[
+      if (rec.maxRounds > 0)
+        (
+          value: '${rec.maxRounds}',
+          unit: null,
+          label: l.progressRecordMaxRounds,
+        ),
+      if (rec.longestSessionSeconds > 0)
+        (
+          value: fmtMinutes(rec.longestSessionSeconds),
+          unit: null,
+          label: l.progressRecordLongestSession,
+        ),
+      if (rec.totalCombos > 0)
+        (
+          value: '${rec.totalCombos}',
+          unit: null,
+          label: l.progressRecordCombos,
+        ),
+      if (rec.longestStreak > 0)
+        (
+          value: '${rec.longestStreak}',
+          unit: l.progressDaysUnit,
+          label: l.progressRecordStreak,
+        ),
+    ];
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return CardWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionTitle(l.progressRecords),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = AppSpacing.sm;
+              final width = (constraints.maxWidth - gap) / 2;
+              return Wrap(
+                spacing: gap,
+                runSpacing: AppSpacing.md,
+                children: [
+                  for (final it in items)
+                    SizedBox(
+                      width: width,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  it.value,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w900,
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                                if (it.unit != null) ...[
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Text(it.unit!, style: AppText.micro),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            it.label.toUpperCase(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.micro,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 7. Detail (de-emphasized)
+// ---------------------------------------------------------------------------
+
+class DetailStatsCard extends StatelessWidget {
+  final List<SessionRecord> sessions;
+  final Lang lang;
+  const DetailStatsCard({
+    super.key,
+    required this.sessions,
+    required this.lang,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final techUsage = techniqueUsageStats(sessions).take(8).toList();
+    final bag = bagStats(sessions);
+
+    return CardWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionTitle(l.progressDetail),
+          Text(l.progressTechniques.toUpperCase(), style: AppText.micro),
+          const SizedBox(height: AppSpacing.sm),
+          if (techUsage.isEmpty)
+            Text(
+              l.statsTechEmpty,
+              style: const TextStyle(fontSize: 12, color: AppColors.mut),
+            )
+          else
+            for (final tc in techUsage)
+              _TechBar(nameCount: tc, max: techUsage.first.count, lang: lang),
+          if (bag.sessions > 0) ...[
+            const SizedBox(height: AppSpacing.md),
+            const Divider(height: 1, color: AppColors.line),
+            const SizedBox(height: AppSpacing.md),
+            Text(l.statsHeavyBag.toUpperCase(), style: AppText.micro),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _MiniStat(
+                    label: l.statsBagSessions,
+                    value: '${bag.sessions}',
+                  ),
+                ),
+                Expanded(
+                  child: _MiniStat(
+                    label: l.statsBagRounds,
+                    value: '${bag.rounds}',
+                  ),
+                ),
+                Expanded(
+                  child: _MiniStat(
+                    label: l.statsBagTime,
+                    value: fmtClock(bag.seconds),
+                  ),
                 ),
               ],
             ),
+          ],
         ],
       ),
-      swapAnimationDuration: const Duration(milliseconds: 250),
     );
   }
 }
@@ -347,7 +1112,7 @@ class _TechBar extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         ClipRRect(
-          borderRadius: BorderRadius.circular(99),
+          borderRadius: BorderRadius.circular(AppSpacing.pill),
           child: LinearProgressIndicator(
             value: max <= 0 ? 0 : nameCount.count / max,
             minHeight: 5,
@@ -360,214 +1125,75 @@ class _TechBar extends StatelessWidget {
   );
 }
 
-class WeeklyOverview extends StatelessWidget {
-  final int weekOffset;
-  final ValueChanged<int> onWeekChange;
-  const WeeklyOverview({
-    super.key,
-    required this.weekOffset,
-    required this.onWeekChange,
-  });
+// ---------------------------------------------------------------------------
+// Small shared pieces
+// ---------------------------------------------------------------------------
+
+class _InlineStat extends StatelessWidget {
+  final String label;
+  final String value;
+  const _InlineStat({required this.label, required this.value});
 
   @override
-  Widget build(BuildContext context) {
-    final store = context.watch<AppStore>();
-    final lang = store.lang;
-    final l = AppLocalizations.of(context)!;
-
-    final now = DateTime.now();
-    final thisWeekStart = startOfWeek(now);
-    final weekStart = thisWeekStart.subtract(Duration(days: weekOffset * 7));
-
-    final dayKeys = List.generate(
-      7,
-      (i) => dateKey(weekStart.add(Duration(days: i))),
-    );
-    final plans = store.data.plans
-        .where((p) => dayKeys.contains(p.dateKey))
-        .toList();
-    final sessionsByDay = <String, List<SessionRecord>>{};
-    for (final s in store.data.sessions) {
-      final key = dateKey(DateTime.fromMillisecondsSinceEpoch(s.date));
-      if (dayKeys.contains(key))
-        sessionsByDay.putIfAbsent(key, () => []).add(s);
-    }
-
-    String headerLabel;
-    if (weekOffset == 0) {
-      headerLabel = l.statsThisWeek;
-    } else if (weekOffset == 1) {
-      headerLabel = l.statsLastWeek;
-    } else {
-      headerLabel =
-          '${_fmtDate(weekStart)} – ${_fmtDate(weekStart.add(const Duration(days: 6)))}';
-    }
-
-    return CardWidget(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionTitle(l.statsWeeklyOverview),
-          Row(
-            children: [
-              IconButton2(
-                Icons.chevron_left_rounded,
-                onTap: () => onWeekChange(weekOffset + 1),
-              ),
-              Expanded(
-                child: Text(
-                  headerLabel,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-              Opacity(
-                opacity: weekOffset > 0 ? 1 : 0.3,
-                child: IconButton2(
-                  Icons.chevron_right_rounded,
-                  onTap: weekOffset > 0
-                      ? () => onWeekChange(weekOffset - 1)
-                      : null,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          for (var d = 0; d < 7; d++)
-            _DayRow(
-              date: weekStart.add(Duration(days: d)),
-              sessions: sessionsByDay[dayKeys[d]] ?? const [],
-              plans: plans.where((p) => p.dateKey == dayKeys[d]).toList(),
-            ),
-          const SizedBox(height: 8),
-          Button(
-            label: l.statsPlan,
-            variant: BtnVariant.ghost,
-            icon: Icons.add,
-            onTap: () => _addPlan(context, store, lang, weekStart),
-          ),
-        ],
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        value,
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          fontFeatures: [FontFeature.tabularFigures()],
+        ),
       ),
-    );
-  }
-
-  String _fmtDate(DateTime d) => '${d.day}/${d.month}';
+      const SizedBox(height: 2),
+      Text(
+        label.toUpperCase(),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppText.micro,
+      ),
+    ],
+  );
 }
 
-class _DayRow extends StatelessWidget {
-  final DateTime date;
-  final List<SessionRecord> sessions;
-  final List<WeekPlanItem> plans;
-  const _DayRow({
-    required this.date,
-    required this.sessions,
-    required this.plans,
-  });
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final String value;
+  const _MiniStat({required this.label, required this.value});
 
   @override
-  Widget build(BuildContext context) {
-    final store = context.watch<AppStore>();
-    final isToday = dateKey(date) == dateKey(DateTime.now());
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.line.withAlpha(90))),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        value,
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
+          fontFeatures: [FontFeature.tabularFigures()],
+        ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 44,
-            child: Text(
-              '${date.day}',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isToday ? FontWeight.w900 : FontWeight.w700,
-                color: isToday ? AppColors.accent : AppColors.mut,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Wrap(
-              spacing: 5,
-              runSpacing: 5,
-              children: [
-                for (final s in sessions)
-                  ChipWidget(
-                    label:
-                        '${workoutTypeMeta(s.type).icon} ${fmtMinutes(s.duration)}',
-                    active: false,
-                    onTap: () {},
-                  ),
-                for (final p in plans)
-                  GestureDetector(
-                    onTap: () => store.togglePlan(p.id),
-                    onLongPress: () => store.deletePlan(p.id),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: p.done
-                            ? AppColors.go.withAlpha(28)
-                            : AppColors.panel2,
-                        borderRadius: BorderRadius.circular(99),
-                        border: Border.all(
-                          color: p.done
-                              ? AppColors.go.withAlpha(120)
-                              : AppColors.line,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            p.done
-                                ? Icons.check_circle_rounded
-                                : Icons.circle_outlined,
-                            size: 12,
-                            color: p.done ? AppColors.go : AppColors.mut,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            p.label +
-                                (p.durationMin != null
-                                    ? ' · ${p.durationMin}m'
-                                    : ''),
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                              color: p.done ? AppColors.go : AppColors.mut,
-                              decoration: p.done
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                if (sessions.isEmpty && plans.isEmpty)
-                  Text('—', style: const TextStyle(color: AppColors.line)),
-              ],
-            ),
-          ),
-        ],
+      const SizedBox(height: 2),
+      Text(
+        label.toUpperCase(),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: AppText.micro,
       ),
-    );
-  }
+    ],
+  );
 }
+
+// ---------------------------------------------------------------------------
+// Plan modal (reused from the old weekly overview)
+// ---------------------------------------------------------------------------
 
 Future<void> _addPlan(
   BuildContext context,
   AppStore store,
   Lang lang,
-  DateTime weekStart,
+  DateTime day,
 ) async {
   final l = AppLocalizations.of(context)!;
   var type = WorkoutType.other;
@@ -620,7 +1246,7 @@ Future<void> _addPlan(
                 store.addPlan(
                   WeekPlanItem(
                     id: uid(),
-                    dateKey: dateKey(weekStart),
+                    dateKey: dateKey(day),
                     type: type,
                     label: labelCtrl.text.trim().isEmpty
                         ? workoutTypeLabel(type, lang)

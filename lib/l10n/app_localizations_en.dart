@@ -819,6 +819,103 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsNextWeek => 'Next week';
 
   @override
+  String get statsWeek => 'Week';
+
+  @override
+  String get stats4Weeks => '4 weeks';
+
+  @override
+  String get progressThisWeek => 'This week';
+
+  @override
+  String get progressTraining => 'Training';
+
+  @override
+  String get progressVsLastWeek => 'vs last week';
+
+  @override
+  String get progressSameAsLastWeek => 'same as last week';
+
+  @override
+  String get progressFirstWeek => 'first week';
+
+  @override
+  String get progressConsistency => 'Consistency';
+
+  @override
+  String progressActiveDays(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n active days',
+      one: '1 active day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressVolume => 'Training volume';
+
+  @override
+  String get progressMinutes => 'minutes';
+
+  @override
+  String get progressVolumeNote => 'Training minutes per week.';
+
+  @override
+  String get progressTrend => 'Progress';
+
+  @override
+  String get progressTotals => 'Totals';
+
+  @override
+  String get progressVsPrev => 'vs previous period';
+
+  @override
+  String get progressNoBaseline => 'No previous period to compare against.';
+
+  @override
+  String get progressCombos => 'Combinations';
+
+  @override
+  String get progressCombosEmptyTitle => 'No combinations yet';
+
+  @override
+  String get progressCombosEmptyMsg =>
+      'Combos used in bag sessions will show up here, ranked by frequency.';
+
+  @override
+  String get progressRecords => 'Personal records';
+
+  @override
+  String get progressRecordMaxRounds => 'Rounds in a session';
+
+  @override
+  String get progressRecordLongestSession => 'Longest session';
+
+  @override
+  String get progressRecordCombos => 'Total combinations';
+
+  @override
+  String get progressRecordStreak => 'Longest streak';
+
+  @override
+  String get progressDaysUnit => 'days';
+
+  @override
+  String get progressDetail => 'Detail';
+
+  @override
+  String get progressTechniques => 'Most trained techniques';
+
+  @override
+  String get progressNow => 'Now';
+
+  @override
+  String get progressEmptyMsg =>
+      'Complete or log a session and your progress will appear here.';
+
+  @override
   String get completeSelectRpe => 'Select an RPE first';
 
   @override

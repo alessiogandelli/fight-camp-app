@@ -62,6 +62,10 @@ String _weekdayLong(DateTime d, Lang lang) {
   return en[idx];
 }
 
+/// Three-letter uppercase weekday for compact strips (e.g. "LUN", "MON").
+String weekdayShort(DateTime d, Lang lang) =>
+    _weekdayLong(d, lang).substring(0, 3).toUpperCase();
+
 const _itMonthsShort = const [
   'gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'
 ];

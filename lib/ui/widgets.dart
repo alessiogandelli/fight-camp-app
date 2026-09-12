@@ -134,18 +134,20 @@ class _ButtonState extends State<Button> {
                 Icon(widget.icon, size: _font + 6, color: _fg(widget.variant)),
                 const SizedBox(width: 6),
               ],
-              Text(
-                widget.label.toUpperCase(),
-                style: TextStyle(
-                  color: enabled
-                      ? _fg(widget.variant)
-                      : _fg(widget.variant).withAlpha(120),
-                  fontWeight: FontWeight.w800,
-                  fontSize: _font,
-                  letterSpacing: 0.8,
+              Flexible(
+                child: Text(
+                  widget.label.toUpperCase(),
+                  style: TextStyle(
+                    color: enabled
+                        ? _fg(widget.variant)
+                        : _fg(widget.variant).withAlpha(120),
+                    fontWeight: FontWeight.w800,
+                    fontSize: _font,
+                    letterSpacing: 0.8,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

@@ -20,23 +20,29 @@ void main() {
     expect(it.pickerDone(3), 'Fatto (3)');
   });
 
-  testWidgets('MaterialApp resolves unsupported locales to Italian', (tester) async {
+  testWidgets('MaterialApp resolves unsupported locales to Italian', (
+    tester,
+  ) async {
     late AppLocalizations captured;
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      localeResolutionCallback: (deviceLocale, supported) {
-        for (final l in supported) {
-          if (l.languageCode == deviceLocale?.languageCode) return l;
-        }
-        return const Locale('it');
-      },
-      locale: const Locale('fr'),
-      home: Builder(builder: (context) {
-        captured = AppLocalizations.of(context)!;
-        return const SizedBox();
-      }),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeResolutionCallback: (deviceLocale, supported) {
+          for (final l in supported) {
+            if (l.languageCode == deviceLocale?.languageCode) return l;
+          }
+          return const Locale('it');
+        },
+        locale: const Locale('fr'),
+        home: Builder(
+          builder: (context) {
+            captured = AppLocalizations.of(context)!;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
     expect(captured.navTrain, 'Allenati');
   });
 }
