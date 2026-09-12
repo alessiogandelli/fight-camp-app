@@ -47,19 +47,42 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await bootApp(tester);
-    // Target the rounds row via its icon, then tap its + button.
-    final roundsRow = find
-        .ancestor(
-          of: find.byIcon(Icons.refresh_rounded),
-          matching: find.byType(Row),
-        )
-        .first;
-    await tester.tap(
-      find.descendant(of: roundsRow, matching: find.byIcon(Icons.add_rounded)),
-    );
+    await tester.tap(find.byKey(const Key('rounds-plus')));
     await tester.pumpAndSettle();
     expect(find.text('6'), findsNWidgets(2));
     expect(find.text('23:00'), findsOneWidget);
+  });
+
+  testWidgets('dragging the work scrubber changes the value', (tester) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await bootApp(tester);
+    final rect = tester.getRect(find.byKey(const Key('work-scrubber')));
+    await tester.dragFrom(
+      Offset(rect.left + 1, rect.center.dy),
+      Offset(rect.width - 2, 0),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('05:00'), findsOneWidget);
+    expect(find.text('29:00'), findsOneWidget);
+  });
+
+  testWidgets('typing a work value opens the editor and applies it', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await bootApp(tester);
+    await tester.tap(find.byKey(const Key('work-value')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '7:30');
+    await tester.tap(find.text('SALVA'));
+    await tester.pumpAndSettle();
+    expect(find.text('07:30'), findsOneWidget);
+    // 5 rounds × 450s + 4 rests × 60s = 41:30.
+    expect(find.text('41:30'), findsOneWidget);
   });
 
   testWidgets('tapping the combinations row opens the combo picker', (

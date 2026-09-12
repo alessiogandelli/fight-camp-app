@@ -106,40 +106,96 @@ class _TrainPageState extends State<TrainPage> {
     context.push('/live', extra: LiveArgs(cfg, autostart: true));
   }
 
+  Future<void> _editValue({
+    required String title,
+    required int value,
+    required int min,
+    required int max,
+    required bool isTime,
+    required ValueChanged<int> onSet,
+  }) async {
+    final l = AppLocalizations.of(context)!;
+    final controller = TextEditingController(
+      text: isTime ? fmtClock(value) : '$value',
+    );
+    int? parse(String raw) =>
+        isTime ? parseTimeInput(raw) : int.tryParse(raw.trim());
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: isTime ? TextInputType.datetime : TextInputType.number,
+          decoration: InputDecoration(hintText: isTime ? 'mm:ss' : null),
+          onSubmitted: (_) => Navigator.pop(ctx, parse(controller.text)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.commonCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, parse(controller.text)),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.accent,
+              textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            child: Text(l.commonSave.toUpperCase()),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || result == null) return;
+    final v = result.clamp(min, max);
+    if (v == value) return;
+    setState(() => onSet(v));
+    Haptics.selection();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Column(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _hero(l),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    0,
-                    AppSpacing.md,
-                    AppSpacing.md,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_active != null) ...[
-                        _activeBanner(l),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      _settingsCard(l),
-                      const SizedBox(height: AppSpacing.sm + 4),
-                      _combosRow(l),
-                      const SizedBox(height: AppSpacing.sm + 4),
-                      _statsRow(l),
-                    ],
-                  ),
+          child: LayoutBuilder(
+            builder: (context, constraints) => FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: constraints.maxWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _hero(l),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        0,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_active != null) ...[
+                            _activeBanner(l),
+                            const SizedBox(height: AppSpacing.md),
+                          ],
+                          _settingsCard(l),
+                          const SizedBox(height: AppSpacing.sm + 4),
+                          _combosRow(l),
+                          const SizedBox(height: AppSpacing.sm + 4),
+                          _statsRow(l),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -180,9 +236,9 @@ class _TrainPageState extends State<TrainPage> {
         child: Padding(
           padding: EdgeInsets.fromLTRB(
             20,
-            MediaQuery.of(context).padding.top + kAppHeaderHeight + 28,
+            MediaQuery.of(context).padding.top + kAppHeaderHeight + 20,
             20,
-            32,
+            24,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,111 +320,123 @@ class _TrainPageState extends State<TrainPage> {
   );
 
   Widget _settingsCard(AppLocalizations l) => CardWidget(
-    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+    padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
     child: Column(
       children: [
-        _settingRow(
+        _HeroTime(
+          keyId: 'work',
           icon: Icons.fitness_center_rounded,
           color: AppColors.accent,
           label: l.commonWork,
           value: fmtClock(_setup.work),
           current: _setup.work,
           min: 5,
-          max: 600,
+          max: 300,
+          cap: 3600,
           step: 5,
           onChanged: (v) => setState(() => _setup.work = v),
+          onTapValue: () => _editValue(
+            title: l.commonWork,
+            value: _setup.work,
+            min: 5,
+            max: 3600,
+            isTime: true,
+            onSet: (v) => _setup.work = v,
+          ),
         ),
-        const _RowDivider(),
-        _settingRow(
-          icon: Icons.local_cafe_rounded,
+        const SizedBox(height: 16),
+        _HeroTime(
+          keyId: 'rest',
+          icon: Icons.bedtime_rounded,
           color: AppColors.rest,
           label: l.commonRest,
           value: _setup.rest > 0 ? fmtClock(_setup.rest) : '—',
           current: _setup.rest,
           min: 0,
-          max: 300,
+          max: 180,
+          cap: 1800,
           step: 5,
           onChanged: (v) => setState(() => _setup.rest = v),
-        ),
-        const _RowDivider(),
-        _settingRow(
-          icon: Icons.refresh_rounded,
-          color: AppColors.ink,
-          label: l.commonRounds,
-          value: '${_setup.rounds}',
-          current: _setup.rounds,
-          min: 1,
-          max: 30,
-          step: 1,
-          onChanged: (v) => setState(() => _setup.rounds = v),
-        ),
-      ],
-    ),
-  );
-
-  Widget _settingRow({
-    required IconData icon,
-    required Color color,
-    required String label,
-    required String value,
-    required int current,
-    required int min,
-    required int max,
-    required int step,
-    required ValueChanged<int> onChanged,
-  }) {
-    final canDec = current > min;
-    final canInc = current < max;
-    void apply(int delta) {
-      final v = (current + delta).clamp(min, max);
-      if (v == current) return;
-      onChanged(v);
-      Haptics.selection();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: color.withAlpha(30),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 21),
+          onTapValue: () => _editValue(
+            title: l.commonRest,
+            value: _setup.rest,
+            min: 0,
+            max: 1800,
+            isTime: true,
+            onSet: (v) => _setup.rest = v,
           ),
-          const SizedBox(width: AppSpacing.sm + 6),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 12, color: AppColors.mut),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
+        ),
+        const SizedBox(height: 16),
+        const Divider(height: 1, thickness: 1, color: AppColors.line),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            const Icon(Icons.repeat_rounded, size: 16, color: AppColors.mut),
+            const SizedBox(width: 8),
+            Text(
+              l.commonRounds.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: AppColors.mut,
+              ),
+            ),
+            const Spacer(),
+            _CircleStep(
+              key: const Key('rounds-minus'),
+              plus: false,
+              enabled: _setup.rounds > 1,
+              size: 34,
+              onTap: () => _bump(
+                _setup.rounds,
+                -1,
+                1,
+                99,
+                (v) => setState(() => _setup.rounds = v),
+              ),
+            ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _editValue(
+                title: l.commonRounds,
+                value: _setup.rounds,
+                min: 1,
+                max: 99,
+                isTime: false,
+                onSet: (v) => _setup.rounds = v,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Text(
+                  '${_setup.rounds}',
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.w900,
                     color: AppColors.ink,
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-          _CircleStep(plus: false, enabled: canDec, onTap: () => apply(-step)),
-          const SizedBox(width: AppSpacing.sm),
-          _CircleStep(plus: true, enabled: canInc, onTap: () => apply(step)),
-        ],
-      ),
-    );
-  }
+            _CircleStep(
+              key: const Key('rounds-plus'),
+              plus: true,
+              enabled: _setup.rounds < 99,
+              size: 34,
+              onTap: () => _bump(
+                _setup.rounds,
+                1,
+                1,
+                99,
+                (v) => setState(() => _setup.rounds = v),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 
   Widget _combosRow(AppLocalizations l) {
     final subtitle = _comboIds.isEmpty
@@ -492,13 +560,203 @@ class _TrainPageState extends State<TrainPage> {
   }
 }
 
-class _RowDivider extends StatelessWidget {
-  const _RowDivider();
+void _bump(
+  int current,
+  int delta,
+  int min,
+  int max,
+  ValueChanged<int> onChanged,
+) {
+  final v = (current + delta).clamp(min, max);
+  if (v == current) return;
+  onChanged(v);
+  Haptics.selection();
+}
+
+class _HeroTime extends StatelessWidget {
+  final String keyId;
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String value;
+  final int current, min, max, cap, step;
+  final ValueChanged<int> onChanged;
+  final VoidCallback onTapValue;
+  const _HeroTime({
+    required this.keyId,
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+    required this.current,
+    required this.min,
+    required this.max,
+    required this.cap,
+    required this.step,
+    required this.onChanged,
+    required this.onTapValue,
+  });
 
   @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.only(left: 64, right: 14),
-    child: Divider(height: 1, thickness: 1, color: AppColors.line),
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 15, color: color),
+                const SizedBox(width: 7),
+                Text(
+                  label.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                    color: AppColors.mut,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            GestureDetector(
+              key: Key('$keyId-value'),
+              behavior: HitTestBehavior.opaque,
+              onTap: onTapValue,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 36,
+                    height: 0.95,
+                    fontWeight: FontWeight.w900,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.ink,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _Scrubber(
+              key: Key('$keyId-scrubber'),
+              current: current,
+              min: min,
+              max: max,
+              step: step,
+              color: color,
+              onChanged: onChanged,
+            ),
+          ],
+        ),
+      ),
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _CircleStep(
+            key: Key('$keyId-plus'),
+            plus: true,
+            enabled: current < cap,
+            onTap: () => _bump(current, step, min, cap, onChanged),
+          ),
+          const SizedBox(height: 10),
+          _CircleStep(
+            key: Key('$keyId-minus'),
+            plus: false,
+            enabled: current > min,
+            onTap: () => _bump(current, -step, min, cap, onChanged),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+class _Scrubber extends StatefulWidget {
+  final int current, min, max, step;
+  final Color color;
+  final ValueChanged<int> onChanged;
+  const _Scrubber({
+    super.key,
+    required this.current,
+    required this.min,
+    required this.max,
+    required this.step,
+    required this.color,
+    required this.onChanged,
+  });
+
+  @override
+  State<_Scrubber> createState() => _ScrubberState();
+}
+
+class _ScrubberState extends State<_Scrubber> {
+  bool _dragging = false;
+
+  void _setFromDx(double dx, double width) {
+    if (width <= 0) return;
+    final frac = (dx / width).clamp(0.0, 1.0);
+    final raw = widget.min + frac * (widget.max - widget.min);
+    final v = ((raw / widget.step).round() * widget.step).clamp(
+      widget.min,
+      widget.max,
+    );
+    if (v == widget.current) return;
+    widget.onChanged(v);
+    Haptics.selection();
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final span = widget.max - widget.min;
+      final frac = span <= 0
+          ? 0.0
+          : ((widget.current - widget.min) / span).clamp(0.0, 1.0);
+      final thickness = _dragging ? 8.0 : 4.0;
+      final duration = _dragging
+          ? Duration.zero
+          : const Duration(milliseconds: 160);
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragStart: (_) => setState(() => _dragging = true),
+        onHorizontalDragUpdate: (d) => _setFromDx(d.localPosition.dx, width),
+        onHorizontalDragEnd: (_) => setState(() => _dragging = false),
+        onHorizontalDragCancel: () => setState(() => _dragging = false),
+        child: SizedBox(
+          height: 24,
+          child: Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              AnimatedContainer(
+                duration: duration,
+                curve: Curves.easeOut,
+                height: thickness,
+                decoration: BoxDecoration(
+                  color: AppColors.line,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              AnimatedContainer(
+                duration: duration,
+                curve: Curves.easeOut,
+                width: frac * width,
+                height: thickness,
+                decoration: BoxDecoration(
+                  color: widget.color,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
   );
 }
 
@@ -506,10 +764,13 @@ class _CircleStep extends StatelessWidget {
   final bool plus;
   final bool enabled;
   final VoidCallback onTap;
+  final double size;
   const _CircleStep({
+    super.key,
     required this.plus,
     required this.enabled,
     required this.onTap,
+    this.size = 40,
   });
 
   @override
@@ -517,8 +778,8 @@ class _CircleStep extends StatelessWidget {
     behavior: HitTestBehavior.opaque,
     onTap: enabled ? onTap : null,
     child: Container(
-      width: 40,
-      height: 40,
+      width: size,
+      height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -527,7 +788,7 @@ class _CircleStep extends StatelessWidget {
       ),
       child: Icon(
         plus ? Icons.add_rounded : Icons.remove_rounded,
-        size: 20,
+        size: size * 0.5,
         color: enabled ? AppColors.ink : AppColors.line,
       ),
     ),
