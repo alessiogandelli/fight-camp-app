@@ -51,12 +51,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get commonAll => 'Tutti';
 
   @override
-  String get commonSequential => 'Sequenziale';
-
-  @override
-  String get commonRandom => 'Casuale';
-
-  @override
   String get commonWork => 'Lavoro';
 
   @override
@@ -151,27 +145,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pickerSelectAll => 'Seleziona tutte';
-
-  @override
-  String get randomMinTechniques => 'Min tecniche';
-
-  @override
-  String get randomMaxTechniques => 'Max tecniche';
-
-  @override
-  String get randomAllowedCategories => 'Categorie consentite';
-
-  @override
-  String get randomRequirePunch => 'Almeno 1 pugno';
-
-  @override
-  String get randomRequireKick => 'Almeno 1 calcio';
-
-  @override
-  String get randomIncludeDefense => 'Includi difesa / movimento';
-
-  @override
-  String get randomGenerated => 'Combinazioni generate';
 
   @override
   String get comboAddTechnique => 'Aggiungi almeno una tecnica';
@@ -353,12 +326,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get trainCombinations => 'Combinazioni';
 
   @override
-  String get trainRotateEvery => 'Ruota ogni';
-
-  @override
-  String get trainOrder => 'Ordine';
-
-  @override
   String get trainNoneFree => 'Nessuna — round liberi';
 
   @override
@@ -397,13 +364,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get trainCycle => 'Ciclo';
-
-  @override
-  String get trainChangesEvery =>
-      'La combinazione cambia a ogni intervallo di lavoro.';
-
-  @override
-  String get trainShowRandom => 'Mostra combinazioni casuali';
 
   @override
   String get trainSavePreset => 'Salva come preset';
@@ -497,9 +457,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get liveFirstUp => 'Prima';
 
   @override
-  String get liveNext => 'Prossimo';
-
-  @override
   String liveNextRound(Object n) {
     return 'Prossimo — round $n';
   }
@@ -529,11 +486,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get liveCustomSlot => 'PERSONALIZZATO';
-
-  @override
-  String liveRandomSlot(Object n) {
-    return 'CASUALE $n';
-  }
 
   @override
   String get workoutsTitle => 'Allenamenti';

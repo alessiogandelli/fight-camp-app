@@ -34,14 +34,12 @@ LiveConfig basicConfig(int prep) => LiveConfig(
       restDuration: 10,
       type: RoundType.combination,
       combinationIds: ['c1'],
-      rotationInterval: 20,
     ),
     const RoundBase(
       duration: 20,
       restDuration: 10,
       type: RoundType.combination,
       combinationIds: ['c2'],
-      rotationInterval: 20,
     ),
   ],
 );
@@ -71,36 +69,39 @@ void main() {
       expect(plan.totalSeconds, 50);
     });
 
-    test('builds rotation slots for sequence rounds', () {
-      final cfg = basicConfig(0);
-      cfg.rounds.clear();
-      cfg.rounds.add(
-        const RoundBase(
-          duration: 60,
-          restDuration: 0,
-          type: RoundType.sequence,
-          combinationIds: ['c1', 'c2'],
-          rotationInterval: 30,
-        ),
+    test('cycles one combination per work round', () {
+      final cfg = LiveConfig(
+        name: 'TEST',
+        type: WorkoutType.heavyBag,
+        prepSeconds: 0,
+        rounds: [
+          for (var i = 0; i < 3; i++)
+            const RoundBase(
+              duration: 60,
+              restDuration: 30,
+              type: RoundType.combination,
+              combinationIds: ['c1', 'c2'],
+            ),
+        ],
       );
       final plan = buildPlan(cfg, TECHS, COMBOS);
-      final seg = plan.segments[0];
-      expect(seg.slots.length, 2);
-      expect(seg.slots[0].comboId, 'c1');
-      expect(seg.slots[1].comboId, 'c2');
-      expect(seg.slotInterval, 30);
+      final work = plan.segments
+          .where((s) => s.kind == SegmentKind.work)
+          .toList();
+      expect(work.length, 3);
+      expect(work.map((s) => s.slot!.comboId), ['c1', 'c2', 'c1']);
     });
 
     test('falls back to FREE when combinations were deleted', () {
       final cfg = basicConfig(0);
       cfg.rounds[0] = cfg.rounds[0].copyWith(combinationIds: ['missing']);
       final plan = buildPlan(cfg, TECHS, COMBOS);
-      expect(plan.segments[0].slots[0].free, true);
+      expect(plan.segments[0].slot!.free, true);
     });
 
     test('keeps a single slot for a single-combination round', () {
       final plan = buildPlan(basicConfig(0), TECHS, COMBOS);
-      expect(plan.segments[0].slots.length, 1);
+      expect(plan.segments[0].slot!.comboId, 'c1');
     });
   });
 
@@ -130,43 +131,10 @@ void main() {
       final st = resolvePlan(plan, plan.totalSeconds);
       expect(st.done, true);
     });
-
-    test('resolves slot index inside a rotating round', () {
-      final cfg = basicConfig(0);
-      cfg.rounds.clear();
-      cfg.rounds.add(
-        const RoundBase(
-          duration: 60,
-          restDuration: 0,
-          type: RoundType.sequence,
-          combinationIds: ['c1', 'c2'],
-          rotationInterval: 30,
-        ),
-      );
-      final p = buildPlan(cfg, TECHS, COMBOS);
-      expect(resolvePlan(p, 10).slotIndex, 0);
-      expect(resolvePlan(p, 31).slotIndex, 1);
-      expect(resolvePlan(p, 59).slotIndex, 1);
-    });
   });
 
   group('eventsBetween', () {
     final plan = buildPlan(basicConfig(5), TECHS, COMBOS);
-
-    SessionPlan rotatingPlan() {
-      final cfg = basicConfig(0);
-      cfg.rounds.clear();
-      cfg.rounds.add(
-        const RoundBase(
-          duration: 60,
-          restDuration: 0,
-          type: RoundType.sequence,
-          combinationIds: ['c1', 'c2'],
-          rotationInterval: 30,
-        ),
-      );
-      return buildPlan(cfg, TECHS, COMBOS);
-    }
 
     test('fires segment events when crossing boundaries', () {
       final evs = eventsBetween(plan, 4.9, 5.1);
@@ -194,12 +162,6 @@ void main() {
         plan.totalSeconds + 0.1,
       );
       expect(evs.any((e) => e is DoneCue), true);
-    });
-
-    test('fires slot change events in rotating rounds', () {
-      final p = rotatingPlan();
-      final evs = eventsBetween(p, 29.9, 30.1);
-      expect(evs.any((e) => e is SlotCue), true);
     });
 
     test('returns nothing when time does not advance', () {

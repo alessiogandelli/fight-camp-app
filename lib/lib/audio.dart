@@ -49,8 +49,6 @@ final cueParts = <String, List<CuePart>>{
   ],
   // short blip
   'count': [CuePart(1760, 0.09, 2, 'triangle')],
-  // tiny click for slot change
-  'slot': [CuePart(2200, 0.05, 1, 'sine')],
 };
 
 // Every cue is peak-normalized on its own, so without this map a 50 ms click
@@ -63,7 +61,6 @@ const _cueGain = <String, double>{
   'done': 1.0,
   'warn': 0.7,
   'count': 0.6,
-  'slot': 0.35,
 };
 
 double _osc(String wave, double phase) {
@@ -158,7 +155,7 @@ class Sound {
   static Future<void> unlock() async {
     if (_primed) return;
     _primed = true;
-    final first = _bank['slot'];
+    final first = _bank['count'];
     for (final p in _pool) {
       try {
         await p.setReleaseMode(ReleaseMode.stop);
@@ -189,5 +186,4 @@ class Sound {
   static Future<void> done() => _play('done');
   static Future<void> warn() => _play('warn');
   static Future<void> count() => _play('count');
-  static Future<void> slot() => _play('slot');
 }

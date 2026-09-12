@@ -10,6 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   Future<void> bootApp(WidgetTester tester) async {
+    // The Home is non-scrollable now, so tests need enough height for it.
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     // Seed Italian so label-based finders are deterministic (stored
     // preference wins over system-locale detection).
     SharedPreferences.setMockInitialValues({
@@ -70,16 +74,12 @@ void main() {
   });
 
   testWidgets('free round session runs through prep and work', (tester) async {
-    tester.view.physicalSize = const Size(800, 1800);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
     await bootApp(tester);
 
     // Default timer setup (5×3:00/1:00, no combos) and start the session.
     // Starting from a routed config auto-starts: there is no second START.
+    // The Start button is pinned to the bottom and always visible.
     final startBtn = find.widgetWithText(Button, 'AVVIA').hitTestable().last;
-    await tester.ensureVisible(startBtn);
-    await tester.pumpAndSettle();
     await tester.tap(startBtn);
     await tester.pumpAndSettle();
 

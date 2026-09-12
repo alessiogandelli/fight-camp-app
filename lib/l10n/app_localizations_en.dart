@@ -51,12 +51,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonAll => 'All';
 
   @override
-  String get commonSequential => 'Sequential';
-
-  @override
-  String get commonRandom => 'Random';
-
-  @override
   String get commonWork => 'Work';
 
   @override
@@ -151,27 +145,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pickerSelectAll => 'Select all';
-
-  @override
-  String get randomMinTechniques => 'Min techniques';
-
-  @override
-  String get randomMaxTechniques => 'Max techniques';
-
-  @override
-  String get randomAllowedCategories => 'Allowed categories';
-
-  @override
-  String get randomRequirePunch => 'Require at least 1 punch';
-
-  @override
-  String get randomRequireKick => 'Require at least 1 kick';
-
-  @override
-  String get randomIncludeDefense => 'Include defense / movement';
-
-  @override
-  String get randomGenerated => 'Combinations generated';
 
   @override
   String get comboAddTechnique => 'Add at least one technique';
@@ -351,12 +324,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trainCombinations => 'Combinations';
 
   @override
-  String get trainRotateEvery => 'Rotate every';
-
-  @override
-  String get trainOrder => 'Order';
-
-  @override
   String get trainNoneFree => 'None — free rounds';
 
   @override
@@ -395,12 +362,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trainCycle => 'Cycle';
-
-  @override
-  String get trainChangesEvery => 'Combination changes every work interval.';
-
-  @override
-  String get trainShowRandom => 'Show random combinations';
 
   @override
   String get trainSavePreset => 'Save as preset';
@@ -492,9 +453,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveFirstUp => 'First up';
 
   @override
-  String get liveNext => 'Next';
-
-  @override
   String liveNextRound(Object n) {
     return 'Next — round $n';
   }
@@ -524,11 +482,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveCustomSlot => 'CUSTOM';
-
-  @override
-  String liveRandomSlot(Object n) {
-    return 'RANDOM $n';
-  }
 
   @override
   String get workoutsTitle => 'Workouts';

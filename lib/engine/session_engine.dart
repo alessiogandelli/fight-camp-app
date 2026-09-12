@@ -49,8 +49,6 @@ class SessionEngine extends ChangeNotifier {
          segIndex: 0,
          segElapsed: 0,
          segRemaining: 0,
-         slotIndex: 0,
-         slotRemaining: 0,
          totalElapsed: 0,
        ) {
     _ensureCapacity(initialElapsedMs / 1000.0);
@@ -112,10 +110,6 @@ class SessionEngine extends ChangeNotifier {
     if (evs.any((e) => e is CountCue)) {
       if (soundOn) await Sound.count();
       await vibrate(40, vibrationOn);
-    }
-    if (segs.isEmpty && evs.any((e) => e is SlotCue)) {
-      if (soundOn) await Sound.slot();
-      await vibrate(30, vibrationOn);
     }
   }
 

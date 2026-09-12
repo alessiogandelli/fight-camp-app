@@ -139,18 +139,8 @@ class _LivePageState extends State<LivePage> {
           }
           // track seen combos
           if (_seenComboIds != null && view.segment?.kind == SegmentKind.work) {
-            for (
-              var i = 0;
-              i <=
-                  math.min(
-                    view.slotIndex,
-                    (view.segment?.slots.length ?? 1) - 1,
-                  );
-              i++
-            ) {
-              final id = view.segment!.slots[i].comboId;
-              if (id != null) _seenComboIds!.add(id);
-            }
+            final id = view.segment!.slot?.comboId;
+            if (id != null) _seenComboIds!.add(id);
           }
           return Scaffold(
             backgroundColor: AppColors.bg,
@@ -364,10 +354,9 @@ class _LivePageState extends State<LivePage> {
 
   bool _hasCombo(ResolvedState view) {
     final seg = view.segment;
-    if (seg == null || seg.kind != SegmentKind.work || seg.slots.isEmpty)
-      return false;
-    final idx = view.slotIndex.clamp(0, seg.slots.length - 1);
-    final slot = seg.slots[idx];
+    if (seg == null || seg.kind != SegmentKind.work) return false;
+    final slot = seg.slot;
+    if (slot == null) return false;
     return slot.techniqueIds.isNotEmpty || slot.image != null;
   }
 
@@ -839,11 +828,8 @@ class _ProgressBarState extends State<ProgressBar>
 
 // ---------------- Phase / slots ----------------
 
-String slotTitle(Slot slot, AppLocalizations l, [int? index]) {
-  if (!slot.free) {
-    if (slot.kind == SlotKind.random) return l.liveRandomSlot((index ?? 0) + 1);
-    return slot.name.toUpperCase();
-  }
+String slotTitle(Slot slot, AppLocalizations l) {
+  if (!slot.free) return slot.name.toUpperCase();
   switch (slot.kind) {
     case SlotKind.defense:
       return l.liveDefenseSlot;
@@ -948,7 +934,7 @@ class _PhaseBlockState extends State<PhaseBlock>
 
   Object _keyOf() {
     final v = widget.view;
-    return (v.segIndex, v.slotIndex);
+    return v.segIndex;
   }
 
   @override
@@ -975,9 +961,8 @@ class _PhaseBlockState extends State<PhaseBlock>
     if (seg == null) return const SizedBox.shrink();
 
     Widget content;
-    if (seg.kind == SegmentKind.work && seg.slots.isNotEmpty) {
-      final idx = v.slotIndex.clamp(0, seg.slots.length - 1);
-      final slot = seg.slots[idx];
+    if (seg.kind == SegmentKind.work && seg.slot != null) {
+      final slot = seg.slot!;
       content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -989,32 +974,11 @@ class _PhaseBlockState extends State<PhaseBlock>
               ),
               child: SlotContent(
                 slot: slot,
-                index: idx,
-                total: seg.slots.length,
                 label: seg.label,
                 compact: widget.compact,
               ),
             ),
           ),
-          if (seg.slots.length > 1)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (var i = 0; i < seg.slots.length; i++)
-                    Container(
-                      width: i == idx ? 16 : 6,
-                      height: 6,
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      decoration: BoxDecoration(
-                        color: i == idx ? Colors.white : AppColors.line,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                ],
-              ),
-            ),
         ],
       );
     } else if (seg.kind == SegmentKind.prep) {
@@ -1039,7 +1003,7 @@ class _PhaseBlockState extends State<PhaseBlock>
       );
     }
 
-    final preview = nextSlotPreview(widget.plan, v.segIndex, v.slotIndex);
+    final preview = nextWorkPreview(widget.plan, v.segIndex);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -1061,15 +1025,11 @@ class _PhaseBlockState extends State<PhaseBlock>
 
 class SlotContent extends StatelessWidget {
   final Slot slot;
-  final int index;
-  final int total;
   final String? label;
   final bool compact;
   const SlotContent({
     super.key,
     required this.slot,
-    required this.index,
-    required this.total,
     this.label,
     this.compact = false,
   });
@@ -1078,7 +1038,7 @@ class SlotContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.read<AppStore>().lang;
     final l = AppLocalizations.of(context)!;
-    final title = slotTitle(slot, l, index);
+    final title = slotTitle(slot, l);
     final subtitle = slotSubtitle(slot, l);
 
     if (slot.image != null) {
@@ -1177,9 +1137,7 @@ class NextPreviewRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     if (preview.kind == PreviewKind.none) return const SizedBox(height: 30);
-    final label = preview.kind == PreviewKind.round
-        ? l.liveNextRoundShort(preview.round ?? '').toUpperCase()
-        : l.liveNext.toUpperCase();
+    final label = l.liveNextRoundShort(preview.round ?? '').toUpperCase();
     final slot = preview.slot;
     final String? detail;
     if (slot != null) {

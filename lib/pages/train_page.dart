@@ -98,8 +98,6 @@ class _TrainPageState extends State<TrainPage> {
           restDuration: i < _setup.rounds - 1 ? _setup.rest : 0,
           type: useCombos ? RoundType.combination : RoundType.free,
           combinationIds: _comboIds,
-          rotationInterval: 30,
-          rotationOrder: RotationOrder.sequential,
         ),
       ),
     );
@@ -161,42 +159,35 @@ class _TrainPageState extends State<TrainPage> {
     return Column(
       children: [
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) => FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: constraints.maxWidth,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _hero(l),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        0,
-                        AppSpacing.md,
-                        AppSpacing.md,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (_active != null) ...[
-                            _activeBanner(l),
-                            const SizedBox(height: AppSpacing.md),
-                          ],
-                          _settingsCard(l),
-                          const SizedBox(height: AppSpacing.sm + 4),
-                          _combosRow(l),
-                          const SizedBox(height: AppSpacing.sm + 4),
-                          _statsRow(l),
-                        ],
-                      ),
-                    ),
-                  ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _hero(l),
+              _constrain(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.sm + 4,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_active != null) ...[
+                        _activeBanner(l),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
+                      _settingsCard(l),
+                      const SizedBox(height: AppSpacing.sm),
+                      _combosRow(l),
+                      const SizedBox(height: AppSpacing.sm),
+                      _statsRow(l),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
         _constrain(
@@ -233,20 +224,22 @@ class _TrainPageState extends State<TrainPage> {
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 672),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            MediaQuery.of(context).padding.top + kAppHeaderHeight + 20,
-            20,
-            24,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              MediaQuery.of(context).padding.top + kAppHeaderHeight + 8,
+              20,
+              12,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Text(
                 l.trainReady.toUpperCase(),
                 style: const TextStyle(
-                  fontSize: 34,
+                  fontSize: 28,
                   height: 1.05,
                   fontWeight: FontWeight.w900,
                   fontStyle: FontStyle.italic,
@@ -254,10 +247,10 @@ class _TrainPageState extends State<TrainPage> {
                   color: AppColors.ink,
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: 6),
               Text(
                 l.trainReadySub,
-                style: const TextStyle(fontSize: 14, color: AppColors.mut),
+                style: const TextStyle(fontSize: 13, color: AppColors.mut),
               ),
             ],
           ),
@@ -320,7 +313,7 @@ class _TrainPageState extends State<TrainPage> {
   );
 
   Widget _settingsCard(AppLocalizations l) => CardWidget(
-    padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
     child: Column(
       children: [
         _HeroTime(
@@ -344,7 +337,7 @@ class _TrainPageState extends State<TrainPage> {
             onSet: (v) => _setup.work = v,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         _HeroTime(
           keyId: 'rest',
           icon: Icons.bedtime_rounded,
@@ -366,9 +359,9 @@ class _TrainPageState extends State<TrainPage> {
             onSet: (v) => _setup.rest = v,
           ),
         ),
-        const SizedBox(height: 16),
-        const Divider(height: 1, thickness: 1, color: AppColors.line),
         const SizedBox(height: 10),
+        const Divider(height: 1, thickness: 1, color: AppColors.line),
+        const SizedBox(height: 8),
         Row(
           children: [
             const Icon(Icons.repeat_rounded, size: 16, color: AppColors.mut),
@@ -387,7 +380,7 @@ class _TrainPageState extends State<TrainPage> {
               key: const Key('rounds-minus'),
               plus: false,
               enabled: _setup.rounds > 1,
-              size: 34,
+              size: 28,
               onTap: () => _bump(
                 _setup.rounds,
                 -1,
@@ -411,7 +404,7 @@ class _TrainPageState extends State<TrainPage> {
                 child: Text(
                   '${_setup.rounds}',
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                     color: AppColors.ink,
                     fontFeatures: [FontFeature.tabularFigures()],
@@ -423,7 +416,7 @@ class _TrainPageState extends State<TrainPage> {
               key: const Key('rounds-plus'),
               plus: true,
               enabled: _setup.rounds < 99,
-              size: 34,
+              size: 28,
               onTap: () => _bump(
                 _setup.rounds,
                 1,
@@ -450,13 +443,13 @@ class _TrainPageState extends State<TrainPage> {
         if (sel != null && mounted) setState(() => _comboIds = sel);
       },
       child: CardWidget(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
           children: [
             Icon(
               Icons.format_list_numbered_rounded,
               color: _comboIds.isEmpty ? AppColors.mut : AppColors.ink,
-              size: 22,
+              size: 20,
             ),
             const SizedBox(width: AppSpacing.sm + 6),
             Expanded(
@@ -491,7 +484,7 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   Widget _statsRow(AppLocalizations l) => CardWidget(
-    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+    padding: const EdgeInsets.symmetric(vertical: 10),
     child: Row(
       children: [
         Expanded(
@@ -501,7 +494,7 @@ class _TrainPageState extends State<TrainPage> {
             label: l.trainTotalDuration,
           ),
         ),
-        Container(width: 1, height: 38, color: AppColors.line),
+        Container(width: 1, height: 30, color: AppColors.line),
         Expanded(
           child: _stat(
             icon: Icons.repeat_rounded,
@@ -520,7 +513,7 @@ class _TrainPageState extends State<TrainPage> {
   }) => Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
-      Icon(icon, size: 22, color: AppColors.mut),
+      Icon(icon, size: 20, color: AppColors.mut),
       const SizedBox(width: AppSpacing.sm + 2),
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,7 +522,7 @@ class _TrainPageState extends State<TrainPage> {
           Text(
             value,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.w900,
               fontFeatures: [FontFeature.tabularFigures()],
             ),
@@ -552,7 +545,7 @@ class _TrainPageState extends State<TrainPage> {
     final l = AppLocalizations.of(context)!;
     return Button(
       label: l.commonStart,
-      size: BtnSize.xl,
+      size: BtnSize.lg,
       icon: Icons.play_arrow_rounded,
       expanded: true,
       onTap: _start,
@@ -620,7 +613,7 @@ class _HeroTime extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             GestureDetector(
               key: Key('$keyId-value'),
               behavior: HitTestBehavior.opaque,
@@ -631,8 +624,8 @@ class _HeroTime extends StatelessWidget {
                 child: Text(
                   value,
                   style: const TextStyle(
-                    fontSize: 36,
-                    height: 0.95,
+                    fontSize: 30,
+                    height: 0.92,
                     fontWeight: FontWeight.w900,
                     fontStyle: FontStyle.italic,
                     color: AppColors.ink,
@@ -641,7 +634,7 @@ class _HeroTime extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _Scrubber(
               key: Key('$keyId-scrubber'),
               current: current,
@@ -663,7 +656,7 @@ class _HeroTime extends StatelessWidget {
             enabled: current < cap,
             onTap: () => _bump(current, step, min, cap, onChanged),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _CircleStep(
             key: Key('$keyId-minus'),
             plus: false,
@@ -729,7 +722,7 @@ class _ScrubberState extends State<_Scrubber> {
         onHorizontalDragEnd: (_) => setState(() => _dragging = false),
         onHorizontalDragCancel: () => setState(() => _dragging = false),
         child: SizedBox(
-          height: 24,
+          height: 18,
           child: Stack(
             alignment: Alignment.centerLeft,
             children: [
@@ -770,7 +763,7 @@ class _CircleStep extends StatelessWidget {
     required this.plus,
     required this.enabled,
     required this.onTap,
-    this.size = 40,
+    this.size = 34,
   });
 
   @override

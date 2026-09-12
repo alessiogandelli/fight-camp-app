@@ -19,7 +19,7 @@ final TECHS = [
   tech('s1', TechniqueCategory.stretching),
   tech('s2', TechniqueCategory.stretching),
 ];
-final COMBOS = [combo('c1', ['a', 'b'])];
+final COMBOS = [combo('c1', ['a', 'b']), combo('c2', ['b', 'a'])];
 final ROUTINES = [combo('routine-1', ['s1', 's2'])];
 
 Workout _workout({
@@ -60,6 +60,12 @@ void main() {
     test('bag workout with combos uses combination type', () {
       final cfg = configFromWorkout(_workout(work: 30, rest: 30, rounds: 2, combos: ['c1']), COMBOS, TECHS, 0);
       expect(cfg.rounds.every((r) => r.type == RoundType.combination), isTrue);
+    });
+
+    test('cycles one combo per round across the workout', () {
+      final plan = _plan(_workout(work: 60, rest: 30, rounds: 3, combos: ['c1', 'c2']));
+      final work = plan.segments.where((s) => s.kind == SegmentKind.work).toList();
+      expect(work.map((s) => s.slot!.comboId), ['c1', 'c2', 'c1']);
     });
 
     test('sparring is a workout without combos and compiles to free rounds', () {
@@ -110,7 +116,7 @@ void main() {
       expect(plan.restSeconds, 10);
       final work = plan.segments.where((s) => s.kind == SegmentKind.work).toList();
       expect(work.length, 2);
-      expect(work[0].slots.first.image, stretchImageFor('s1'));
+      expect(work[0].slot!.image, stretchImageFor('s1'));
     });
   });
 }

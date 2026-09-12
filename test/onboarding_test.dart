@@ -34,6 +34,10 @@ void main() {
   });
 
   testWidgets('onboarding is not shown when already seen', (tester) async {
+    // The Home is non-scrollable now and needs height to fit in tests.
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     SharedPreferences.setMockInitialValues({
       'fight-camp:lang': 'it',
       'fight-camp:onboarding-seen': true,

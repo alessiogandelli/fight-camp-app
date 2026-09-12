@@ -14,8 +14,6 @@
   "commonClear": "Clear",
   "commonDone": "Done",
   "commonAll": "All",
-  "commonSequential": "Sequential",
-  "commonRandom": "Random",
   "commonWork": "Work",
   "commonRest": "Rest",
   "commonRounds": "Rounds",
@@ -52,13 +50,6 @@
     }
   },
   "pickerSelectAll": "Select all",
-  "randomMinTechniques": "Min techniques",
-  "randomMaxTechniques": "Max techniques",
-  "randomAllowedCategories": "Allowed categories",
-  "randomRequirePunch": "Require at least 1 punch",
-  "randomRequireKick": "Require at least 1 kick",
-  "randomIncludeDefense": "Include defense / movement",
-  "randomGenerated": "Combinations generated",
   "comboAddTechnique": "Add at least one technique",
   "comboGiveName": "Give the combination a name",
   "comboSaved": "Combination saved",
@@ -139,8 +130,6 @@
   },
   "trainRounds": "Rounds",
   "trainCombinations": "Combinations",
-  "trainRotateEvery": "Rotate every",
-  "trainOrder": "Order",
   "trainNoneFree": "None — free rounds",
   "trainSelected": "{n} selected",
   "@trainSelected": {
@@ -163,8 +152,6 @@
   "trainCreateWorkout": "Create a workout",
   "trainFixed": "Fixed",
   "trainCycle": "Cycle",
-  "trainChangesEvery": "Combination changes every work interval.",
-  "trainShowRandom": "Show random combinations",
   "trainSavePreset": "Save as preset",
   "trainPresetSaved": "Preset saved",
   "trainPresetDeleted": "Preset deleted",
@@ -205,7 +192,6 @@
   "liveGetReady": "Get ready",
   "livePaused": "Paused",
   "liveFirstUp": "First up",
-  "liveNext": "Next",
   "liveNextRound": "Next — round {n}",
   "@liveNextRound": {
     "placeholders": {
@@ -225,12 +211,6 @@
   "liveDefenseSlot": "DEFENSE",
   "liveConditioningSlot": "CONDITIONING",
   "liveCustomSlot": "CUSTOM",
-  "liveRandomSlot": "RANDOM {n}",
-  "@liveRandomSlot": {
-    "placeholders": {
-      "n": {}
-    }
-  },
   "workoutsTitle": "Workouts",
   "workoutsNoRounds": "This workout has no rounds",
   "workoutsEmpty": "No workouts yet",

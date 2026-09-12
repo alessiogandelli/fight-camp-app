@@ -147,131 +147,7 @@ class Combination {
   };
 }
 
-enum RoundType {
-  combination,
-  sequence,
-  random,
-  free,
-  defense,
-  conditioning,
-  custom,
-}
-
-const roundTypes = <({RoundType id, String label, String labelEn})>[
-  (
-    id: RoundType.combination,
-    label: 'Combinazione specifica',
-    labelEn: 'Specific combination',
-  ),
-  (
-    id: RoundType.sequence,
-    label: 'Sequenza di combinazioni',
-    labelEn: 'Combination sequence',
-  ),
-  (
-    id: RoundType.random,
-    label: 'Combinazioni casuali',
-    labelEn: 'Random combinations',
-  ),
-  (id: RoundType.free, label: 'Round libero', labelEn: 'Free round'),
-  (id: RoundType.defense, label: 'Difesa', labelEn: 'Defense'),
-  (
-    id: RoundType.conditioning,
-    label: 'Condizionamento',
-    labelEn: 'Conditioning',
-  ),
-  (id: RoundType.custom, label: 'Personalizzato', labelEn: 'Custom'),
-];
-
-String roundTypeLabel(RoundType id, Lang lang) {
-  for (final r in roundTypes) {
-    if (r.id == id) return lang == Lang.en ? r.labelEn : r.label;
-  }
-  return id.name;
-}
-
-enum RotationOrder { sequential, random }
-
-class RandomConfig {
-  final int minTechniques;
-  final int maxTechniques;
-  final List<TechniqueCategory> categories;
-  final bool requirePunch;
-  final bool requireKick;
-  final bool includeDefense;
-  final int count;
-
-  const RandomConfig({
-    required this.minTechniques,
-    required this.maxTechniques,
-    required this.categories,
-    required this.requirePunch,
-    required this.requireKick,
-    required this.includeDefense,
-    required this.count,
-  });
-
-  static const def = RandomConfig(
-    minTechniques: 3,
-    maxTechniques: 5,
-    categories: [
-      TechniqueCategory.boxing,
-      TechniqueCategory.kicks,
-      TechniqueCategory.knees,
-      TechniqueCategory.elbows,
-      TechniqueCategory.defense,
-    ],
-    requirePunch: true,
-    requireKick: true,
-    includeDefense: false,
-    count: 6,
-  );
-
-  factory RandomConfig.fromJson(Map<String, dynamic> j) => RandomConfig(
-    minTechniques: (j['minTechniques'] ?? 3) as int,
-    maxTechniques: (j['maxTechniques'] ?? 5) as int,
-    categories: ((j['categories'] ?? []) as List)
-        .map(
-          (v) => TechniqueCategory.values.firstWhere(
-            (c) => c.name == v,
-            orElse: () => TechniqueCategory.boxing,
-          ),
-        )
-        .toList(),
-    requirePunch: j['requirePunch'] == true,
-    requireKick: j['requireKick'] == true,
-    includeDefense: j['includeDefense'] == true,
-    count: (j['count'] ?? 6) as int,
-  );
-
-  Map<String, dynamic> toJson() => {
-    'minTechniques': minTechniques,
-    'maxTechniques': maxTechniques,
-    'categories': categories.map((c) => c.name).toList(),
-    'requirePunch': requirePunch,
-    'requireKick': requireKick,
-    'includeDefense': includeDefense,
-    'count': count,
-  };
-
-  RandomConfig copyWith({
-    int? minTechniques,
-    int? maxTechniques,
-    List<TechniqueCategory>? categories,
-    bool? requirePunch,
-    bool? requireKick,
-    bool? includeDefense,
-    int? count,
-  }) => RandomConfig(
-    minTechniques: minTechniques ?? this.minTechniques,
-    maxTechniques: maxTechniques ?? this.maxTechniques,
-    categories: categories ?? this.categories,
-    requirePunch: requirePunch ?? this.requirePunch,
-    requireKick: requireKick ?? this.requireKick,
-    includeDefense: includeDefense ?? this.includeDefense,
-    count: count ?? this.count,
-  );
-}
+enum RoundType { combination, free, defense, conditioning, custom }
 
 class RoundBase {
   final String? label;
@@ -279,9 +155,6 @@ class RoundBase {
   final int restDuration;
   final RoundType type;
   final List<String> combinationIds;
-  final int rotationInterval;
-  final RotationOrder rotationOrder;
-  final RandomConfig? randomConfig;
   final String? image;
 
   const RoundBase({
@@ -290,9 +163,6 @@ class RoundBase {
     required this.restDuration,
     required this.type,
     this.combinationIds = const [],
-    this.rotationInterval = 30,
-    this.rotationOrder = RotationOrder.sequential,
-    this.randomConfig,
     this.image,
   });
 
@@ -307,13 +177,6 @@ class RoundBase {
     combinationIds: ((j['combinationIds'] ?? []) as List)
         .map((e) => e.toString())
         .toList(growable: false),
-    rotationInterval: (j['rotationInterval'] ?? 30) as int,
-    rotationOrder: (j['rotationOrder'] ?? 'sequential') == 'random'
-        ? RotationOrder.random
-        : RotationOrder.sequential,
-    randomConfig: j['randomConfig'] == null
-        ? null
-        : RandomConfig.fromJson(j['randomConfig']),
     image: j['image'] as String?,
   );
 
@@ -323,9 +186,6 @@ class RoundBase {
     'restDuration': restDuration,
     'type': type.name,
     'combinationIds': combinationIds,
-    'rotationInterval': rotationInterval,
-    'rotationOrder': rotationOrder.name,
-    if (randomConfig != null) 'randomConfig': randomConfig!.toJson(),
     if (image != null) 'image': image,
   };
 
@@ -336,10 +196,6 @@ class RoundBase {
     int? restDuration,
     RoundType? type,
     List<String>? combinationIds,
-    int? rotationInterval,
-    RotationOrder? rotationOrder,
-    RandomConfig? randomConfig,
-    bool clearRandomConfig = false,
     String? image,
   }) => RoundBase(
     label: clearLabel ? null : (label ?? this.label),
@@ -347,11 +203,6 @@ class RoundBase {
     restDuration: restDuration ?? this.restDuration,
     type: type ?? this.type,
     combinationIds: combinationIds ?? this.combinationIds,
-    rotationInterval: rotationInterval ?? this.rotationInterval,
-    rotationOrder: rotationOrder ?? this.rotationOrder,
-    randomConfig: clearRandomConfig
-        ? null
-        : (randomConfig ?? this.randomConfig),
     image: image ?? this.image,
   );
 }

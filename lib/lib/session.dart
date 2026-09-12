@@ -125,10 +125,11 @@ SessionSummary buildSummary(
   final usage = <String, UsageRef>{};
   final seenSlots = <String, List<String>>{};
   for (final seg in plan.segments) {
-    for (final slot in seg.slots) {
-      if (slot.comboId != null && !seenSlots.containsKey(slot.comboId)) {
-        seenSlots[slot.comboId!] = slot.techniqueIds;
-      }
+    final slot = seg.slot;
+    if (slot != null &&
+        slot.comboId != null &&
+        !seenSlots.containsKey(slot.comboId)) {
+      seenSlots[slot.comboId!] = slot.techniqueIds;
     }
   }
   for (final id in seenComboIds) {

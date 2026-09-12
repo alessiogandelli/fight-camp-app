@@ -27,8 +27,6 @@ Future<void> bootApp(WidgetTester tester) async {
 Future<void> startFreeRound(WidgetTester tester) async {
   // Train-page start button → the session auto-starts (no idle screen).
   final startBtn = find.widgetWithText(Button, 'AVVIA').hitTestable().last;
-  await tester.ensureVisible(startBtn);
-  await tester.pumpAndSettle();
   await tester.tap(startBtn);
   await tester.pumpAndSettle();
 }

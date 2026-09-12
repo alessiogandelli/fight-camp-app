@@ -182,18 +182,6 @@ abstract class AppLocalizations {
   /// **'All'**
   String get commonAll;
 
-  /// No description provided for @commonSequential.
-  ///
-  /// In en, this message translates to:
-  /// **'Sequential'**
-  String get commonSequential;
-
-  /// No description provided for @commonRandom.
-  ///
-  /// In en, this message translates to:
-  /// **'Random'**
-  String get commonRandom;
-
   /// No description provided for @commonWork.
   ///
   /// In en, this message translates to:
@@ -379,48 +367,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select all'**
   String get pickerSelectAll;
-
-  /// No description provided for @randomMinTechniques.
-  ///
-  /// In en, this message translates to:
-  /// **'Min techniques'**
-  String get randomMinTechniques;
-
-  /// No description provided for @randomMaxTechniques.
-  ///
-  /// In en, this message translates to:
-  /// **'Max techniques'**
-  String get randomMaxTechniques;
-
-  /// No description provided for @randomAllowedCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'Allowed categories'**
-  String get randomAllowedCategories;
-
-  /// No description provided for @randomRequirePunch.
-  ///
-  /// In en, this message translates to:
-  /// **'Require at least 1 punch'**
-  String get randomRequirePunch;
-
-  /// No description provided for @randomRequireKick.
-  ///
-  /// In en, this message translates to:
-  /// **'Require at least 1 kick'**
-  String get randomRequireKick;
-
-  /// No description provided for @randomIncludeDefense.
-  ///
-  /// In en, this message translates to:
-  /// **'Include defense / movement'**
-  String get randomIncludeDefense;
-
-  /// No description provided for @randomGenerated.
-  ///
-  /// In en, this message translates to:
-  /// **'Combinations generated'**
-  String get randomGenerated;
 
   /// No description provided for @comboAddTechnique.
   ///
@@ -752,18 +698,6 @@ abstract class AppLocalizations {
   /// **'Combinations'**
   String get trainCombinations;
 
-  /// No description provided for @trainRotateEvery.
-  ///
-  /// In en, this message translates to:
-  /// **'Rotate every'**
-  String get trainRotateEvery;
-
-  /// No description provided for @trainOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Order'**
-  String get trainOrder;
-
   /// No description provided for @trainNoneFree.
   ///
   /// In en, this message translates to:
@@ -823,18 +757,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cycle'**
   String get trainCycle;
-
-  /// No description provided for @trainChangesEvery.
-  ///
-  /// In en, this message translates to:
-  /// **'Combination changes every work interval.'**
-  String get trainChangesEvery;
-
-  /// No description provided for @trainShowRandom.
-  ///
-  /// In en, this message translates to:
-  /// **'Show random combinations'**
-  String get trainShowRandom;
 
   /// No description provided for @trainSavePreset.
   ///
@@ -1004,12 +926,6 @@ abstract class AppLocalizations {
   /// **'First up'**
   String get liveFirstUp;
 
-  /// No description provided for @liveNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get liveNext;
-
   /// No description provided for @liveNextRound.
   ///
   /// In en, this message translates to:
@@ -1063,12 +979,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CUSTOM'**
   String get liveCustomSlot;
-
-  /// No description provided for @liveRandomSlot.
-  ///
-  /// In en, this message translates to:
-  /// **'RANDOM {n}'**
-  String liveRandomSlot(Object n);
 
   /// No description provided for @workoutsTitle.
   ///

@@ -1,8 +1,7 @@
 // Session plan builder ported from src/engine/plan.ts.
-import '../lib/random.dart';
 import '../models/types.dart';
 
-enum SlotKind { free, defense, conditioning, custom, random }
+enum SlotKind { free, defense, conditioning, custom }
 
 class Slot {
   final String? comboId;
@@ -31,8 +30,7 @@ class Segment {
   final int totalRounds;
   final String? label;
   final RoundType? roundType;
-  final List<Slot> slots;
-  final int slotInterval;
+  final Slot? slot;
 
   const Segment({
     required this.kind,
@@ -41,8 +39,7 @@ class Segment {
     required this.totalRounds,
     this.label,
     this.roundType,
-    required this.slots,
-    required this.slotInterval,
+    this.slot,
   });
 }
 
@@ -66,8 +63,6 @@ class SessionPlan {
     this.endless = false,
   });
 }
-
-int _clamp(int v, int min, int max) => v < min ? min : (v > max ? max : v);
 
 Slot _comboToSlot(Combination c) => Slot(
   comboId: c.id,
@@ -101,8 +96,6 @@ SessionPlan buildPlan(
         duration: cfg.prepSeconds,
         round: 0,
         totalRounds: totalRounds,
-        slots: const [],
-        slotInterval: cfg.prepSeconds,
       ),
     );
   }
@@ -111,97 +104,41 @@ SessionPlan buildPlan(
     final r = rounds[idx];
     final duration = r.duration < 1 ? 1 : r.duration;
     final restDuration = r.restDuration < 0 ? 0 : r.restDuration;
-    var slots = <Slot>[];
-    var slotInterval = duration;
 
-    if (r.type == RoundType.free ||
-        r.type == RoundType.defense ||
-        r.type == RoundType.conditioning ||
-        r.type == RoundType.custom) {
-      final SlotKind kind;
-      switch (r.type) {
-        case RoundType.free:
-          kind = SlotKind.free;
-        case RoundType.defense:
-          kind = SlotKind.defense;
-        case RoundType.conditioning:
-          kind = SlotKind.conditioning;
-        default:
-          kind = SlotKind.custom;
-      }
-      slots = [
-        _fixedSlot(
+    final Slot slot;
+    switch (r.type) {
+      case RoundType.free:
+      case RoundType.defense:
+      case RoundType.conditioning:
+      case RoundType.custom:
+        final SlotKind kind;
+        switch (r.type) {
+          case RoundType.free:
+            kind = SlotKind.free;
+          case RoundType.defense:
+            kind = SlotKind.defense;
+          case RoundType.conditioning:
+            kind = SlotKind.conditioning;
+          default:
+            kind = SlotKind.custom;
+        }
+        slot = _fixedSlot(
           kind,
           name: r.type == RoundType.custom ? (r.label ?? '') : '',
           image: r.image,
-        ),
-      ];
-    } else if (r.type == RoundType.random) {
-      final rc = r.randomConfig;
-      if (rc != null) {
-        final interval = _clamp(
-          r.rotationInterval != 0 ? r.rotationInterval : duration,
-          5,
-          duration,
         );
-        final needed = (duration / interval).ceil().clamp(1, 1 << 30);
-        final gen = generateCombos(
-          rc,
-          techniques,
-          rc.count > needed ? rc.count : needed,
-        );
-        var generated = gen
-            .map(
-              (g) => Slot(
-                name: g.name,
-                techniqueIds: g.techniqueIds,
-                free: false,
-                kind: SlotKind.random,
-              ),
-            )
+      case RoundType.combination:
+        final resolved = r.combinationIds
+            .map((id) => comboById[id])
+            .whereType<Combination>()
+            .map(_comboToSlot)
             .toList();
-        final n = (duration / interval).ceil().clamp(1, 1 << 30);
-        slots = [for (var i = 0; i < n; i++) generated[i % generated.length]];
-        slotInterval = interval;
-      } else {
-        slots = [_fixedSlot(SlotKind.free)];
-      }
-    } else {
-      final resolved = r.combinationIds
-          .map((id) => comboById[id])
-          .whereType<Combination>()
-          .map(_comboToSlot)
-          .toList();
-      final pool = resolved.isNotEmpty ? resolved : [_fixedSlot(SlotKind.free)];
-      final singleCombo = pool.length == 1;
-      final interval = _clamp(
-        r.rotationInterval != 0 ? r.rotationInterval : duration,
-        5,
-        duration,
-      );
-      final n = singleCombo
-          ? 1
-          : (duration / interval).ceil().clamp(1, 1 << 30);
-      slotInterval = singleCombo ? duration : interval;
-      if (r.rotationOrder == RotationOrder.random && pool.length > 1) {
-        final seq = <int>[];
-        var lastIdx = -1;
-        for (var i = 0; i < n; i++) {
-          final options = [
-            for (var pi = 0; pi < pool.length; pi++)
-              if (pi != lastIdx) pi,
-          ];
-          final chosen = options.isEmpty
-              ? 0
-              : options[defaultRngInt(options.length)];
-          seq.add(chosen);
-          lastIdx = chosen;
-        }
-        slots = [for (final pi in seq) pool[pi]];
-      } else {
-        final offset = r.type == RoundType.sequence ? idx : 0;
-        slots = [for (var i = 0; i < n; i++) pool[(i + offset) % pool.length]];
-      }
+        final pool = resolved.isNotEmpty
+            ? resolved
+            : [_fixedSlot(SlotKind.free)];
+        // One combination per work round, cycling through the selection at
+        // each round boundary.
+        slot = pool[idx % pool.length];
     }
 
     segments.add(
@@ -212,8 +149,7 @@ SessionPlan buildPlan(
         totalRounds: totalRounds,
         label: r.type == RoundType.custom ? (r.label ?? '') : null,
         roundType: r.type,
-        slots: slots,
-        slotInterval: slotInterval,
+        slot: slot,
       ),
     );
 
@@ -224,8 +160,6 @@ SessionPlan buildPlan(
           duration: restDuration,
           round: idx + 1,
           totalRounds: totalRounds,
-          slots: const [],
-          slotInterval: restDuration,
         ),
       );
     }
@@ -274,8 +208,6 @@ SessionPlan extendPlan(SessionPlan plan) {
         duration: r.duration,
         round: work.round,
         totalRounds: work.totalRounds,
-        slots: const [],
-        slotInterval: r.duration,
       ),
     );
   }
@@ -287,8 +219,7 @@ SessionPlan extendPlan(SessionPlan plan) {
       totalRounds: nextRound,
       label: work.label,
       roundType: work.roundType,
-      slots: work.slots,
-      slotInterval: work.slotInterval,
+      slot: work.slot,
     ),
   );
   final workSeconds = segs
@@ -313,9 +244,4 @@ int segmentStart(SessionPlan plan, int index) {
     t += plan.segments[i].duration;
   }
   return t;
-}
-
-// Small helper used by rotationOrder=random in buildPlan.
-int defaultRngInt(int maxExclusive) {
-  return (defaultRandom.nextDouble() * maxExclusive).floor();
 }

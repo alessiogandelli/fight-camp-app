@@ -14,8 +14,6 @@
   "commonClear": "Azzera",
   "commonDone": "Fatto",
   "commonAll": "Tutti",
-  "commonSequential": "Sequenziale",
-  "commonRandom": "Casuale",
   "commonWork": "Lavoro",
   "commonRest": "Riposo",
   "commonRounds": "Round",
@@ -52,13 +50,6 @@
     }
   },
   "pickerSelectAll": "Seleziona tutte",
-  "randomMinTechniques": "Min tecniche",
-  "randomMaxTechniques": "Max tecniche",
-  "randomAllowedCategories": "Categorie consentite",
-  "randomRequirePunch": "Almeno 1 pugno",
-  "randomRequireKick": "Almeno 1 calcio",
-  "randomIncludeDefense": "Includi difesa / movimento",
-  "randomGenerated": "Combinazioni generate",
   "comboAddTechnique": "Aggiungi almeno una tecnica",
   "comboGiveName": "Dai un nome alla combinazione",
   "comboSaved": "Combinazione salvata",
@@ -139,8 +130,6 @@
   },
   "trainRounds": "Round",
   "trainCombinations": "Combinazioni",
-  "trainRotateEvery": "Ruota ogni",
-  "trainOrder": "Ordine",
   "trainNoneFree": "Nessuna — round liberi",
   "trainSelected": "{n} selezionati",
   "@trainSelected": {
@@ -163,8 +152,6 @@
   "trainCreateWorkout": "Crea un allenamento",
   "trainFixed": "Fissa",
   "trainCycle": "Ciclo",
-  "trainChangesEvery": "La combinazione cambia a ogni intervallo di lavoro.",
-  "trainShowRandom": "Mostra combinazioni casuali",
   "trainSavePreset": "Salva come preset",
   "trainPresetSaved": "Preset salvato",
   "trainPresetDeleted": "Preset eliminato",
@@ -205,7 +192,6 @@
   "liveGetReady": "Preparati",
   "livePaused": "In pausa",
   "liveFirstUp": "Prima",
-  "liveNext": "Prossimo",
   "liveNextRound": "Prossimo — round {n}",
   "@liveNextRound": {
     "placeholders": {
@@ -225,12 +211,6 @@
   "liveDefenseSlot": "DIFESA",
   "liveConditioningSlot": "CONDIZIONAMENTO",
   "liveCustomSlot": "PERSONALIZZATO",
-  "liveRandomSlot": "CASUALE {n}",
-  "@liveRandomSlot": {
-    "placeholders": {
-      "n": {}
-    }
-  },
   "workoutsTitle": "Allenamenti",
   "workoutsNoRounds": "Questo allenamento non ha round",
   "workoutsEmpty": "Nessun allenamento",

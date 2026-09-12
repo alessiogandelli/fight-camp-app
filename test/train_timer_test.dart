@@ -15,6 +15,12 @@ Future<void> bootApp(
     'fight-camp:onboarding-seen': true,
   },
 }) async {
+  // A real phone surface with safe areas: the Home is non-scrollable and
+  // must fit here (iPhone 15/16-class screen, 393×852).
+  tester.view.physicalSize = const Size(393, 852);
+  tester.view.devicePixelRatio = 1.0;
+  tester.view.padding = const FakeViewPadding(top: 59, bottom: 34);
+  addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues(prefs);
   await tester.pumpWidget(const FightCampApp());
   await tester.pumpAndSettle(const Duration(seconds: 1));
@@ -43,9 +49,6 @@ void main() {
   testWidgets('tapping the rounds plus button adjusts the value', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(800, 1800);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
     await bootApp(tester);
     await tester.tap(find.byKey(const Key('rounds-plus')));
     await tester.pumpAndSettle();
@@ -54,9 +57,6 @@ void main() {
   });
 
   testWidgets('dragging the work scrubber changes the value', (tester) async {
-    tester.view.physicalSize = const Size(800, 1800);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
     await bootApp(tester);
     final rect = tester.getRect(find.byKey(const Key('work-scrubber')));
     await tester.dragFrom(
@@ -71,9 +71,6 @@ void main() {
   testWidgets('typing a work value opens the editor and applies it', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(800, 1800);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
     await bootApp(tester);
     await tester.tap(find.byKey(const Key('work-value')));
     await tester.pumpAndSettle();
@@ -88,13 +85,8 @@ void main() {
   testWidgets('tapping the combinations row opens the combo picker', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(800, 1800);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
     await bootApp(tester);
     final combosRow = find.text('Combinazioni');
-    await tester.ensureVisible(combosRow);
-    await tester.pumpAndSettle();
     expect(combosRow, findsOneWidget);
     await tester.tap(combosRow);
     await tester.pumpAndSettle();
