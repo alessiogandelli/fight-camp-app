@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Jump squat">
+  <rect x="0" y="0" width="240" height="240" rx="16" fill="#121216"/>
+  <rect x="4" y="4" width="232" height="232" rx="12" fill="none" stroke="#26262e" stroke-width="2"/>
+  <line x1="24" y1="196" x2="216" y2="196" stroke="#26262e" stroke-width="3" stroke-linecap="round"/>
+  <path d="M58 150 L58 112" stroke="#ff4d4d" stroke-width="6" stroke-linecap="round"/>
+  <path d="M50 122 L58 108 L66 122" stroke="#ff4d4d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <g stroke="#f4f4f1" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M124 80 L124 130"/>
+    <path d="M124 130 L108 152 L112 172"/>
+    <path d="M124 130 L140 152 L136 172"/>
+    <path d="M122 96 L98 116"/>
+    <path d="M126 96 L150 116"/>
+    <circle cx="124" cy="66" r="13" fill="#121216"/>
+  </g>
+  <g font-family="sans-serif" font-size="11" font-weight="700" fill="#9a9aa5">
+    <text x="120" y="226" text-anchor="middle">JUMP SQUAT</text>
+  </g>
+</svg>

@@ -189,8 +189,8 @@ class _PushupCounterSectionState extends State<PushupCounterSection> {
                                     Icons.circle,
                                     size: 8,
                                     color: calibrated
-                                        ? AppColors.go
-                                        : AppColors.warn,
+                                        ? AppColors.success
+                                        : AppColors.warning,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
@@ -201,8 +201,8 @@ class _PushupCounterSectionState extends State<PushupCounterSection> {
                                       fontSize: 10.5,
                                       fontWeight: FontWeight.w700,
                                       color: calibrated
-                                          ? AppColors.go
-                                          : AppColors.warn,
+                                          ? AppColors.success
+                                          : AppColors.warning,
                                     ),
                                   ),
                                 ],
@@ -247,7 +247,7 @@ class _PushupCounterSectionState extends State<PushupCounterSection> {
                 child: SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     trackHeight: 4,
-                    activeTrackColor: AppColors.accent,
+                    activeTrackColor: AppColors.primary,
                     inactiveTrackColor: AppColors.line,
                     thumbColor: Colors.white,
                     overlayShape: SliderComponentShape.noOverlay,

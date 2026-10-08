@@ -11,7 +11,7 @@ L'unico strumento di allenamento dell'app: una sequenza di fasi *preparazione �
 La tab del timer generico: serve a iniziare rapidamente un allenamento configurando il Timer direttamente. L'app ricorda l'ultima configurazione usata.
 
 ### Workout
-Una configurazione **singola e uniforme** del Timer (lavoro, pausa, round sempre uguali) salvata e riutilizzabile, con titolo personalizzato. Può includere opzionalmente una lista di Combo (workout da sacco) oppure una Routine (workout di stretching). Il tipo è **derivato** dal contenuto: ha una Routine → stretching; ha Combo → sacco; pausa zero e round singolo → continuo (es. corda); altrimenti → circuito. Un allenamento reale è spesso più Workout eseguiti in successione (riscaldamento, poi sacco, poi stretching), non un unico workout composto da parti diverse.
+Una configurazione **singola e uniforme** del Timer (lavoro, pausa, round sempre uguali) salvata e riutilizzabile, con titolo personalizzato. Può includere opzionalmente una lista di Combo (workout da sacco), una Routine (workout di stretching) oppure un Circuito di potenziamento. Il tipo è **derivato** dal contenuto: ha una Routine → stretching; ha Combo → sacco; combo di soli esercizi di potenziamento → potenziamento; pausa zero e round singolo → continuo (es. corda); altrimenti → circuito. Un allenamento reale è spesso più Workout eseguiti in successione (riscaldamento, poi sacco, poi stretching), non un unico workout composto da parti diverse.
 
 ### Combo
 Una lista ordinata di Tecniche da eseguire al sacco. Vive nella Libreria.
@@ -20,10 +20,13 @@ Una lista ordinata di Tecniche da eseguire al sacco. Vive nella Libreria.
 Una lista ordinata di esercizi di **stretching**. Concetto distinto dalla Combo: la Combo è una sequenza di colpi, la Routine è un blocco di esercizi fisici. Vive nel **Workout**: si sceglie, crea o modifica mentre si configura un Workout, non nella Libreria.
 
 ### Tecnica
-Un movimento elementare con nome e categoria (pugni, calci, ginocchia, gomitate, difesa/movimento, stretching). È l'atomo di cui sono fatte le Combo e le Routine.
+Un movimento elementare con nome e categoria (pugni, calci, ginocchia, gomitate, difesa/movimento, potenziamento, stretching). È l'atomo di cui sono fatte le Combo, i Circuiti e le Routine.
+
+### Circuito
+Una lista ordinata di esercizi di **potenziamento** (push up, squat, plank…), ciascuno con un eventuale numero di ripetizioni. Vive nel **Workout** ed è l'equivalente della Combo per il corpo libero: stessa entità sotto il cofano, tecniche di categoria potenziamento. Non compare nella Libreria.
 
 ### Libreria
-La tab che contiene le liste ordinate di movimenti e lo strumento extra, in tre sezioni: **Sacco** (Combo), **Stretching** (catalogo degli esercizi di stretching, di sola consultazione), **Tool** (flessioni).
+La tab che contiene liste ordinate di movimenti e lo strumento extra, in quattro sezioni: **Sacco** (Combo), **Potenziamento** (catalogo in sola consultazione degli esercizi a corpo libero), **Stretching** (catalogo in sola consultazione degli esercizi di stretching), **Tool** (flessioni).
 
 ### Tool
 Strumento extra non basato sul Timer (attualmente solo il contatore di flessioni). Vive nella sezione Tool della Libreria.

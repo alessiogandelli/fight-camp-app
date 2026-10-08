@@ -171,10 +171,10 @@ class _ComboPickerBodyState extends State<_ComboPickerBody> {
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: checked ? AppColors.accent.withAlpha(30) : AppColors.panel2,
+          color: checked ? AppColors.primary.withAlpha(30) : AppColors.panel2,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: checked ? AppColors.accent.withAlpha(120) : AppColors.line,
+            color: checked ? AppColors.primary.withAlpha(120) : AppColors.line,
           ),
         ),
         child: Row(
@@ -184,7 +184,7 @@ class _ComboPickerBodyState extends State<_ComboPickerBody> {
                   ? Icons.check_box_rounded
                   : Icons.check_box_outline_blank_rounded,
               size: 20,
-              color: checked ? AppColors.accent : AppColors.mut,
+              color: checked ? AppColors.primary : AppColors.mut,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -208,7 +208,7 @@ class _ComboPickerBodyState extends State<_ComboPickerBody> {
                         const Icon(
                           Icons.star_rounded,
                           size: 13,
-                          color: AppColors.warn,
+                          color: AppColors.warning,
                         ),
                       ],
                     ],

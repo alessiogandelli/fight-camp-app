@@ -43,7 +43,7 @@ class _ButtonState extends State<Button> {
   Color _bg(BtnVariant v) {
     switch (v) {
       case BtnVariant.primary:
-        return AppColors.accent;
+        return AppColors.primary;
       case BtnVariant.ghost:
         return AppColors.panel2;
       case BtnVariant.danger:
@@ -59,7 +59,7 @@ class _ButtonState extends State<Button> {
       case BtnVariant.primary:
         return Colors.white;
       case BtnVariant.danger:
-        return AppColors.accent;
+        return AppColors.error;
       default:
         return AppColors.ink;
     }
@@ -119,7 +119,7 @@ class _ButtonState extends State<Button> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: widget.variant == BtnVariant.danger
-                  ? AppColors.accent
+                  ? AppColors.error
                   : (widget.variant == BtnVariant.primary
                         ? Colors.transparent
                         : AppColors.line),
@@ -332,6 +332,241 @@ class EmptyState extends StatelessWidget {
   );
 }
 
+// ---------- Browse cards ----------
+
+/// One entry in an [ActionCard]'s overflow menu.
+class CardMenuAction {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  const CardMenuAction({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+}
+
+/// Hierarchical list card: category glyph top-left, circular play top-right,
+/// title + meta below, secondary actions folded into a single overflow menu.
+/// Tapping the body runs [onTap] (the editor); the play button is the primary
+/// action. Shared by the Workouts and Library (bag) lists.
+class ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Widget? titleTrailing;
+  final String? meta;
+  final Widget? body;
+  final VoidCallback? onPlay;
+  final VoidCallback? onTap;
+  final List<CardMenuAction> menu;
+  final String menuTitle;
+  final String playLabel;
+  const ActionCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.titleTrailing,
+    this.meta,
+    this.body,
+    required this.onPlay,
+    this.onTap,
+    this.menu = const [],
+    this.menuTitle = '',
+    this.playLabel = '',
+  });
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: CardWidget(
+      padding: const EdgeInsets.fromLTRB(16, 14, 10, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _CardIconBadge(icon),
+              const Spacer(),
+              if (menu.isNotEmpty)
+                _CardMenuButton(menu: menu, title: menuTitle),
+              const SizedBox(width: AppSpacing.xs),
+              _CardPlayButton(
+                onTap: onPlay,
+                semanticsLabel: playLabel.isEmpty ? title : '$playLabel $title',
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  title.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              if (titleTrailing != null) ...[
+                const SizedBox(width: 4),
+                titleTrailing!,
+              ],
+            ],
+          ),
+          if (meta != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              meta!,
+              style: const TextStyle(fontSize: 11.5, color: AppColors.mut),
+            ),
+          ],
+          if (body != null) ...[const SizedBox(height: 10), body!],
+        ],
+      ),
+    ),
+  );
+}
+
+class _CardIconBadge extends StatelessWidget {
+  final IconData icon;
+  const _CardIconBadge(this.icon);
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 40,
+    height: 40,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: AppColors.panel2,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.line),
+    ),
+    child: Icon(icon, size: 20, color: AppColors.ink),
+  );
+}
+
+class _CardPlayButton extends StatefulWidget {
+  final VoidCallback? onTap;
+  final String semanticsLabel;
+  const _CardPlayButton({required this.onTap, required this.semanticsLabel});
+
+  @override
+  State<_CardPlayButton> createState() => _CardPlayButtonState();
+}
+
+class _CardPlayButtonState extends State<_CardPlayButton> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onTap != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: widget.semanticsLabel,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _down = true),
+        onTapCancel: () => setState(() => _down = false),
+        onTapUp: (_) => setState(() => _down = false),
+        onTap: enabled
+            ? () {
+                Haptics.light();
+                widget.onTap!();
+              }
+            : null,
+        child: AnimatedScale(
+          scale: _down ? 0.9 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: enabled
+                  ? AppColors.primary
+                  : AppColors.primary.withAlpha(90),
+            ),
+            child: const Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CardMenuButton extends StatelessWidget {
+  final List<CardMenuAction> menu;
+  final String title;
+  const _CardMenuButton({required this.menu, required this.title});
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: () {
+      Haptics.selection();
+      showAppModal<void>(
+        context,
+        title: title,
+        builder: (ctx) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final a in menu)
+              _CardMenuRow(
+                action: a,
+                onDone: () => Navigator.of(ctx, rootNavigator: true).pop(),
+              ),
+          ],
+        ),
+      );
+    },
+    child: const SizedBox(
+      width: 44,
+      height: 44,
+      child: Icon(Icons.more_vert_rounded, size: 20, color: AppColors.mut),
+    ),
+  );
+}
+
+class _CardMenuRow extends StatelessWidget {
+  final CardMenuAction action;
+  final VoidCallback onDone;
+  const _CardMenuRow({required this.action, required this.onDone});
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: () {
+      onDone();
+      action.onTap();
+    },
+    child: Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          Icon(action.icon, size: 20, color: AppColors.mut),
+          const SizedBox(width: AppSpacing.sm + 4),
+          Text(
+            action.label,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 // ---------- Modal / confirm ----------
 
 Future<T?> showAppModal<T>(
@@ -441,7 +676,7 @@ Future<bool> showConfirm(
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
           style: TextButton.styleFrom(
-            foregroundColor: AppColors.accent,
+            foregroundColor: AppColors.error,
             textStyle: const TextStyle(fontWeight: FontWeight.w800),
           ),
           child: Text(confirmLabel.toUpperCase()),
@@ -570,7 +805,7 @@ class Toggle extends StatelessWidget {
       height: 26,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: value ? AppColors.accent : AppColors.line,
+        color: value ? AppColors.primary : AppColors.line,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Align(
@@ -608,10 +843,10 @@ class ChipWidget extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: active ? AppColors.accent.withAlpha(38) : AppColors.panel2,
+        color: active ? AppColors.primary.withAlpha(38) : AppColors.panel2,
         borderRadius: BorderRadius.circular(99),
         border: Border.all(
-          color: active ? AppColors.accent.withAlpha(140) : AppColors.line,
+          color: active ? AppColors.primary.withAlpha(140) : AppColors.line,
         ),
       ),
       child: Text(
@@ -619,7 +854,7 @@ class ChipWidget extends StatelessWidget {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: active ? AppColors.accent : AppColors.mut,
+          color: active ? AppColors.primary : AppColors.mut,
         ),
       ),
     ),
@@ -664,7 +899,7 @@ class Segmented<T> extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: value == o.value
-                      ? AppColors.accent
+                      ? AppColors.primary
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(9),
                 ),

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fight_camp/main.dart';
+import 'package:glass_bottom_navigation/glass_bottom_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -28,7 +29,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     // We are on the main shell now.
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(GlassBottomBar), findsOneWidget);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('fight-camp:onboarding-seen'), isTrue);
   });
@@ -46,6 +47,6 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
     expect(find.text('Allenati con il timer'), findsNothing);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(GlassBottomBar), findsOneWidget);
   });
 }

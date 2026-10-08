@@ -7,7 +7,15 @@ extension LangX on Lang {
   static Lang parse(String? s) => s == 'en' ? Lang.en : Lang.it;
 }
 
-enum TechniqueCategory { boxing, kicks, knees, elbows, defense, stretching }
+enum TechniqueCategory {
+  boxing,
+  kicks,
+  knees,
+  elbows,
+  defense,
+  conditioning,
+  stretching,
+}
 
 const techniqueCategories =
     <({TechniqueCategory id, String label, String labelEn})>[
@@ -19,6 +27,11 @@ const techniqueCategories =
         id: TechniqueCategory.defense,
         label: 'Difesa / Movimento',
         labelEn: 'Defense / Movement',
+      ),
+      (
+        id: TechniqueCategory.conditioning,
+        label: 'Potenziamento',
+        labelEn: 'Conditioning',
       ),
       (
         id: TechniqueCategory.stretching,
@@ -117,6 +130,12 @@ class Combination {
   final String id;
   final String name;
   final List<String> techniqueIds;
+
+  /// Optional rep target per step, aligned with [techniqueIds]. Empty (or a
+  /// null entry) means "no rep count" (e.g. boxing combos). Used by
+  /// conditioning circuits, where the same exercise can appear with different
+  /// reps in different circuits.
+  final List<int?> reps;
   final bool favorite;
   final int createdAt;
 
@@ -124,15 +143,21 @@ class Combination {
     required this.id,
     required this.name,
     required this.techniqueIds,
+    this.reps = const [],
     required this.favorite,
     required this.createdAt,
   });
+
+  int? repsAt(int index) => index < reps.length ? reps[index] : null;
 
   factory Combination.fromJson(Map<String, dynamic> j) => Combination(
     id: j['id'] as String,
     name: (j['name'] ?? '') as String,
     techniqueIds: ((j['techniqueIds'] ?? []) as List)
         .map((e) => e.toString())
+        .toList(growable: false),
+    reps: ((j['reps'] ?? []) as List)
+        .map((e) => e is num ? e.toInt() : null)
         .toList(growable: false),
     favorite: j['favorite'] == true,
     createdAt: (j['createdAt'] ?? 0) as int,
@@ -142,6 +167,7 @@ class Combination {
     'id': id,
     'name': name,
     'techniqueIds': techniqueIds,
+    if (reps.any((r) => r != null)) 'reps': reps,
     'favorite': favorite,
     'createdAt': createdAt,
   };
@@ -286,6 +312,31 @@ const workoutTypes =
 
 String workoutTypeLabel(WorkoutType id, Lang lang) =>
     lang == Lang.en ? workoutTypeMeta(id).labelEn : workoutTypeMeta(id).label;
+
+/// Derives a workout's type from its content, category-aware: a workout whose
+/// combos are all conditioning circuits is itself a conditioning workout.
+/// Mirrors [Workout.type] for the non-conditioning cases.
+WorkoutType deriveWorkoutType(
+  Workout w,
+  List<Combination> combos,
+  List<Technique> techniques,
+) {
+  if (w.routineId != null) return WorkoutType.stretching;
+  if (w.combinationIds.isNotEmpty) {
+    final techById = {for (final t in techniques) t.id: t};
+    final comboById = {for (final c in combos) c.id: c};
+    final allConditioning = w.combinationIds.every((id) {
+      final c = comboById[id];
+      if (c == null || c.techniqueIds.isEmpty) return false;
+      return c.techniqueIds.every(
+        (tid) => techById[tid]?.category == TechniqueCategory.conditioning,
+      );
+    });
+    return allConditioning ? WorkoutType.conditioning : WorkoutType.heavyBag;
+  }
+  if (w.restDuration == 0 && w.rounds <= 1) return WorkoutType.aerobic;
+  return WorkoutType.intervals;
+}
 
 /// A single uniform timer configuration (work/rest/rounds), optionally
 /// referencing Combos (bag workout) or a Routine (stretching workout).
@@ -640,29 +691,40 @@ class Settings {
   final bool sound;
   final bool vibration;
   final int prepSeconds;
+
+  /// Read the upcoming combo aloud during the pause before a round.
+  final bool comboVoice;
   const Settings({
     required this.sound,
     required this.vibration,
     required this.prepSeconds,
+    this.comboVoice = true,
   });
 
   factory Settings.fromJson(Map<String, dynamic> j) => Settings(
     sound: j['sound'] != false,
     vibration: j['vibration'] != false,
     prepSeconds: (j['prepSeconds'] ?? 3) as int,
+    comboVoice: j['comboVoice'] != false,
   );
   Map<String, dynamic> toJson() => {
     'sound': sound,
     'vibration': vibration,
     'prepSeconds': prepSeconds,
+    'comboVoice': comboVoice,
   };
 
-  Settings copyWith({bool? sound, bool? vibration, int? prepSeconds}) =>
-      Settings(
-        sound: sound ?? this.sound,
-        vibration: vibration ?? this.vibration,
-        prepSeconds: prepSeconds ?? this.prepSeconds,
-      );
+  Settings copyWith({
+    bool? sound,
+    bool? vibration,
+    int? prepSeconds,
+    bool? comboVoice,
+  }) => Settings(
+    sound: sound ?? this.sound,
+    vibration: vibration ?? this.vibration,
+    prepSeconds: prepSeconds ?? this.prepSeconds,
+    comboVoice: comboVoice ?? this.comboVoice,
+  );
 }
 
 class AppData {

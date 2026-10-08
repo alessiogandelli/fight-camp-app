@@ -78,6 +78,7 @@ flutter:
 
   assets:
     - assets/stretch/
+    - assets/conditioning/
     - assets/audio/
     - assets/brand/
 

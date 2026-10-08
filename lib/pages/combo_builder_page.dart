@@ -10,19 +10,43 @@ import '../ui/toast.dart';
 import '../ui/widgets.dart';
 import '../l10n/app_localizations.dart';
 
-Future<bool?> showComboBuilderSheet(BuildContext context, {String? comboId}) {
+Future<bool?> showComboBuilderSheet(
+  BuildContext context, {
+  String? comboId,
+  bool reps = false,
+  TechniqueCategory? categoryFilter,
+}) {
   final l = AppLocalizations.of(context)!;
+  final title = reps
+      ? (comboId == null ? l.circuitsNew : l.circuitsEdit)
+      : (comboId == null ? l.comboNew : l.comboEdit);
   return showAppModal<bool>(
     context,
-    title: comboId == null ? l.comboNew : l.comboEdit,
+    title: title,
     scrollable: false,
-    builder: (_) => ComboBuilderPage(comboId: comboId),
+    builder: (_) => ComboBuilderPage(
+      comboId: comboId,
+      reps: reps,
+      categoryFilter: categoryFilter,
+    ),
   );
 }
 
 class ComboBuilderPage extends StatefulWidget {
   final String? comboId;
-  const ComboBuilderPage({super.key, this.comboId});
+
+  /// Show a rep target per step (conditioning circuits).
+  final bool reps;
+
+  /// Restrict the technique library to a single category (e.g. conditioning).
+  final TechniqueCategory? categoryFilter;
+
+  const ComboBuilderPage({
+    super.key,
+    this.comboId,
+    this.reps = false,
+    this.categoryFilter,
+  });
 
   @override
   State<ComboBuilderPage> createState() => _ComboBuilderPageState();
@@ -31,8 +55,10 @@ class ComboBuilderPage extends StatefulWidget {
 class _ComboBuilderPageState extends State<ComboBuilderPage> {
   late String _id;
   bool _exists = true;
+  bool _favorite = false;
   late final TextEditingController _name;
   List<String> _steps = [];
+  List<int?> _reps = [];
 
   @override
   void initState() {
@@ -50,10 +76,16 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
       text:
           src?.name ??
           (widget.comboId == null
-              ? nextComboName(store.data.combinations)
+              ? (widget.reps
+                    ? nextCircuitName(store.data.combinations)
+                    : nextComboName(store.data.combinations))
               : ''),
     );
     _steps = src != null ? [...src.techniqueIds] : [];
+    _reps = src != null
+        ? [for (var i = 0; i < src.techniqueIds.length; i++) src.repsAt(i)]
+        : [];
+    _favorite = src?.favorite ?? false;
   }
 
   @override
@@ -62,17 +94,44 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
     super.dispose();
   }
 
+  void _addStep(String id) {
+    setState(() {
+      _steps.add(id);
+      _reps.add(null);
+    });
+  }
+
+  void _reorder(int a, int b) {
+    setState(() {
+      final s = _steps[a];
+      _steps[a] = _steps[b];
+      _steps[b] = s;
+      final r = _reps[a];
+      _reps[a] = _reps[b];
+      _reps[b] = r;
+    });
+  }
+
+  void _remove(int i) {
+    setState(() {
+      _steps.removeAt(i);
+      _reps.removeAt(i);
+    });
+  }
+
   Future<void> _save() async {
     final store = context.read<AppStore>();
     final l = AppLocalizations.of(context)!;
     if (_steps.isEmpty) return context.showToast(l.comboAddTechnique);
     if (_name.text.trim().isEmpty) return context.showToast(l.comboGiveName);
+    final reps = _reps.any((r) => r != null) ? [..._reps] : const <int?>[];
     store.saveCombination(
       Combination(
         id: _id,
         name: _name.text.trim().toUpperCase(),
         techniqueIds: [..._steps],
-        favorite: false,
+        reps: reps,
+        favorite: _favorite,
         createdAt: DateTime.now().millisecondsSinceEpoch,
       ),
     );
@@ -86,7 +145,7 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
     final l = AppLocalizations.of(context)!;
     final nameCtrl = TextEditingController();
     final shortCtrl = TextEditingController();
-    var category = TechniqueCategory.boxing;
+    var category = widget.categoryFilter ?? TechniqueCategory.boxing;
     final descCtrl = TextEditingController();
 
     final ok = await showAppModal<bool>(
@@ -148,7 +207,7 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
       custom: true,
     );
     final created = store.addTechnique(tech);
-    setState(() => _steps.add(created.id));
+    _addStep(created.id);
   }
 
   @override
@@ -179,7 +238,7 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
                         child: Text(
                           l.comboNotFoundMsg,
                           style: const TextStyle(
-                            color: AppColors.warn,
+                            color: AppColors.warning,
                             fontSize: 12.5,
                           ),
                         ),
@@ -191,16 +250,16 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
                         final left = _StepsPanel(
                           nameController: _name,
                           steps: _steps,
-                          onReorder: (a, b) => setState(() {
-                            final tmp = _steps[a];
-                            _steps[a] = _steps[b];
-                            _steps[b] = tmp;
-                          }),
-                          onRemove: (i) => setState(() => _steps.removeAt(i)),
+                          reps: _reps,
+                          repsEnabled: widget.reps,
+                          onReorder: _reorder,
+                          onRemove: _remove,
+                          onRepsChanged: (i, v) => setState(() => _reps[i] = v),
                         );
                         final right = _LibraryPanel(
                           byCat: byCat,
-                          onPick: (tech) => setState(() => _steps.add(tech.id)),
+                          categoryFilter: widget.categoryFilter,
+                          onPick: (tech) => _addStep(tech.id),
                           onAddNew: _addCustomTechnique,
                         );
                         return wide
@@ -251,13 +310,19 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
 class _StepsPanel extends StatelessWidget {
   final TextEditingController nameController;
   final List<String> steps;
+  final List<int?> reps;
+  final bool repsEnabled;
   final void Function(int, int) onReorder;
   final void Function(int) onRemove;
+  final void Function(int, int?) onRepsChanged;
   const _StepsPanel({
     required this.nameController,
     required this.steps,
+    required this.reps,
+    required this.repsEnabled,
     required this.onReorder,
     required this.onRemove,
+    required this.onRepsChanged,
   });
 
   @override
@@ -321,6 +386,13 @@ class _StepsPanel extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (repsEnabled) ...[
+                      _RepControl(
+                        value: i < reps.length ? reps[i] : null,
+                        onChanged: (v) => onRepsChanged(i, v),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
                     IconButton2(
                       Icons.keyboard_arrow_up_rounded,
                       size: 17,
@@ -348,14 +420,62 @@ class _StepsPanel extends StatelessWidget {
   }
 }
 
+/// Compact optional rep target: "–" when unset, then a small stepper.
+class _RepControl extends StatelessWidget {
+  final int? value;
+  final ValueChanged<int?> onChanged;
+  const _RepControl({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final v = value;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.panel,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton2(
+            Icons.remove,
+            size: 15,
+            onTap: v == null ? null : () => onChanged(v <= 1 ? null : v - 1),
+          ),
+          SizedBox(
+            width: 30,
+            child: Text(
+              v == null ? '–' : '×$v',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          IconButton2(
+            Icons.add,
+            size: 15,
+            onTap: () => onChanged((v ?? 0) + 1),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _LibraryPanel extends StatelessWidget {
   final Map<TechniqueCategory, List<Technique>> byCat;
+  final TechniqueCategory? categoryFilter;
   final ValueChanged<Technique> onPick;
   final VoidCallback onAddNew;
   const _LibraryPanel({
     required this.byCat,
     required this.onPick,
     required this.onAddNew,
+    this.categoryFilter,
   });
 
   @override
@@ -363,14 +483,20 @@ class _LibraryPanel extends StatelessWidget {
     final store = context.watch<AppStore>();
     final lang = store.lang;
     final l = AppLocalizations.of(context)!;
-    final customTechs = store.data.techniques.where((t) => t.custom).toList();
+    final cats = categoryFilter == null
+        ? techniqueCategories
+        : techniqueCategories.where((c) => c.id == categoryFilter);
+    final customTechs = store.data.techniques
+        .where((t) => t.custom)
+        .where((t) => categoryFilter == null || t.category == categoryFilter)
+        .toList();
 
     return CardWidget(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionTitle(l.comboTechniqueLibrary),
-          for (final cat in techniqueCategories) ...[
+          for (final cat in cats) ...[
             Text(
               categoryLabel(cat.id, lang).toUpperCase(),
               style: const TextStyle(
@@ -455,7 +581,7 @@ class _LibraryPanel extends StatelessWidget {
                         color: AppColors.panel2,
                         borderRadius: BorderRadius.circular(9),
                         border: Border.all(
-                          color: AppColors.accent.withAlpha(90),
+                          color: AppColors.primary.withAlpha(90),
                         ),
                       ),
                       child: Row(
@@ -466,7 +592,7 @@ class _LibraryPanel extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.accent,
+                              color: AppColors.primary,
                             ),
                           ),
                           const SizedBox(width: 5),
@@ -500,4 +626,18 @@ String nextComboName(List<Combination> combos) {
   }
   final next = maxN + 1;
   return 'COMBO ${next.toString().padLeft(2, '0')}';
+}
+
+/// Scans trailing numbers of existing circuit names to produce "CIRCUITO NN".
+String nextCircuitName(List<Combination> combos) {
+  var maxN = 0;
+  for (final c in combos) {
+    final match = RegExp(r'(\d+)\s*$').firstMatch(c.name);
+    if (match != null) {
+      final n = int.tryParse(match.group(1)!);
+      if (n != null && n > maxN) maxN = n;
+    }
+  }
+  final next = maxN + 1;
+  return 'CIRCUITO ${next.toString().padLeft(2, '0')}';
 }

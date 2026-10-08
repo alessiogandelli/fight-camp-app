@@ -167,7 +167,7 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                         child: Text(
                           l.builderNotFound,
                           style: const TextStyle(
-                            color: AppColors.warn,
+                            color: AppColors.warning,
                             fontSize: 12.5,
                           ),
                         ),
@@ -186,7 +186,7 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                           ),
                           const SizedBox(height: AppSpacing.sm + 4),
                           Text(
-                            '${workoutTypeMeta(effective.type).icon} ${workoutTypeLabel(effective.type, lang)}',
+                            '${workoutTypeMeta(store.workoutTypeOf(effective)).icon} ${workoutTypeLabel(store.workoutTypeOf(effective), lang)}',
                             style: const TextStyle(
                               fontSize: 11.5,
                               color: AppColors.mut,

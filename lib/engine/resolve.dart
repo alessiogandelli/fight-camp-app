@@ -89,7 +89,8 @@ List<CueEvent> eventsBetween(SessionPlan plan, num from, num to) {
       if (ct > from && ct <= to && ct >= start) events.add(CountCue(n));
     }
   }
-  if (plan.totalSeconds > from && to >= plan.totalSeconds) events.add(DoneCue());
+  if (plan.totalSeconds > from && to >= plan.totalSeconds)
+    events.add(DoneCue());
   return events;
 }
 

@@ -109,6 +109,6 @@ void main() {
     expect(find.text('12'), findsNWidgets(2));
     // Store still exposes seed data (regression guard).
     final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
-    expect(store.data.techniques.length, 48);
+    expect(store.data.techniques.length, 110);
   });
 }

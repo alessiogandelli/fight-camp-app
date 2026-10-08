@@ -51,14 +51,28 @@ String dayLabel(int ts, Lang lang) {
 }
 
 final _itWeekdaysLong = const [
-  'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica'
+  'lunedì',
+  'martedì',
+  'mercoledì',
+  'giovedì',
+  'venerdì',
+  'sabato',
+  'domenica',
 ];
 
 String _weekdayLong(DateTime d, Lang lang) {
   // Monday-based index.
   final idx = (d.weekday + 6) % 7;
   if (lang == Lang.it) return _itWeekdaysLong[idx];
-  const en = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const en = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
   return en[idx];
 }
 
@@ -67,17 +81,43 @@ String weekdayShort(DateTime d, Lang lang) =>
     _weekdayLong(d, lang).substring(0, 3).toUpperCase();
 
 const _itMonthsShort = const [
-  'gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'
+  'gen',
+  'feb',
+  'mar',
+  'apr',
+  'mag',
+  'giu',
+  'lug',
+  'ago',
+  'set',
+  'ott',
+  'nov',
+  'dic',
 ];
 
 String _shortDate(DateTime d, Lang lang, String locale) {
   final weekday = _weekdayLong(d, lang).substring(0, 3);
-  final month = lang == Lang.it ? _itMonthsShort[d.month - 1] : _enMonthShort(d.month);
+  final month = lang == Lang.it
+      ? _itMonthsShort[d.month - 1]
+      : _enMonthShort(d.month);
   return '$weekday $month ${d.day}';
 }
 
 String _enMonthShort(int month) {
-  const en = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const en = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return en[month - 1];
 }
 

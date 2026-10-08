@@ -250,7 +250,7 @@ Future<void> showLogSessionModal(BuildContext context, AppStore store) async {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: rpe == i
-                            ? (i >= 8 ? AppColors.accent : AppColors.panel2)
+                            ? (i >= 8 ? AppColors.primary : AppColors.panel2)
                             : AppColors.panel2,
                         borderRadius: BorderRadius.circular(9),
                         border: Border.all(
@@ -276,7 +276,7 @@ Future<void> showLogSessionModal(BuildContext context, AppStore store) async {
                   '${l.commonLoad}: ${computeLoad(duration, rpe)}',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColors.accent,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -588,7 +588,7 @@ class _SessionCard extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: IconButton2(
                 Icons.delete_outline,
-                color: AppColors.accent,
+                color: AppColors.error,
                 onTap: () async {
                   final ok = await showConfirm(
                     context,
@@ -655,9 +655,9 @@ class HistoryPage extends StatelessWidget {
     return Stack(
       children: [
         SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             AppSpacing.md,
-            AppSpacing.sm,
+            MediaQuery.paddingOf(context).top + kAppHeaderHeight + 8,
             AppSpacing.md,
             96,
           ),
@@ -696,7 +696,7 @@ class HistoryPage extends StatelessWidget {
           bottom: 20,
           child: FloatingActionButton(
             heroTag: null,
-            backgroundColor: AppColors.accent,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             tooltip: l.historyLogOne,
             onPressed: () => showLogSessionModal(context, store),

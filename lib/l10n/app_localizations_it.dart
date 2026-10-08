@@ -1073,6 +1073,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSound => 'Segnali sonori';
 
   @override
+  String get settingsComboVoice => 'Leggi le combo';
+
+  @override
+  String get settingsComboVoiceHint =>
+      'Annuncia la combo nella pausa prima del round';
+
+  @override
+  String get settingsComboVoiceTest => 'Ascolta un esempio';
+
+  @override
   String get settingsVibration => 'Vibrazione';
 
   @override
@@ -1113,10 +1123,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get libraryBag => 'Sacco';
 
   @override
+  String get libraryConditioning => 'Potenziamento';
+
+  @override
   String get libraryTool => 'Tool';
 
   @override
   String get libraryStretching => 'Stretching';
+
+  @override
+  String get circuitsNew => 'Nuovo circuito';
+
+  @override
+  String get circuitsEdit => 'Modifica circuito';
 
   @override
   String get routineNew => 'Nuova routine di stretching';
@@ -1205,6 +1224,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get commonDuplicate => 'Duplica';
+
+  @override
+  String get commonActions => 'Azioni';
 
   @override
   String get comboDeleteTechniqueTitle => 'Elimina tecnica';

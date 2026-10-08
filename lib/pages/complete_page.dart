@@ -156,13 +156,13 @@ class _CompletePageState extends State<CompletePage>
                               height: 84,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.go.withAlpha(28),
+                                color: AppColors.success.withAlpha(28),
                                 border: Border.all(
-                                  color: AppColors.go.withAlpha(120),
+                                  color: AppColors.success.withAlpha(120),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.go.withAlpha(60),
+                                    color: AppColors.success.withAlpha(60),
                                     blurRadius: 32,
                                     spreadRadius: 4,
                                   ),
@@ -170,7 +170,7 @@ class _CompletePageState extends State<CompletePage>
                               ),
                               child: const Icon(
                                 Icons.check_rounded,
-                                color: AppColors.go,
+                                color: AppColors.success,
                                 size: 44,
                               ),
                             ),
@@ -204,7 +204,9 @@ class _CompletePageState extends State<CompletePage>
                                   ? Icons.cloud_done_rounded
                                   : Icons.cloud_off_rounded,
                               size: 14,
-                              color: saved ? AppColors.go : AppColors.warn,
+                              color: saved
+                                  ? AppColors.success
+                                  : AppColors.warning,
                             ),
                             const SizedBox(width: 6),
                             Flexible(
@@ -216,7 +218,9 @@ class _CompletePageState extends State<CompletePage>
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w700,
-                                  color: saved ? AppColors.go : AppColors.warn,
+                                  color: saved
+                                      ? AppColors.success
+                                      : AppColors.warning,
                                 ),
                               ),
                             ),
@@ -309,7 +313,7 @@ class _CompletePageState extends State<CompletePage>
                                             decoration: BoxDecoration(
                                               color: _rpe == i
                                                   ? (i >= 8
-                                                        ? AppColors.accent
+                                                        ? AppColors.primary
                                                         : AppColors.panel2)
                                                   : AppColors.bg,
                                               borderRadius:
@@ -371,7 +375,7 @@ class _CompletePageState extends State<CompletePage>
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.accent,
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                 ),

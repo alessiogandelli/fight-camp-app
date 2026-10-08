@@ -1068,6 +1068,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSound => 'Sound cues';
 
   @override
+  String get settingsComboVoice => 'Read combos aloud';
+
+  @override
+  String get settingsComboVoiceHint =>
+      'Announces the combo during the pause before the round';
+
+  @override
+  String get settingsComboVoiceTest => 'Hear an example';
+
+  @override
   String get settingsVibration => 'Vibration';
 
   @override
@@ -1107,10 +1117,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryBag => 'Bag';
 
   @override
+  String get libraryConditioning => 'Conditioning';
+
+  @override
   String get libraryTool => 'Tool';
 
   @override
   String get libraryStretching => 'Stretching';
+
+  @override
+  String get circuitsNew => 'New circuit';
+
+  @override
+  String get circuitsEdit => 'Edit circuit';
 
   @override
   String get routineNew => 'New stretching routine';
@@ -1200,6 +1219,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonDuplicate => 'Duplicate';
+
+  @override
+  String get commonActions => 'Actions';
 
   @override
   String get comboDeleteTechniqueTitle => 'Delete technique';

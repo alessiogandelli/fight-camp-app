@@ -63,7 +63,7 @@ LiveConfig configFromWorkout(
   ];
   return LiveConfig(
     name: w.name,
-    type: w.type,
+    type: deriveWorkoutType(w, combos, techniques),
     workoutId: w.id,
     prepSeconds: prepSeconds,
     endless: endless,

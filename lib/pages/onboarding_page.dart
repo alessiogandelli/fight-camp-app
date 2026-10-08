@@ -127,7 +127,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       height: 8,
                       width: i == _index ? 24 : 8,
                       decoration: BoxDecoration(
-                        color: i == _index ? AppColors.accent : AppColors.line,
+                        color: i == _index ? AppColors.primary : AppColors.line,
                         borderRadius: BorderRadius.circular(AppSpacing.pill),
                       ),
                     ),
@@ -276,14 +276,14 @@ class _CountdownVisualState extends State<_CountdownVisual>
     return _VisualCard(
       width: 220,
       height: 250,
-      glow: AppColors.accent,
+      glow: AppColors.primary,
       child: AnimatedBuilder(
         animation: _ctrl,
         builder: (context, _) {
           final v = _ctrl.value;
           final isWork = v < 0.5;
           final phase = isWork ? v * 2 : (v - 0.5) * 2;
-          final color = isWork ? AppColors.accent : AppColors.rest;
+          final color = isWork ? AppColors.work : AppColors.rest;
           final label = (isWork ? l.commonWork : l.commonRest).toUpperCase();
           final seconds = (3 - phase * 3).ceil().clamp(1, 3);
           return Column(
@@ -426,7 +426,7 @@ class _TechniqueChainVisualState extends State<_TechniqueChainVisual>
     final l = AppLocalizations.of(context)!;
     return _VisualCard(
       width: 250,
-      glow: AppColors.accent,
+      glow: AppColors.primary,
       child: AnimatedBuilder(
         animation: _ctrl,
         builder: (context, _) {
@@ -445,7 +445,7 @@ class _TechniqueChainVisualState extends State<_TechniqueChainVisual>
                   value: _ctrl.value,
                   minHeight: 4,
                   backgroundColor: AppColors.panel2,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+                  valueColor: const AlwaysStoppedAnimation(AppColors.primary),
                 ),
               ),
             ],
@@ -458,8 +458,8 @@ class _TechniqueChainVisualState extends State<_TechniqueChainVisual>
   Widget _chainRow(int i, double head) {
     final d = (head - i).abs().clamp(0.0, 1.0);
     final t = 1 - d;
-    final bg = Color.lerp(AppColors.panel2, AppColors.accent, t * 0.85)!;
-    final border = Color.lerp(AppColors.line, AppColors.accent, t)!;
+    final bg = Color.lerp(AppColors.panel2, AppColors.primary, t * 0.85)!;
+    final border = Color.lerp(AppColors.line, AppColors.primary, t)!;
     final fg = Color.lerp(AppColors.mut, Colors.white, t)!;
     return Transform.scale(
       scale: 1 + 0.04 * t,
@@ -474,7 +474,7 @@ class _TechniqueChainVisualState extends State<_TechniqueChainVisual>
           boxShadow: t > 0.5
               ? [
                   BoxShadow(
-                    color: AppColors.accent.withAlpha((60 * t).round()),
+                    color: AppColors.primary.withAlpha((60 * t).round()),
                     blurRadius: 18,
                     spreadRadius: -4,
                   ),
@@ -547,7 +547,7 @@ class _ProgressVisualState extends State<_ProgressVisual>
     return _VisualCard(
       width: 260,
       height: 250,
-      glow: AppColors.accent,
+      glow: AppColors.primary,
       child: AnimatedBuilder(
         animation: _ctrl,
         builder: (context, _) {
@@ -559,7 +559,7 @@ class _ProgressVisualState extends State<_ProgressVisual>
                 children: [
                   const Icon(
                     Icons.local_fire_department_rounded,
-                    color: AppColors.warn,
+                    color: AppColors.warning,
                     size: 22,
                   ),
                   const SizedBox(width: 6),
@@ -597,9 +597,9 @@ class _ProgressVisualState extends State<_ProgressVisual>
                       height: 10,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: i < 5 ? AppColors.go : AppColors.panel2,
+                        color: i < 5 ? AppColors.success : AppColors.panel2,
                         border: Border.all(
-                          color: i < 5 ? AppColors.go : AppColors.line,
+                          color: i < 5 ? AppColors.success : AppColors.line,
                         ),
                       ),
                     ),
@@ -627,14 +627,14 @@ class _ProgressVisualState extends State<_ProgressVisual>
               gradient: const LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
-                colors: [Color(0x99FF4D4D), AppColors.accent],
+                colors: [Color(0x99E63946), AppColors.primary],
               ),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(6),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accent.withAlpha(40),
+                  color: AppColors.primary.withAlpha(40),
                   blurRadius: 12,
                   spreadRadius: -4,
                 ),

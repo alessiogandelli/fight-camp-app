@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fight_camp/data/store.dart';
 import 'package:fight_camp/main.dart';
 import 'package:fight_camp/ui/widgets.dart';
+import 'package:glass_bottom_navigation/glass_bottom_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,13 +34,23 @@ void main() {
   ) async {
     await bootApp(tester);
 
-    // Walk through the bottom navigation tabs.
-    for (final label in ['WORKOUT', 'LIBRERIA', 'PROGRESSI', 'ALLENATI']) {
-      await tester.tap(find.text(label).last);
+    // Walk through the bottom navigation tabs. Tap the icons rather than the
+    // labels: the glass "magic lens" renders a duplicate, non-interactive
+    // label layer, so tapping the text can miss the real tab target.
+    final steps = <IconData, String>{
+      Icons.calendar_month_outlined: '/workouts',
+      Icons.format_list_numbered_outlined: '/library',
+      Icons.bar_chart_outlined: '/progress',
+      Icons.flash_on_outlined: '/',
+    };
+    for (final step in steps.entries) {
+      await tester.tap(find.byIcon(step.key).first);
       await tester.pumpAndSettle(const Duration(seconds: 1));
+      final tabContext = tester.element(find.byType(GlassBottomBar));
+      expect(GoRouterState.of(tabContext).matchedLocation, step.value);
     }
 
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(GlassBottomBar), findsOneWidget);
   });
 
   testWidgets(
@@ -66,9 +77,9 @@ void main() {
   testWidgets('store provider exposes seed data', (tester) async {
     await bootApp(tester);
     final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
-    expect(store.data.techniques.length, 48);
-    expect(store.data.combinations.length, 21);
-    expect(store.data.workouts.length, 6);
+    expect(store.data.techniques.length, 110);
+    expect(store.data.combinations.length, 160);
+    expect(store.data.workouts.length, 22);
     // No plans are auto-inserted any more: the user owns their schedule.
     expect(store.data.plans, isEmpty);
   });

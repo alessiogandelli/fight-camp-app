@@ -107,7 +107,7 @@ class _StretchRoutineBuilderPageState extends State<StretchRoutineBuilderPage> {
                         child: Text(
                           l.comboNotFoundMsg,
                           style: const TextStyle(
-                            color: AppColors.warn,
+                            color: AppColors.warning,
                             fontSize: 12.5,
                           ),
                         ),

@@ -138,7 +138,7 @@ class _TrainPageState extends State<TrainPage> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, parse(controller.text)),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.accent,
+              foregroundColor: AppColors.primary,
               textStyle: const TextStyle(fontWeight: FontWeight.w800),
             ),
             child: Text(l.commonSave.toUpperCase()),
@@ -159,44 +159,46 @@ class _TrainPageState extends State<TrainPage> {
     return Column(
       children: [
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _hero(l),
-              _constrain(
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    0,
-                    AppSpacing.md,
-                    AppSpacing.sm + 4,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (_active != null) ...[
-                        _activeBanner(l),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _hero(l),
+                _constrain(
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      AppSpacing.sm + 4,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_active != null) ...[
+                          _activeBanner(l),
+                          const SizedBox(height: AppSpacing.sm),
+                        ],
+                        _settingsCard(l),
                         const SizedBox(height: AppSpacing.sm),
+                        _combosRow(l),
+                        const SizedBox(height: AppSpacing.sm),
+                        _statsRow(l),
                       ],
-                      _settingsCard(l),
-                      const SizedBox(height: AppSpacing.sm),
-                      _combosRow(l),
-                      const SizedBox(height: AppSpacing.sm),
-                      _statsRow(l),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         _constrain(
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.md,
               0,
               AppSpacing.md,
-              AppSpacing.md,
+              glassNavClearance(context),
             ),
             child: _startButton(),
           ),
@@ -214,13 +216,6 @@ class _TrainPageState extends State<TrainPage> {
 
   Widget _hero(AppLocalizations l) => Container(
     width: double.infinity,
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF2A1416), AppColors.bg],
-      ),
-    ),
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 672),
@@ -261,11 +256,11 @@ class _TrainPageState extends State<TrainPage> {
   );
 
   Widget _activeBanner(AppLocalizations l) => CardWidget(
-    color: AppColors.accent.withAlpha(24),
+    color: AppColors.primary.withAlpha(24),
     padding: const EdgeInsets.all(14),
     child: Row(
       children: [
-        const Icon(Icons.play_circle_outline_rounded, color: AppColors.accent),
+        const Icon(Icons.play_circle_outline_rounded, color: AppColors.primary),
         const SizedBox(width: AppSpacing.sm + 4),
         Expanded(
           child: Column(
@@ -277,7 +272,7 @@ class _TrainPageState extends State<TrainPage> {
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
-                  color: AppColors.accent,
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -320,7 +315,7 @@ class _TrainPageState extends State<TrainPage> {
         _HeroTime(
           keyId: 'work',
           icon: Icons.fitness_center_rounded,
-          color: AppColors.accent,
+          color: AppColors.work,
           label: l.commonWork,
           value: fmtClock(_setup.work),
           current: _setup.work,

@@ -6,11 +6,13 @@ import 'package:provider/provider.dart';
 
 import '../app_args.dart';
 import '../data/store.dart';
+import '../lib/conditioning.dart';
 import '../lib/stretch.dart';
 import '../models/types.dart';
 import '../ui/theme.dart';
 import '../ui/toast.dart';
 import '../ui/widgets.dart';
+import '../ui/workout_icons.dart';
 import '../widgets/pushup_counter.dart';
 import '../l10n/app_localizations.dart';
 import 'combo_builder_page.dart';
@@ -22,26 +24,24 @@ Future<void> _openComboBuilder(BuildContext context, {String? comboId}) async {
   context.showToast(l.comboSaved);
 }
 
-Future<void> _showExercisePreview(
-  BuildContext context,
-  Technique tech,
-  Lang lang,
-) async {
-  final img = stretchImageFor(tech.id);
-  if (img == null) return;
-  final desc = tech.descriptionIn(lang);
+Future<void> _showImagePreview(
+  BuildContext context, {
+  required String title,
+  required String image,
+  String? description,
+}) async {
   await showAppModal<void>(
     context,
-    title: tech.nameIn(lang),
+    title: title,
     builder: (_) => Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(child: SvgPicture.asset(img, width: 220, height: 220)),
+        Center(child: SvgPicture.asset(image, width: 220, height: 220)),
         const SizedBox(height: 12),
-        if (desc != null)
+        if (description != null)
           Text(
-            desc,
+            description,
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 13, color: AppColors.mut),
           ),
@@ -53,8 +53,9 @@ Future<void> _showExercisePreview(
 
 enum _Filter { all, favorites, boxing, kicks, knees, elbows, defense }
 
-/// Library section: bag combos, stretching exercises, or the push-up tool.
-enum _Section { bag, stretching, tool }
+/// Library section: bag combos, conditioning circuits, stretching exercises,
+/// or the push-up tool.
+enum _Section { bag, conditioning, stretching, tool }
 
 class CombosPage extends StatefulWidget {
   const CombosPage({super.key});
@@ -75,9 +76,10 @@ class _CombosPageState extends State<CombosPage> {
     final l = AppLocalizations.of(context)!;
     final query = _query.toLowerCase();
 
-    // Bag combos: routines are a Workout concept and never surface here.
+    // Bag combos: routines and conditioning circuits live in Workouts, so
+    // neither surfaces here.
     var combos = store.data.combinations
-        .where((c) => !store.isStretchRoutine(c))
+        .where((c) => !store.isStretchRoutine(c) && !store.isCircuit(c))
         .where((c) => c.name.toLowerCase().contains(query))
         .toList();
     if (_filter == _Filter.favorites) {
@@ -117,14 +119,25 @@ class _CombosPageState extends State<CombosPage> {
         )
         .toList();
 
+    // Conditioning catalog: the exercises themselves, read-only.
+    final conditioning = store.data.techniques
+        .where((t) => t.category == TechniqueCategory.conditioning)
+        .where(
+          (t) =>
+              query.isEmpty ||
+              t.nameIn(lang).toLowerCase().contains(query) ||
+              t.shortIn(lang).toLowerCase().contains(query),
+        )
+        .toList();
+
     return Stack(
       children: [
         SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             AppSpacing.md,
+            MediaQuery.paddingOf(context).top + kAppHeaderHeight + 8,
             AppSpacing.md,
-            AppSpacing.md,
-            96,
+            glassNavClearance(context) + 72,
           ),
           child: Center(
             child: ConstrainedBox(
@@ -137,6 +150,10 @@ class _CombosPageState extends State<CombosPage> {
                     value: _section,
                     options: [
                       (value: _Section.bag, label: l.libraryBag),
+                      (
+                        value: _Section.conditioning,
+                        label: l.libraryConditioning,
+                      ),
                       (value: _Section.stretching, label: l.libraryStretching),
                       (value: _Section.tool, label: l.libraryTool),
                     ],
@@ -152,9 +169,9 @@ class _CombosPageState extends State<CombosPage> {
                     TextField(
                       onChanged: (v) => setState(() => _query = v),
                       decoration: InputDecoration(
-                        hintText: _section == _Section.stretching
-                            ? l.stretchesSearch
-                            : l.combosSearch,
+                        hintText: _section == _Section.bag
+                            ? l.combosSearch
+                            : l.stretchesSearch,
                         prefixIcon: const Icon(
                           Icons.search,
                           color: AppColors.mut,
@@ -193,7 +210,8 @@ class _CombosPageState extends State<CombosPage> {
                                     setState(() => _filter = _Filter.favorites),
                               ),
                               for (final c in techniqueCategories)
-                                if (c.id != TechniqueCategory.stretching) ...[
+                                if (c.id != TechniqueCategory.stretching &&
+                                    c.id != TechniqueCategory.conditioning) ...[
                                   const SizedBox(width: 6),
                                   ChipWidget(
                                     label: categoryLabel(c.id, lang),
@@ -223,6 +241,14 @@ class _CombosPageState extends State<CombosPage> {
                             lang: lang,
                           ),
                         ]
+                    else if (_section == _Section.conditioning)
+                      for (var i = 0; i < conditioning.length; i++) ...[
+                        if (i > 0) const SizedBox(height: AppSpacing.sm + 4),
+                        _ConditioningExerciseCard(
+                          technique: conditioning[i],
+                          lang: lang,
+                        ),
+                      ]
                     else if (combos.isEmpty)
                       EmptyState(
                         title: l.combosEmpty,
@@ -248,10 +274,10 @@ class _CombosPageState extends State<CombosPage> {
         if (_section == _Section.bag)
           Positioned(
             right: 20,
-            bottom: 20,
+            bottom: glassNavClearance(context) - 8,
             child: FloatingActionButton(
               heroTag: null,
-              backgroundColor: AppColors.accent,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               tooltip: l.combosCreate,
               onPressed: () => _openComboBuilder(context),
@@ -268,6 +294,7 @@ class _CombosPageState extends State<CombosPage> {
     TechniqueCategory.knees => _Filter.knees,
     TechniqueCategory.elbows => _Filter.elbows,
     TechniqueCategory.defense => _Filter.defense,
+    TechniqueCategory.conditioning => _Filter.all,
     TechniqueCategory.stretching => _Filter.all,
   };
 }
@@ -285,7 +312,12 @@ class _StretchExerciseCard extends StatelessWidget {
     return GestureDetector(
       onTap: img == null
           ? null
-          : () => _showExercisePreview(context, technique, lang),
+          : () => _showImagePreview(
+              context,
+              title: technique.nameIn(lang),
+              image: img,
+              description: desc,
+            ),
       child: CardWidget(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -344,23 +376,76 @@ class _StretchExerciseCard extends StatelessWidget {
   }
 }
 
-class _ComboCard extends StatefulWidget {
-  final Combination combo;
-  const _ComboCard({required this.combo});
+/// Read-only catalog entry for one conditioning exercise: illustration + name.
+class _ConditioningExerciseCard extends StatelessWidget {
+  final Technique technique;
+  final Lang lang;
+  const _ConditioningExerciseCard({
+    required this.technique,
+    required this.lang,
+  });
 
   @override
-  State<_ComboCard> createState() => _ComboCardState();
+  Widget build(BuildContext context) {
+    final img = conditioningImageFor(technique.id);
+    return GestureDetector(
+      onTap: img == null
+          ? null
+          : () => _showImagePreview(
+              context,
+              title: technique.nameIn(lang),
+              image: img,
+            ),
+      child: CardWidget(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.panel2,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: img != null
+                  ? SvgPicture.asset(img, width: 80, height: 80)
+                  : const Icon(
+                      Icons.fitness_center_rounded,
+                      color: AppColors.mut,
+                    ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                technique.nameIn(lang).toUpperCase(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+            if (img != null)
+              const Icon(Icons.zoom_in_rounded, size: 18, color: AppColors.mut),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _ComboCardState extends State<_ComboCard> {
-  bool _down = false;
+class _ComboCard extends StatelessWidget {
+  final Combination combo;
+  const _ComboCard({required this.combo});
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
     final lang = store.lang;
     final l = AppLocalizations.of(context)!;
-    final combo = widget.combo;
 
     Future<bool> confirmDelete() async {
       final ok = await showConfirm(
@@ -468,119 +553,63 @@ class _ComboCardState extends State<_ComboCard> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.accent.withAlpha(38),
+          color: AppColors.error.withAlpha(38),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.accent.withAlpha(140)),
+          border: Border.all(color: AppColors.error.withAlpha(140)),
         ),
-        child: const Icon(Icons.delete_outline, color: AppColors.accent),
+        child: const Icon(Icons.delete_outline, color: AppColors.error),
       ),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _down = true),
-        onTapCancel: () => setState(() => _down = false),
-        onTapUp: (_) => setState(() => _down = false),
-        onTap: () => _openComboBuilder(context, comboId: combo.id),
-        child: ScaleTransition(
-          scale: AlwaysStoppedAnimation(_down ? 0.98 : 1.0),
-          child: CardWidget(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        combo.name.toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13.5,
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                    ),
-                    IconButton2(
-                      combo.favorite
-                          ? Icons.star_rounded
-                          : Icons.star_outline_rounded,
-                      color: combo.favorite ? AppColors.warn : AppColors.mut,
-                      onTap: () => store.toggleFavorite(combo.id),
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [
-                      for (var i = 0; i < techniqueNames.length; i++) ...[
-                        Text(
-                          techniqueNames[i],
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            height: 1.4,
-                          ),
-                        ),
-                        if (i < techniqueNames.length - 1)
-                          const Text(
-                            '→',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.mut,
-                            ),
-                          ),
-                      ],
-                    ],
-                  ),
-                ),
-                Row(
-                  children: [
-                    Button(
-                      label: l.commonStart,
-                      size: BtnSize.sm,
-                      icon: Icons.play_arrow_rounded,
-                      onTap: quickStart,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Button(
-                      label: l.commonDuplicate,
-                      icon: Icons.copy_rounded,
-                      variant: BtnVariant.ghost,
-                      size: BtnSize.sm,
-                      onTap: () {
-                        final copy = store.duplicateCombination(combo.id);
-                        context.showToast(
-                          copy != null
-                              ? l.combosDuplicated
-                              : l.comboNotFoundMsg,
-                        );
-                      },
-                    ),
-                    const Spacer(),
-                    Text(
-                      l.commonEdit.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: AppColors.mut,
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 16,
-                      color: AppColors.mut,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+      child: ActionCard(
+        icon: comboCardIcon,
+        title: combo.name,
+        titleTrailing: IconButton2(
+          combo.favorite ? Icons.star_rounded : Icons.star_outline_rounded,
+          color: combo.favorite ? AppColors.warning : AppColors.mut,
+          onTap: () => store.toggleFavorite(combo.id),
         ),
+        body: Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            for (var i = 0; i < techniqueNames.length; i++) ...[
+              Text(
+                techniqueNames[i],
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  height: 1.4,
+                ),
+              ),
+              if (i < techniqueNames.length - 1)
+                const Text(
+                  '→',
+                  style: TextStyle(fontSize: 12, color: AppColors.mut),
+                ),
+            ],
+          ],
+        ),
+        playLabel: l.commonStart,
+        menuTitle: l.commonActions,
+        onPlay: quickStart,
+        onTap: () => _openComboBuilder(context, comboId: combo.id),
+        menu: [
+          CardMenuAction(
+            label: l.commonDuplicate,
+            icon: Icons.copy_rounded,
+            onTap: () {
+              final copy = store.duplicateCombination(combo.id);
+              context.showToast(
+                copy != null ? l.combosDuplicated : l.comboNotFoundMsg,
+              );
+            },
+          ),
+          CardMenuAction(
+            label: l.commonEdit,
+            icon: Icons.edit_outlined,
+            onTap: () => _openComboBuilder(context, comboId: combo.id),
+          ),
+        ],
       ),
     );
   }

@@ -7,7 +7,7 @@ import '../models/seed.dart';
 
 const dataKey = 'fight-camp:data:v3';
 const activeKey = 'fight-camp:active:v3';
-const storageVersion = 7;
+const storageVersion = 8;
 
 /// Seed workout ids that existed before v6 and are replaced by the new
 /// seed list (riscaldamento / corda / circuito / sparring).
@@ -82,6 +82,73 @@ AppData _migrateToV7(AppData d) {
   );
 }
 
+/// v8: append the club-programme seed (extra technique atoms, conditioning
+/// exercises, all THAI combos, conditioning circuits and interval workouts).
+/// Append-only and idempotent: only entities whose id is not already present
+/// are added, so user-created data is never touched.
+AppData _migrateToV8(AppData d) {
+  if (d.version >= 8) return d;
+  final now = DateTime.now().millisecondsSinceEpoch;
+
+  final techIds = {for (final t in d.techniques) t.id};
+  final addedTechs = seedTechniques
+      .where((t) => !techIds.contains(t.id))
+      .toList();
+
+  final comboIds = {for (final c in d.combinations) c.id};
+  final seedCombosAll = [
+    ...seedCombinations,
+    ...seedStretchRoutines,
+    ...seedCombosThai,
+    ...seedConditioningCircuits,
+  ];
+  final addedCombos = seedCombosAll
+      .where((c) => !comboIds.contains(c.id))
+      .map(
+        (c) => Combination(
+          id: c.id,
+          name: c.name,
+          techniqueIds: c.techniqueIds,
+          reps: c.reps,
+          favorite: c.favorite,
+          createdAt: now,
+        ),
+      )
+      .toList();
+
+  final workoutIds = {for (final w in d.workouts) w.id};
+  final seedWorkoutsAll = [
+    ...seedWorkouts,
+    seedStretchingWorkout,
+    ...seedThaiWorkouts,
+  ];
+  final addedWorkouts = seedWorkoutsAll
+      .where((w) => !workoutIds.contains(w.id))
+      .map(
+        (w) => Workout(
+          id: w.id,
+          name: w.name,
+          workDuration: w.workDuration,
+          restDuration: w.restDuration,
+          rounds: w.rounds,
+          combinationIds: w.combinationIds,
+          routineId: w.routineId,
+          createdAt: now,
+        ),
+      )
+      .toList();
+
+  return AppData(
+    version: 8,
+    techniques: [...d.techniques, ...addedTechs],
+    combinations: [...d.combinations, ...addedCombos],
+    workouts: [...d.workouts, ...addedWorkouts],
+    sessions: d.sessions,
+    plans: d.plans,
+    settings: d.settings,
+  );
+}
+
 Future<AppData> loadData() async {
   try {
     final prefs = await SharedPreferences.getInstance();
@@ -94,7 +161,7 @@ Future<AppData> loadData() async {
       return seedData();
     if (appData.version < 1 || appData.version > storageVersion)
       return seedData();
-    final migrated = _migrateToV7(_migrateToV6(appData));
+    final migrated = _migrateToV8(_migrateToV7(_migrateToV6(appData)));
     if (migrated.version != appData.version) await saveData(migrated);
     return migrated;
   } catch (_) {

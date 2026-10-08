@@ -2060,6 +2060,24 @@ abstract class AppLocalizations {
   /// **'Sound cues'**
   String get settingsSound;
 
+  /// No description provided for @settingsComboVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Read combos aloud'**
+  String get settingsComboVoice;
+
+  /// No description provided for @settingsComboVoiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Announces the combo during the pause before the round'**
+  String get settingsComboVoiceHint;
+
+  /// No description provided for @settingsComboVoiceTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear an example'**
+  String get settingsComboVoiceTest;
+
   /// No description provided for @settingsVibration.
   ///
   /// In en, this message translates to:
@@ -2138,6 +2156,12 @@ abstract class AppLocalizations {
   /// **'Bag'**
   String get libraryBag;
 
+  /// No description provided for @libraryConditioning.
+  ///
+  /// In en, this message translates to:
+  /// **'Conditioning'**
+  String get libraryConditioning;
+
   /// No description provided for @libraryTool.
   ///
   /// In en, this message translates to:
@@ -2149,6 +2173,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stretching'**
   String get libraryStretching;
+
+  /// No description provided for @circuitsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New circuit'**
+  String get circuitsNew;
+
+  /// No description provided for @circuitsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit circuit'**
+  String get circuitsEdit;
 
   /// No description provided for @routineNew.
   ///
@@ -2317,6 +2353,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duplicate'**
   String get commonDuplicate;
+
+  /// No description provided for @commonActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get commonActions;
 
   /// No description provided for @comboDeleteTechniqueTitle.
   ///

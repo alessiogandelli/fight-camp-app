@@ -24,6 +24,7 @@ void main() {
 
     // Segmented sections present.
     expect(find.text('SACCO'), findsOneWidget);
+    expect(find.text('POTENZIAMENTO'), findsOneWidget);
     expect(find.text('STRETCHING'), findsOneWidget);
 
     // Bag section (default): seed combos visible, no stretching exercises.
@@ -39,6 +40,15 @@ void main() {
     expect(find.text('COMBO 01'), findsNothing);
 
     // Exercises render their illustration images, and there is no routine FAB.
+    expect(find.byType(SvgPicture), findsWidgets);
+    expect(find.byType(FloatingActionButton), findsNothing);
+
+    // Switch to Conditioning: the exercise catalog appears, circuits do not.
+    await tester.tap(find.text('POTENZIAMENTO'));
+    await tester.pumpAndSettle();
+    expect(find.text('PUSH UP'), findsOneWidget);
+    expect(find.text('CRUNCH'), findsOneWidget);
+    expect(find.text('WHOLE BODY 1'), findsNothing);
     expect(find.byType(SvgPicture), findsWidgets);
     expect(find.byType(FloatingActionButton), findsNothing);
   });

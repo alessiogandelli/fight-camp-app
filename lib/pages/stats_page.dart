@@ -56,7 +56,7 @@ class WeeklyHero extends StatelessWidget {
       );
     } else {
       final up = diff > 0;
-      final color = up ? AppColors.go : AppColors.warn;
+      final color = up ? AppColors.success : AppColors.warning;
       comparison = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -157,7 +157,7 @@ class WeeklyHero extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
-                  color: reached ? AppColors.go : AppColors.mut,
+                  color: reached ? AppColors.success : AppColors.mut,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -171,7 +171,7 @@ class WeeklyHero extends StatelessWidget {
               minHeight: 5,
               backgroundColor: AppColors.line,
               valueColor: AlwaysStoppedAnimation(
-                reached ? AppColors.go : AppColors.accent,
+                reached ? AppColors.success : AppColors.primary,
               ),
             ),
           ),
@@ -362,7 +362,7 @@ class _DayCell extends StatelessWidget {
         width: 12,
         height: 12,
         decoration: const BoxDecoration(
-          color: AppColors.accent,
+          color: AppColors.primary,
           shape: BoxShape.circle,
         ),
       );
@@ -372,11 +372,13 @@ class _DayCell extends StatelessWidget {
         height: 12,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: plan!.done ? AppColors.go.withAlpha(60) : Colors.transparent,
+          color: plan!.done
+              ? AppColors.success.withAlpha(60)
+              : Colors.transparent,
           border: Border.all(
             color: plan!.done
-                ? AppColors.go.withAlpha(160)
-                : AppColors.accent.withAlpha(130),
+                ? AppColors.success.withAlpha(160)
+                : AppColors.primary.withAlpha(130),
             width: 1.5,
           ),
         ),
@@ -406,7 +408,7 @@ class _DayCell extends StatelessWidget {
             decoration: today
                 ? BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.accent.withAlpha(150)),
+                    border: Border.all(color: AppColors.primary.withAlpha(150)),
                   )
                 : null,
             child: marker,
@@ -575,13 +577,13 @@ class _VolumeChart extends StatelessWidget {
             ],
             isCurved: true,
             curveSmoothness: 0.25,
-            color: AppColors.accent,
+            color: AppColors.primary,
             barWidth: 2.5,
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
                 radius: index == lastIndex ? 4 : 2,
-                color: AppColors.accent,
+                color: AppColors.primary,
                 strokeWidth: 2,
                 strokeColor: AppColors.bg,
               ),
@@ -592,8 +594,8 @@ class _VolumeChart extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.accent.withAlpha(70),
-                  AppColors.accent.withAlpha(0),
+                  AppColors.primary.withAlpha(70),
+                  AppColors.primary.withAlpha(0),
                 ],
               ),
             ),
@@ -768,7 +770,9 @@ class _DeltaPill extends StatelessWidget {
     }
     final flat = d == 0;
     final up = d > 0;
-    final color = flat ? AppColors.mut : (up ? AppColors.go : AppColors.warn);
+    final color = flat
+        ? AppColors.mut
+        : (up ? AppColors.success : AppColors.warning);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -863,7 +867,7 @@ class CombinationsCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
-                          color: i == 0 ? AppColors.accent : AppColors.mut,
+                          color: i == 0 ? AppColors.primary : AppColors.mut,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -886,7 +890,7 @@ class CombinationsCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.accent,
+                        color: AppColors.primary,
                         fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -1117,7 +1121,7 @@ class _TechBar extends StatelessWidget {
             value: max <= 0 ? 0 : nameCount.count / max,
             minHeight: 5,
             backgroundColor: AppColors.line,
-            valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+            valueColor: const AlwaysStoppedAnimation(AppColors.primary),
           ),
         ),
       ],

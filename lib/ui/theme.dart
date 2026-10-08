@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../engine/plan.dart';
+
 /// Spacing scale tokens. Use these instead of ad-hoc paddings/margins.
 ///
 /// xs = 4, sm = 8, md = 16, lg = 24, xl = 32 (logical pixels).
@@ -9,6 +11,25 @@ import 'package:flutter/services.dart';
 /// Fixed height of the app header bar, shared between the shell and pages
 /// that need to render content underneath it (e.g. the home hero).
 const double kAppHeaderHeight = 60;
+
+/// Floating glass bottom navigation metrics. The bar rides above the bottom
+/// safe area; pages must leave [glassNavClearance] of space at the bottom so
+/// their content is not hidden behind it (the body extends behind the bar).
+///
+/// These mirror the `GlassTabBar.bottom` used by the shell: total height is
+/// `barHeight + 2 * verticalPadding`.
+const double kGlassNavHeight = 64;
+const double kGlassNavVerticalPadding = 8;
+double glassNavClearance(BuildContext context) =>
+    kGlassNavHeight +
+    kGlassNavVerticalPadding * 2 +
+    16 +
+    MediaQuery.paddingOf(context).bottom;
+
+/// Fixed top glow shared by the shell: fades from a dark maroon at the
+/// physical top into [AppColors.bg]. Sized in logical pixels below the status
+/// bar; the shell adds the top safe-area inset on top of it.
+const double kHeroGlowHeight = 140;
 
 class AppSpacing {
   static const double xs = 4;
@@ -19,18 +40,45 @@ class AppSpacing {
   static const double pill = 999;
 }
 
+/// Semantic colour tokens. Pick by meaning, not by hue.
+///
+/// Rules (see `docs/adr/0005-colori-semantici.md`):
+/// - [primary] is the brand red. Never use it for errors or the timer.
+/// - [work] / [rest] are the timer states: green = WORK, red = REST.
+/// - [error] is for real errors, validation and destructive actions.
+/// - [warning] and [success] are generic feedback.
 class AppColors {
+  // Surfaces and text.
   static const bg = Color(0xFF09090B);
   static const panel = Color(0xFF121216);
   static const panel2 = Color(0xFF1A1A20);
   static const line = Color(0xFF26262E);
   static const ink = Color(0xFFF4F4F1);
   static const mut = Color(0xFF9A9AA5);
-  static const accent = Color(0xFFFF4D4D);
-  static const rest = Color(0xFF4CC3FF);
-  static const warn = Color(0xFFFFB224);
-  static const go = Color(0xFF3DDC84);
+
+  // Brand.
+  static const primary = Color(0xFFE63946);
+
+  // Home hero glow: dark maroon wash fading into [bg].
+  static const glow = Color(0xFF2A1416);
+
+  // Timer states.
+  static const work = Color(0xFF22C55E);
+  static const rest = Color(0xFFEF4444);
+
+  // Semantic feedback.
+  static const error = Color(0xFFB91C1C);
+  static const warning = Color(0xFFF59E0B);
+  static const success = Color(0xFF22C55E);
 }
+
+/// Single source of truth for timer phase colours: green = WORK, red = REST,
+/// amber = preparation.
+Color phaseColor(SegmentKind kind) => switch (kind) {
+  SegmentKind.prep => AppColors.warning,
+  SegmentKind.work => AppColors.work,
+  SegmentKind.rest => AppColors.rest,
+};
 
 /// Shared text styles. Use these instead of ad-hoc font sizes so the
 /// typography stays consistent across pages.
@@ -75,10 +123,10 @@ ThemeData buildTheme() {
     brightness: Brightness.dark,
     scaffoldBackgroundColor: AppColors.bg,
     colorScheme: const ColorScheme.dark(
-      primary: AppColors.accent,
-      secondary: AppColors.accent,
+      primary: AppColors.primary,
+      secondary: AppColors.primary,
       surface: AppColors.panel,
-      error: AppColors.accent,
+      error: AppColors.error,
     ),
     fontFamilyFallback: const ['.SF UI Text', 'Roboto', 'Segoe UI'],
   );
@@ -88,9 +136,9 @@ ThemeData buildTheme() {
       displayColor: AppColors.ink,
     ),
     textSelectionTheme: const TextSelectionThemeData(
-      cursorColor: AppColors.accent,
-      selectionColor: Color(0x55FF4D4D),
-      selectionHandleColor: AppColors.accent,
+      cursorColor: AppColors.primary,
+      selectionColor: Color(0x55E63946),
+      selectionHandleColor: AppColors.primary,
     ),
     inputDecorationTheme: inputCls(),
     dialogTheme: DialogThemeData(

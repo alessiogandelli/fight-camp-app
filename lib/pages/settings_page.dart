@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../data/store.dart';
 import '../l10n/app_localizations.dart';
+import '../lib/combo_voice.dart';
+import '../lib/haptics.dart';
+import '../lib/speech.dart';
 import '../lib/vibrate.dart' as vibrate;
 import '../models/types.dart';
 import '../ui/theme.dart';
@@ -115,6 +118,28 @@ class _SettingsPageState extends State<SettingsPage> {
                             onChanged: (v) => store.setSettings(sound: v),
                           ),
                         ),
+                        if (store.lang == Lang.it)
+                          _SettingRow(
+                            icon: Icons.record_voice_over_rounded,
+                            label: l.settingsComboVoice,
+                            hint: l.settingsComboVoiceHint,
+                            trailing: Toggle(
+                              value: settings.comboVoice,
+                              onChanged: (v) =>
+                                  store.setSettings(comboVoice: v),
+                            ),
+                          ),
+                        if (store.lang == Lang.it)
+                          _SettingRow(
+                            icon: Icons.play_circle_outline_rounded,
+                            label: l.settingsComboVoiceTest,
+                            trailing: const Icon(
+                              Icons.volume_up_rounded,
+                              size: 20,
+                              color: AppColors.mut,
+                            ),
+                            onTap: () => _previewCombo(store),
+                          ),
                         if (_supported)
                           _SettingRow(
                             icon: Icons.vibration_rounded,
@@ -174,6 +199,20 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
+  /// Speaks a real combo (first bag combo if any, else a short sample) so the
+  /// user can hear how announcements sound without starting a session.
+  void _previewCombo(AppStore store) {
+    final byId = {for (final t in store.data.techniques) t.id: t};
+    final bagCombos = store.data.combinations.where(
+      (c) => c.techniqueIds.isNotEmpty && !store.isStretchRoutine(c),
+    );
+    final combo = bagCombos.isEmpty ? null : bagCombos.first;
+    final words = combo == null
+        ? const ['uno', 'due']
+        : spokenCombo(combo.techniqueIds, byId, store.lang);
+    Speech.speakCombo(words.isEmpty ? const ['uno', 'due'] : words);
+  }
 }
 
 class _SettingRow extends StatelessWidget {
@@ -181,39 +220,52 @@ class _SettingRow extends StatelessWidget {
   final String label;
   final String? hint;
   final Widget trailing;
+  final VoidCallback? onTap;
   const _SettingRow({
     required this.icon,
     required this.label,
     this.hint,
     required this.trailing,
+    this.onTap,
   });
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 4),
-    child: Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.mut),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(label.toUpperCase(), style: AppText.muted),
-              if (hint != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  hint!,
-                  style: const TextStyle(fontSize: 11, color: AppColors.mut),
-                ),
+  Widget build(BuildContext context) {
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.mut),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label.toUpperCase(), style: AppText.muted),
+                if (hint != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    hint!,
+                    style: const TextStyle(fontSize: 11, color: AppColors.mut),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        trailing,
-      ],
-    ),
-  );
+          const SizedBox(width: AppSpacing.sm),
+          trailing,
+        ],
+      ),
+    );
+    if (onTap == null) return row;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        Haptics.selection();
+        onTap!();
+      },
+      child: row,
+    );
+  }
 }

@@ -83,7 +83,7 @@ class ToastProviderState extends State<ToastProvider> {
                                   m.onAction?.call();
                                 },
                                 style: TextButton.styleFrom(
-                                  foregroundColor: AppColors.accent,
+                                  foregroundColor: AppColors.primary,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
                                     vertical: 4,

@@ -12,9 +12,11 @@ import '../data/storage.dart';
 import '../engine/plan.dart';
 import '../engine/resolve.dart';
 import '../engine/session_engine.dart';
+import '../lib/combo_voice.dart';
 import '../lib/format.dart';
 import '../lib/haptics.dart';
 import '../lib/session.dart';
+import '../lib/speech.dart';
 import '../models/types.dart';
 import '../app_args.dart';
 import '../ui/theme.dart';
@@ -48,6 +50,12 @@ class _LivePageState extends State<LivePage> {
   bool _checkedSnapshot = false;
   bool _autostart = false;
   SessionEngine? _engine;
+
+  // Voice announcements: track the last segment seen so a combo is read once,
+  // on entering the pause (or the initial prep) before its round.
+  EngineStatus _lastSpokenStatus = EngineStatus.idle;
+  int _lastSpokenIndex = -1;
+  bool _speechActive = false;
 
   @override
   void initState() {
@@ -109,7 +117,9 @@ class _LivePageState extends State<LivePage> {
     final store = context.watch<AppStore>();
     if (!_checkedSnapshot || _config == null || _plan == null) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
       );
     }
     final lang = store.lang;
@@ -130,6 +140,7 @@ class _LivePageState extends State<LivePage> {
         builder: (context, engine, _) {
           final view = engine.view;
           _engine = engine;
+          _maybeAnnounceCombo(engine, store);
           // Routed starts skip the idle "ready" screen: begin immediately.
           if (_autostart && engine.status == EngineStatus.idle) {
             _autostart = false;
@@ -171,11 +182,7 @@ class _LivePageState extends State<LivePage> {
     final plan = engine.plan;
     final l = AppLocalizations.of(context)!;
     final view = engine.view;
-    final segColor = switch (view.segment?.kind) {
-      SegmentKind.rest => AppColors.rest,
-      SegmentKind.prep => AppColors.warn,
-      _ => AppColors.accent,
-    };
+    final segColor = phaseColor(view.segment?.kind ?? SegmentKind.work);
     final isLandscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
 
@@ -263,6 +270,17 @@ class _LivePageState extends State<LivePage> {
       onExit: () => _confirmExit(context, engine),
     );
 
+    // The phase side carries the combo during a work round and the upcoming
+    // round's combination during a break. Mount it whenever either exists, so
+    // the break screen also previews the next round (previously the side was
+    // dropped on non-work segments, hiding the preview).
+    final seg0 = view.segment;
+    final showPhaseSide =
+        _hasCombo(view) ||
+        (seg0 != null &&
+            seg0.kind != SegmentKind.work &&
+            nextWorkPreview(plan, view.segIndex).kind != PreviewKind.none);
+
     final Widget body;
     if (isLandscape) {
       // The surrounding screen stays upright: header remains at the top and
@@ -291,7 +309,7 @@ class _LivePageState extends State<LivePage> {
           timerFace(3),
         ],
       );
-      body = _hasCombo(view)
+      body = showPhaseSide
           ? Column(
               children: [
                 Expanded(child: timerFaces),
@@ -304,7 +322,7 @@ class _LivePageState extends State<LivePage> {
               ],
             )
           : timerFaces;
-    } else if (!_hasCombo(view)) {
+    } else if (!showPhaseSide) {
       body = Center(
         child: TimerBlock(
           engine: engine,
@@ -358,6 +376,54 @@ class _LivePageState extends State<LivePage> {
     final slot = seg.slot;
     if (slot == null) return false;
     return slot.techniqueIds.isNotEmpty || slot.image != null;
+  }
+
+  /// Reads the upcoming combo aloud when the session enters the pause (or the
+  /// initial prep) before a work round. Silenced outside Italian or when the
+  /// combo-voice setting is off. Re-announces after a deliberate resume.
+  void _maybeAnnounceCombo(SessionEngine engine, AppStore store) {
+    final view = engine.view;
+    final seg = view.segment;
+    final status = engine.status;
+    final idx = view.segIndex;
+    final becameActive =
+        status == EngineStatus.running &&
+        _lastSpokenStatus != EngineStatus.running;
+    final changed = idx != _lastSpokenIndex;
+    _lastSpokenStatus = status;
+    _lastSpokenIndex = idx;
+
+    if (status != EngineStatus.running ||
+        seg == null ||
+        seg.kind == SegmentKind.work) {
+      if (_speechActive) {
+        _speechActive = false;
+        Speech.stop();
+      }
+      return;
+    }
+    if (!becameActive && !changed) return;
+    if (store.lang != Lang.it || !store.data.settings.comboVoice) return;
+
+    final preview = nextWorkPreview(engine.plan, idx);
+    final slot = preview.slot;
+    if (preview.kind != PreviewKind.round ||
+        slot == null ||
+        slot.techniqueIds.isEmpty) {
+      return;
+    }
+    final byId = {for (final t in store.data.techniques) t.id: t};
+    final words = spokenCombo(slot.techniqueIds, byId, store.lang);
+    if (words.isEmpty) return;
+
+    final target = idx;
+    _speechActive = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (!mounted || _engine?.view.segIndex != target) return;
+        Speech.speakCombo(words);
+      });
+    });
   }
 
   void _onSnapshot(LiveConfig cfg, int ms, EngineStatus status) {
@@ -448,7 +514,7 @@ class _LivePageState extends State<LivePage> {
             TextButton(
               onPressed: () => Navigator.pop(ctx, _EndlessChoice.save),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.accent,
+                foregroundColor: AppColors.primary,
                 textStyle: const TextStyle(fontWeight: FontWeight.w800),
               ),
               child: Text(l.liveStopAndSave.toUpperCase()),
@@ -577,11 +643,7 @@ class TimerBlock extends StatelessWidget {
     this.compact = false,
   });
 
-  Color get _phaseColor => switch (view.segment?.kind) {
-    SegmentKind.rest => AppColors.rest,
-    SegmentKind.prep => AppColors.warn,
-    _ => AppColors.accent,
-  };
+  Color get _phaseColor => phaseColor(view.segment?.kind ?? SegmentKind.work);
 
   @override
   Widget build(BuildContext context) {
@@ -593,7 +655,7 @@ class TimerBlock extends StatelessWidget {
     final last3 = view.segRemaining <= 3;
     final color = last3
         ? Colors.white
-        : (warnMode ? AppColors.warn : _phaseColor);
+        : (warnMode ? AppColors.warning : _phaseColor);
     final seg = view.segment;
     final phaseTag = seg == null
         ? ''
@@ -747,8 +809,8 @@ class _ProgressBarState extends State<ProgressBar>
 
   double _start = 0;
   double _end = 0;
-  Color _startColor = AppColors.accent;
-  Color _endColor = AppColors.accent;
+  Color _startColor = AppColors.primary;
+  Color _endColor = AppColors.primary;
 
   double get _value => _start + (_end - _start) * _curve.value;
   Color get _valueColor => Color.lerp(_startColor, _endColor, _curve.value)!;
@@ -984,8 +1046,8 @@ class _PhaseBlockState extends State<PhaseBlock>
     } else if (seg.kind == SegmentKind.prep) {
       content = Text(
         l.liveGetReady.toUpperCase(),
-        style: const TextStyle(
-          color: AppColors.warn,
+        style: TextStyle(
+          color: phaseColor(seg.kind),
           fontWeight: FontWeight.w900,
           fontSize: 22,
           letterSpacing: 2,
@@ -994,8 +1056,8 @@ class _PhaseBlockState extends State<PhaseBlock>
     } else {
       content = Text(
         l.commonRest.toUpperCase(),
-        style: const TextStyle(
-          color: AppColors.rest,
+        style: TextStyle(
+          color: phaseColor(seg.kind),
           fontWeight: FontWeight.w900,
           fontSize: 26,
           letterSpacing: 2,
@@ -1249,7 +1311,7 @@ class ControlsBar extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: done
                         ? AppColors.panel2
-                        : (running ? AppColors.go : AppColors.accent),
+                        : (running ? AppColors.work : AppColors.primary),
                   ),
                   child: Icon(
                     done

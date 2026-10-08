@@ -72,15 +72,24 @@ class AppStore extends ChangeNotifier {
       _copyWith(
         techniques: data.techniques.where((t) => t.id != id).toList(),
         combinations: data.combinations
-            .map(
-              (c) => Combination(
+            .map((c) {
+              final keptIds = <String>[];
+              final keptReps = <int?>[];
+              for (var i = 0; i < c.techniqueIds.length; i++) {
+                if (c.techniqueIds[i] != id) {
+                  keptIds.add(c.techniqueIds[i]);
+                  keptReps.add(c.repsAt(i));
+                }
+              }
+              return Combination(
                 id: c.id,
                 name: c.name,
-                techniqueIds: c.techniqueIds.where((tid) => tid != id).toList(),
+                techniqueIds: keptIds,
+                reps: keptReps.any((r) => r != null) ? keptReps : const [],
                 favorite: c.favorite,
                 createdAt: c.createdAt,
-              ),
-            )
+              );
+            })
             .where((c) => c.techniqueIds.isNotEmpty)
             .toList(),
       ),
@@ -126,6 +135,7 @@ class AppStore extends ChangeNotifier {
       id: uid(),
       name: '${src.name} COPY',
       techniqueIds: src.techniqueIds.toList(),
+      reps: src.reps.toList(),
       favorite: false,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
@@ -160,6 +170,20 @@ class AppStore extends ChangeNotifier {
       (id) => byId[id]?.category == TechniqueCategory.stretching,
     );
   }
+
+  /// A conditioning circuit: an ordered list of strength/bodyweight exercises
+  /// (category [TechniqueCategory.conditioning]), optionally with rep targets.
+  bool isCircuit(Combination c) {
+    if (c.techniqueIds.isEmpty) return false;
+    final byId = {for (final t in data.techniques) t.id: t};
+    return c.techniqueIds.every(
+      (id) => byId[id]?.category == TechniqueCategory.conditioning,
+    );
+  }
+
+  /// Category-aware workout type (see [deriveWorkoutType]).
+  WorkoutType workoutTypeOf(Workout w) =>
+      deriveWorkoutType(w, data.combinations, data.techniques);
 
   // ---- workouts ----
   void saveWorkout(Workout w) {
@@ -234,13 +258,19 @@ class AppStore extends ChangeNotifier {
   }
 
   // ---- settings ----
-  void setSettings({bool? sound, bool? vibration, int? prepSeconds}) {
+  void setSettings({
+    bool? sound,
+    bool? vibration,
+    int? prepSeconds,
+    bool? comboVoice,
+  }) {
     _set(
       _copyWith(
         settings: data.settings.copyWith(
           sound: sound,
           vibration: vibration,
           prepSeconds: prepSeconds,
+          comboVoice: comboVoice,
         ),
       ),
     );

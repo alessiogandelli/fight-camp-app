@@ -22,7 +22,10 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
     // Open the Workout tab and launch the builder from its FAB.
-    await tester.tap(find.text('WORKOUT').last);
+    await tester.tap(
+      find.byIcon(Icons.calendar_month_outlined).first,
+      warnIfMissed: false,
+    );
     await tester.pumpAndSettle(const Duration(seconds: 1));
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
@@ -64,7 +67,10 @@ void main() {
     await tester.pumpWidget(const FightCampApp());
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    await tester.tap(find.text('WORKOUT').last);
+    await tester.tap(
+      find.byIcon(Icons.calendar_month_outlined).first,
+      warnIfMissed: false,
+    );
     await tester.pumpAndSettle(const Duration(seconds: 1));
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();

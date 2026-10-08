@@ -32,11 +32,11 @@ class _ProgressPageState extends State<ProgressPage> {
     final sessions = store.data.sessions;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.md,
+        MediaQuery.paddingOf(context).top + kAppHeaderHeight + 8,
         AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.xl,
+        glassNavClearance(context),
       ),
       child: Center(
         child: ConstrainedBox(
@@ -118,7 +118,7 @@ class _HistoryCard extends StatelessWidget {
               Expanded(child: SectionTitle(l.historyTitle)),
               TextButton(
                 onPressed: () => context.go('/progress/history'),
-                style: TextButton.styleFrom(foregroundColor: AppColors.accent),
+                style: TextButton.styleFrom(foregroundColor: AppColors.primary),
                 child: Text(
                   l.progressViewHistory.toUpperCase(),
                   style: const TextStyle(
