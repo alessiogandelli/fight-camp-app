@@ -31,8 +31,11 @@ La tab che contiene liste ordinate di movimenti e lo strumento extra, in quattro
 ### Tool
 Strumento extra non basato sul Timer (attualmente solo il contatore di flessioni). Vive nella sezione Tool della Libreria.
 
+### Allenamento
+Il blocco di sessioni eseguite di seguito (al massimo 15 minuti di stacco fra una e l'altra) e/o coperte dallo stesso workout di Apple Salute: riscaldamento, sacco e stretching sono **un** Allenamento, non tre. È l'unità che Progressi conta ("12 allenamenti") e che lo Storico mostra come una scheda espandibile. Può esistere anche senza sessioni dell'app, quando arriva solo da Salute.
+
 ### Sessione
-Un allenamento registrato: il risultato completato (o abbandonato) di un Timer o di un Workout. Visibile in Progressi.
+L'unità atomica registrata: il risultato completato (o abbandonato) di un Timer o di un Workout, oppure un workout importato da Salute. Più Sessioni ravvicinate formano un Allenamento. Visibile dentro l'Allenamento in Progressi e Storico.
 
 ### Progressi
 La pagina che mostra come sta andando l'allenamento: riassunti, volume nel tempo, lista delle Sessioni.
@@ -43,3 +46,4 @@ La pagina che mostra come sta andando l'allenamento: riassunti, volume nel tempo
 - **Combo ≠ Routine**: le Combo sono colpi, le Routine sono esercizi di stretching. Non sono la stessa cosa, anche se condividono la struttura di lista ordinata di Tecniche.
 - **Combo/Routine ≠ Workout**: una Combo o una Routine è una lista di movimenti; un Workout è una configurazione del Timer che può referenziare una di esse.
 - **Workout ≠ sequenza di blocchi**: un Workout è un'unica configurazione a intervalli uniformi, non una sequenza di parti eterogenee.
+- **Allenamento ≠ Sessione**: l'Allenamento è il blocco reale (più Sessioni, più eventuali workout di Salute); la Sessione è il singolo pezzo registrato. I Progressi contano Allenamenti, le statistiche di volume sommano Sessioni.

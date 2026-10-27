@@ -193,7 +193,7 @@ class _Slide extends StatelessWidget {
               Text(
                 body,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.mut,
                   fontSize: 14.5,
                   height: 1.55,
@@ -445,7 +445,7 @@ class _TechniqueChainVisualState extends State<_TechniqueChainVisual>
                   value: _ctrl.value,
                   minHeight: 4,
                   backgroundColor: AppColors.panel2,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                  valueColor: AlwaysStoppedAnimation(AppColors.primary),
                 ),
               ),
             ],
@@ -460,7 +460,7 @@ class _TechniqueChainVisualState extends State<_TechniqueChainVisual>
     final t = 1 - d;
     final bg = Color.lerp(AppColors.panel2, AppColors.primary, t * 0.85)!;
     final border = Color.lerp(AppColors.line, AppColors.primary, t)!;
-    final fg = Color.lerp(AppColors.mut, Colors.white, t)!;
+    final fg = Color.lerp(AppColors.mut, AppColors.ink, t)!;
     return Transform.scale(
       scale: 1 + 0.04 * t,
       alignment: Alignment.centerLeft,
@@ -557,7 +557,7 @@ class _ProgressVisualState extends State<_ProgressVisual>
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.local_fire_department_rounded,
                     color: AppColors.warning,
                     size: 22,
@@ -624,7 +624,7 @@ class _ProgressVisualState extends State<_ProgressVisual>
           child: Container(
             height: 104 * h,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [Color(0x99E63946), AppColors.primary],

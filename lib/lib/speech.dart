@@ -6,20 +6,27 @@
 // available engine (or in widget tests) speech simply does nothing.
 import 'package:flutter_tts/flutter_tts.dart';
 
+import '../models/types.dart';
+
 class Speech {
   static FlutterTts? _tts;
   static bool _ready = false;
+  static Lang _lang = Lang.it;
 
   static FlutterTts _instance() => _tts ??= FlutterTts();
 
-  /// Configures language/voice once. Safe to call repeatedly. Each platform
-  /// call is isolated so one failure cannot skip the rest of the setup.
-  static Future<void> _init() async {
-    if (_ready) return;
+  static String _locale(Lang lang) => lang == Lang.it ? 'it-IT' : 'en-US';
+
+  /// Configures language/voice once per app language. Safe to call repeatedly:
+  /// the work is skipped unless the language changed. Each platform call is
+  /// isolated so one failure cannot skip the rest of the setup.
+  static Future<void> _init(Lang lang) async {
+    if (_ready && _lang == lang) return;
+    _lang = lang;
     _ready = true;
     final tts = _instance();
     try {
-      await tts.setLanguage('it-IT');
+      await tts.setLanguage(_locale(lang));
     } catch (_) {}
     try {
       await tts.setSpeechRate(0.45);
@@ -41,10 +48,11 @@ class Speech {
     } catch (_) {}
   }
 
-  /// Speaks [words] as a single announcement, replacing any in-flight one.
-  static Future<void> speakCombo(List<String> words) async {
+  /// Speaks [words] as a single announcement in the app's [lang], replacing any
+  /// in-flight one.
+  static Future<void> speakCombo(List<String> words, Lang lang) async {
     if (words.isEmpty) return;
-    await _init();
+    await _init(lang);
     try {
       await _instance().stop();
       await _instance().speak(words.join(', '));

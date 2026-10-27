@@ -155,6 +155,28 @@ void main() {
       expect(counts, [3, 2, 1]);
     });
 
+    test('strikes the round-end bell when a work round hands over to rest', () {
+      // prep 5 + work 20 → rest starts at t=25.
+      final evs = eventsBetween(plan, 24.9, 25.1);
+      expect(evs.any((e) => e is RoundEndCue), true);
+      expect(evs.any((e) => e is DoneCue), false);
+    });
+
+    test('does not fake a round end when jumping into a rest', () {
+      // A jump lands mid-rest: jumpTo re-emits only the segment cue.
+      final evs = eventsBetween(plan, 30, 30);
+      expect(evs, isEmpty);
+    });
+
+    test('the last round ends the session, not a round', () {
+      final evs = eventsBetween(
+        plan,
+        plan.totalSeconds - 0.2,
+        plan.totalSeconds + 0.1,
+      );
+      expect(evs.any((e) => e is RoundEndCue), false);
+    });
+
     test('fires done at the end of the plan', () {
       final evs = eventsBetween(
         plan,

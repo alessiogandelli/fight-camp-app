@@ -154,7 +154,7 @@ class _PushupCounterSectionState extends State<PushupCounterSection> {
       children: [
         Text(
           l.pushupsHint,
-          style: const TextStyle(fontSize: 12, color: AppColors.mut),
+          style: TextStyle(fontSize: 12, color: AppColors.mut),
         ),
         const SizedBox(height: 12),
         ClipRRect(
@@ -229,7 +229,7 @@ class _PushupCounterSectionState extends State<PushupCounterSection> {
                                 _ => l.pushupsErrorGeneric,
                               },
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12.5,
                                 color: AppColors.mut,
                               ),
@@ -287,13 +287,13 @@ class _PushupCounterSectionState extends State<PushupCounterSection> {
             const SizedBox(width: 8),
             Text(
               l.pushupsCount,
-              style: const TextStyle(color: AppColors.mut, fontSize: 13),
+              style: TextStyle(color: AppColors.mut, fontSize: 13),
             ),
             if (elapsedSec > 0) ...[
               const SizedBox(width: 12),
               Text(
                 '· ${fmtClock(elapsedSec)}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.mut,
                   fontSize: 13,
                   fontFeatures: [FontFeature.tabularFigures()],

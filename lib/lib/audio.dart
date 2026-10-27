@@ -1,4 +1,4 @@
-// Cue sounds played from baked WAV assets in assets/audio/.
+// Cue sounds played from baked WAV assets in assets/audio/<bank>/.
 //
 // The waveforms are generated offline from cue_synth.dart by
 // tool/generate_cues.dart and committed. Playing them through AssetSource lets
@@ -9,6 +9,8 @@ import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
 
+import 'cue_synth.dart';
+
 class Sound {
   static final List<AudioPlayer> _pool = List.generate(
     4,
@@ -17,10 +19,20 @@ class Sound {
   static int _next = 0;
   static bool _primed = false;
 
+  /// Which cue bank plays. Set once from settings on load and whenever the
+  /// athlete changes it in Settings; unknown ids fall back to the classic bank.
+  static String get bank => _bank;
+
+  static set bank(String value) {
+    _bank = cueBanks.contains(value) ? value : defaultCueBank;
+  }
+
+  static String _bank = defaultCueBank;
+
   static String _uid() =>
       '${DateTime.now().microsecondsSinceEpoch}-${math.Random().nextInt(999999)}';
 
-  static Source _source(String name) => AssetSource('audio/$name.wav');
+  static Source _source(String name) => AssetSource('audio/$_bank/$name.wav');
 
   /// Warms the audio session and preloads each pooled player so the first cue
   /// of a session fires without the usual cold-start lag. Idempotent.
@@ -53,4 +65,7 @@ class Sound {
   static Future<void> done() => _play('done');
   static Future<void> warn() => _play('warn');
   static Future<void> count() => _play('count');
+
+  /// Plays a single cue outside a session (Settings preview).
+  static Future<void> preview([String name = 'done']) => _play(name);
 }

@@ -9,11 +9,12 @@ import 'package:provider/provider.dart';
 
 import 'app_args.dart';
 import 'data/store.dart';
+import 'health/health_service.dart';
 import 'l10n/app_localizations.dart';
+import 'lib/appearance.dart';
 import 'models/types.dart';
 import 'pages/combos_page.dart';
 import 'pages/complete_page.dart';
-import 'pages/history_page.dart';
 import 'pages/live_page.dart';
 import 'pages/onboarding_page.dart';
 import 'pages/progress_page.dart';
@@ -27,7 +28,11 @@ import 'ui/widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(overlayStyle);
+  SystemChrome.setSystemUIOverlayStyle(
+    overlayStyleFor(
+      WidgetsBinding.instance.platformDispatcher.platformBrightness,
+    ),
+  );
   // The app is portrait-only except on the live session screen, which
   // unlocks landscape for bag-side propping (see LivePage).
   SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
@@ -41,18 +46,90 @@ Future<void> main() async {
   );
 }
 
-class FightCampApp extends StatelessWidget {
+class FightCampApp extends StatefulWidget {
   const FightCampApp({super.key});
 
   @override
+  State<FightCampApp> createState() => _FightCampAppState();
+}
+
+class _FightCampAppState extends State<FightCampApp>
+    with WidgetsBindingObserver {
+  // The app follows the phone's appearance: dark phone -> dark app, light
+  // phone -> light app. Cached here so the palette is set before the first
+  // frame and refreshed when the system appearance flips at runtime.
+  late Brightness _brightness =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness;
+
+  /// The first successful build is enough to kick off the Health sync; the
+  /// service throttles itself to once an hour.
+  bool _healthSyncKicked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _applyAppearance();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final store = _storeRef;
+    if (store != null) healthService.maybeAutoSync(store);
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    final next = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    if (next == _brightness) return;
+    setState(() => _brightness = next);
+  }
+
+  /// Points the static colour tokens at the matching palette and syncs the
+  /// status/navigation bars. Used for the splash, before the store (and so the
+  /// saved theme choice) is available.
+  void _applyAppearance() {
+    AppColors.palette = _brightness == Brightness.dark
+        ? AppPalette.dark
+        : AppPalette.light;
+    SystemChrome.setSystemUIOverlayStyle(overlayStyleFor(_brightness));
+  }
+
+  /// The palette actually in use: the saved choice, or the phone's appearance
+  /// when the choice is [ThemeChoice.system].
+  Brightness _effectiveBrightness(ThemeChoice choice) => switch (choice) {
+    ThemeChoice.light => Brightness.light,
+    ThemeChoice.dark => Brightness.dark,
+    ThemeChoice.system => _brightness,
+  };
+
+  ThemeMode _themeModeOf(ThemeChoice choice) => switch (choice) {
+    ThemeChoice.light => ThemeMode.light,
+    ThemeChoice.dark => ThemeMode.dark,
+    ThemeChoice.system => ThemeMode.system,
+  };
+
+  @override
   Widget build(BuildContext context) {
+    _applyAppearance();
     return FutureProvider<AppStore?>(
       create: (_) => AppStore.create(),
       initialData: null,
       child: Consumer<AppStore?>(
         builder: (context, store, _) {
           if (store == null) {
-            return MaterialApp(theme: buildTheme(), home: const SplashScreen());
+            return MaterialApp(
+              key: ValueKey('splash-$_brightness'),
+              theme: buildTheme(_brightness),
+              home: const SplashScreen(),
+            );
           }
           return ChangeNotifierProvider.value(
             value: store,
@@ -61,9 +138,40 @@ class FightCampApp extends StatelessWidget {
                 // Expose the store to the router's redirect so it can gate the
                 // first-run onboarding without rebuilding the router.
                 _storeRef = s;
+                // The saved choice wins over the phone; "system" defers to the
+                // platform brightness tracked above.
+                final brightness = _effectiveBrightness(
+                  s.data.settings.themeChoice,
+                );
+                AppColors.palette = brightness == Brightness.dark
+                    ? AppPalette.dark
+                    : AppPalette.light;
+                SystemChrome.setSystemUIOverlayStyle(
+                  overlayStyleFor(brightness),
+                );
+                // Native iOS chrome follows the in-app override, not the phone.
+                NativeAppearance.apply(
+                  s.data.settings.themeChoice == ThemeChoice.system
+                      ? 'system'
+                      : brightness == Brightness.dark
+                      ? 'dark'
+                      : 'light',
+                );
+                if (!_healthSyncKicked) {
+                  _healthSyncKicked = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) healthService.maybeAutoSync(s);
+                  });
+                }
                 return MaterialApp.router(
+                  // Remounting on appearance changes is deliberate: the colour
+                  // tokens are read during build, so a fresh tree guarantees
+                  // even const widgets repaint with the new palette.
+                  key: ValueKey('app-$brightness'),
                   routerConfig: _router,
-                  theme: buildTheme(),
+                  theme: buildTheme(Brightness.light),
+                  darkTheme: buildTheme(Brightness.dark),
+                  themeMode: _themeModeOf(s.data.settings.themeChoice),
                   // The store's language (system-detected on first launch, then
                   // user-settable) drives localization for both lookup systems.
                   locale: Locale(s.lang.code),
@@ -122,12 +230,6 @@ final GoRouter _router = GoRouter(
             GoRoute(
               path: '/progress',
               builder: (_, __) => const ProgressPage(),
-              routes: [
-                GoRoute(
-                  path: 'history',
-                  builder: (_, __) => const HistoryPage(),
-                ),
-              ],
             ),
           ],
         ),
@@ -222,7 +324,7 @@ class ShellScaffold extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     return GlassScaffold(
       backgroundColor: AppColors.bg,
-      statusBarStyle: GlassStatusBarStyle.light,
+      statusBarStyle: GlassStatusBarStyle.auto,
       extendBody: true,
       // Fade content out more strongly behind the bar so it stays legible.
       bottomEdgeFadeExtent: 40,
@@ -247,7 +349,7 @@ class ShellScaffold extends StatelessWidget {
               child: IgnorePointer(
                 child: Container(
                   height: MediaQuery.of(context).padding.top + kHeroGlowHeight,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -286,7 +388,7 @@ class ShellScaffold extends StatelessWidget {
             initialLocation: i == navigationShell.currentIndex,
           ),
           // Full width so the bar is not left-aligned with a gap on the right.
-          style: const GlassBottomNavStyle(
+          style: GlassBottomNavStyle(
             accent: AppColors.primary,
             radius: 26,
             widthFactor: 1.0,
@@ -338,7 +440,7 @@ class ShellScaffold extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => context.go('/'),
-                    child: const Text.rich(
+                    child: Text.rich(
                       TextSpan(
                         text: 'FIGHT ',
                         children: [

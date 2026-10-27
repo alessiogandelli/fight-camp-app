@@ -57,6 +57,10 @@ class _LivePageState extends State<LivePage> {
   int _lastSpokenIndex = -1;
   bool _speechActive = false;
 
+  /// Session-only override of the saved combo-voice setting, driven by the
+  /// mute button next to Restart/Exit. Reset from settings on every session.
+  bool _comboVoiceOn = true;
+
   @override
   void initState() {
     super.initState();
@@ -110,13 +114,14 @@ class _LivePageState extends State<LivePage> {
     _seenComboIds = {};
     _resumeMs = resumeMs;
     _autostart = autostart && resumeMs == null;
+    _comboVoiceOn = store.data.settings.comboVoice;
   }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
     if (!_checkedSnapshot || _config == null || _plan == null) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
@@ -268,6 +273,9 @@ class _LivePageState extends State<LivePage> {
     final controls = ControlsBar(
       engine: engine,
       onExit: () => _confirmExit(context, engine),
+      // Hidden only when there is nothing to announce.
+      comboVoiceOn: _sessionHasCombos(plan) ? _comboVoiceOn : null,
+      onToggleComboVoice: _toggleComboVoice,
     );
 
     // The phase side carries the combo during a work round and the upcoming
@@ -379,8 +387,9 @@ class _LivePageState extends State<LivePage> {
   }
 
   /// Reads the upcoming combo aloud when the session enters the pause (or the
-  /// initial prep) before a work round. Silenced outside Italian or when the
-  /// combo-voice setting is off. Re-announces after a deliberate resume.
+  /// initial prep) before a work round, in the app language. Silenced when the
+  /// combo-voice setting or the session mute is off. Re-announces after a
+  /// deliberate resume.
   void _maybeAnnounceCombo(SessionEngine engine, AppStore store) {
     final view = engine.view;
     final seg = view.segment;
@@ -403,7 +412,7 @@ class _LivePageState extends State<LivePage> {
       return;
     }
     if (!becameActive && !changed) return;
-    if (store.lang != Lang.it || !store.data.settings.comboVoice) return;
+    if (!_comboVoiceOn || !store.data.settings.comboVoice) return;
 
     final preview = nextWorkPreview(engine.plan, idx);
     final slot = preview.slot;
@@ -421,7 +430,7 @@ class _LivePageState extends State<LivePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 400), () {
         if (!mounted || _engine?.view.segIndex != target) return;
-        Speech.speakCombo(words);
+        Speech.speakCombo(words, store.lang);
       });
     });
   }
@@ -438,6 +447,24 @@ class _LivePageState extends State<LivePage> {
       );
     }
   }
+
+  /// Mutes/unmutes only the spoken combo announcements: the cue bells keep
+  /// playing because they are gated by the sound setting alone.
+  void _toggleComboVoice() {
+    Haptics.light();
+    setState(() => _comboVoiceOn = !_comboVoiceOn);
+    if (!_comboVoiceOn) {
+      _speechActive = false;
+      Speech.stop();
+    }
+  }
+
+  /// True when at least one work round actually references a combo. Free,
+  /// defense, conditioning and stretching rounds have nothing to announce, so
+  /// the mute button stays out of the way there.
+  bool _sessionHasCombos(SessionPlan plan) => plan.segments.any(
+    (s) => s.kind == SegmentKind.work && s.slot?.comboId != null,
+  );
 
   Future<void> _onDone(int elapsedMs) async {
     if (_exited || !mounted) return;
@@ -591,16 +618,13 @@ class _IdleView extends StatelessWidget {
           Text(
             l.liveTotal(plan.rounds, fmtClock(plan.totalSeconds)),
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.mut,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: AppColors.mut, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
           Text(
             l.liveReady,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.mut, fontSize: 13),
+            style: TextStyle(color: AppColors.mut, fontSize: 13),
           ),
           const Spacer(),
           SizedBox(
@@ -616,7 +640,7 @@ class _IdleView extends StatelessWidget {
           Text(
             l.liveSoundHint,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.mut, fontSize: 11.5),
+            style: TextStyle(color: AppColors.mut, fontSize: 11.5),
           ),
         ],
       ),
@@ -654,7 +678,7 @@ class TimerBlock extends StatelessWidget {
         view.segment!.duration >= 10;
     final last3 = view.segRemaining <= 3;
     final color = last3
-        ? Colors.white
+        ? AppColors.ink
         : (warnMode ? AppColors.warning : _phaseColor);
     final seg = view.segment;
     final phaseTag = seg == null
@@ -775,7 +799,7 @@ class _PulsingLabelState extends State<PulsingLabel>
     opacity: Tween(begin: 0.35, end: 1.0).animate(controller),
     child: Text(
       widget.text.toUpperCase(),
-      style: const TextStyle(
+      style: TextStyle(
         color: AppColors.mut,
         fontSize: 12,
         fontWeight: FontWeight.w800,
@@ -913,13 +937,13 @@ String? slotSubtitle(Slot slot, AppLocalizations l) {
 class AutoFitText extends StatelessWidget {
   final String text;
   final double maxFontSize;
-  final Color color;
+  final Color? color;
   final TextAlign align;
   const AutoFitText(
     this.text, {
     super.key,
     this.maxFontSize = 44,
-    this.color = Colors.white,
+    this.color,
     this.align = TextAlign.center,
   });
 
@@ -952,7 +976,7 @@ class AutoFitText extends StatelessWidget {
             fontWeight: FontWeight.w900,
             height: 1.05,
             letterSpacing: -0.5,
-            color: color,
+            color: color ?? AppColors.ink,
           ),
         );
       },
@@ -1142,7 +1166,7 @@ class SlotContent extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               label!.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.mut,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -1174,7 +1198,7 @@ class SlotContent extends StatelessWidget {
             padding: const EdgeInsets.only(top: 10),
             child: Text(
               subtitle,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.mut,
                 fontSize: 13,
                 fontStyle: FontStyle.italic,
@@ -1234,7 +1258,7 @@ class NextPreviewRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.6,
@@ -1252,7 +1276,7 @@ class NextPreviewRow extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
                 color: AppColors.ink,
@@ -1270,7 +1294,18 @@ class NextPreviewRow extends StatelessWidget {
 class ControlsBar extends StatelessWidget {
   final SessionEngine engine;
   final VoidCallback onExit;
-  const ControlsBar({super.key, required this.engine, required this.onExit});
+
+  /// Session combo-voice state. Null hides the mute button (no combos to
+  /// announce, or a language without announcements).
+  final bool? comboVoiceOn;
+  final VoidCallback? onToggleComboVoice;
+  const ControlsBar({
+    super.key,
+    required this.engine,
+    required this.onExit,
+    this.comboVoiceOn,
+    this.onToggleComboVoice,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1339,8 +1374,13 @@ class ControlsBar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          // Wrap instead of Row: on a narrow phone the combo-voice toggle drops
+          // to a second line rather than overflowing the exit pill.
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 14,
+            runSpacing: 10,
             children: [
               PillButton(
                 label: l.liveRestart,
@@ -1360,7 +1400,6 @@ class ControlsBar extends StatelessWidget {
                         engine.restart();
                       },
               ),
-              const SizedBox(width: 14),
               PillButton(
                 label: l.liveExitWorkout,
                 icon: Icons.close,
@@ -1369,9 +1408,54 @@ class ControlsBar extends StatelessWidget {
                   onExit();
                 },
               ),
+              if (comboVoiceOn != null)
+                ComboVoiceButton(
+                  on: comboVoiceOn!,
+                  onTap: onToggleComboVoice ?? () {},
+                ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Small round toggle in the bottom bar: mutes the spoken combos only, never
+/// the cue bells. Icon reads as "muted" while it is off.
+class ComboVoiceButton extends StatelessWidget {
+  final bool on;
+  final VoidCallback onTap;
+  const ComboVoiceButton({super.key, required this.on, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Tooltip(
+      message: on ? l.liveComboVoiceMute : l.liveComboVoiceUnmute,
+      child: Semantics(
+        button: true,
+        toggled: on,
+        label: on ? l.liveComboVoiceMute : l.liveComboVoiceUnmute,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.line),
+              color: on ? AppColors.bg : AppColors.panel2,
+            ),
+            child: Icon(
+              on
+                  ? Icons.record_voice_over_rounded
+                  : Icons.voice_over_off_rounded,
+              size: 20,
+              color: on ? AppColors.ink : AppColors.mut,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1439,7 +1523,7 @@ class PillButton extends StatelessWidget {
             const SizedBox(width: 7),
             Text(
               label.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.8,

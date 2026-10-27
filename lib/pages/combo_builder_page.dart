@@ -237,7 +237,7 @@ class _ComboBuilderPageState extends State<ComboBuilderPage> {
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           l.comboNotFoundMsg,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.warning,
                             fontSize: 12.5,
                           ),
@@ -341,13 +341,13 @@ class _StepsPanel extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             l.comboTechniquesCount(steps.length),
-            style: const TextStyle(fontSize: 11, color: AppColors.mut),
+            style: TextStyle(fontSize: 11, color: AppColors.mut),
           ),
           const SizedBox(height: 10),
           if (steps.isEmpty)
             Text(
               l.comboTapHint,
-              style: const TextStyle(fontSize: 12.5, color: AppColors.mut),
+              style: TextStyle(fontSize: 12.5, color: AppColors.mut),
             )
           else
             ...List.generate(steps.length, (i) {
@@ -369,7 +369,7 @@ class _StepsPanel extends StatelessWidget {
                   children: [
                     Text(
                       '${i + 1}.',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.mut,
                         fontWeight: FontWeight.w800,
                         fontSize: 12,
@@ -499,7 +499,7 @@ class _LibraryPanel extends StatelessWidget {
           for (final cat in cats) ...[
             Text(
               categoryLabel(cat.id, lang).toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: AppColors.mut,
@@ -589,18 +589,14 @@ class _LibraryPanel extends StatelessWidget {
                         children: [
                           Text(
                             tech.shortIn(lang),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                               color: AppColors.primary,
                             ),
                           ),
                           const SizedBox(width: 5),
-                          const Icon(
-                            Icons.close,
-                            size: 11,
-                            color: AppColors.mut,
-                          ),
+                          Icon(Icons.close, size: 11, color: AppColors.mut),
                         ],
                       ),
                     ),

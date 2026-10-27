@@ -160,13 +160,13 @@ class _ButtonState extends State<Button> {
 class IconButton2 extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onTap;
-  final Color color;
+  final Color? color;
   final double size;
   const IconButton2(
     this.icon, {
     super.key,
     this.onTap,
-    this.color = AppColors.mut,
+    this.color,
     this.size = 20,
   });
 
@@ -193,7 +193,11 @@ class _IconButton2State extends State<IconButton2> {
         padding: const EdgeInsets.all(8),
         child: Opacity(
           opacity: widget.onTap == null ? 0.4 : (_down ? 0.7 : 1),
-          child: Icon(widget.icon, size: widget.size, color: widget.color),
+          child: Icon(
+            widget.icon,
+            size: widget.size,
+            color: widget.color ?? AppColors.mut,
+          ),
         ),
       ),
     );
@@ -237,7 +241,7 @@ class SectionTitle extends StatelessWidget {
     padding: const EdgeInsets.only(bottom: 10),
     child: Text(
       text.toUpperCase(),
-      style: const TextStyle(
+      style: TextStyle(
         color: AppColors.mut,
         fontSize: 11,
         fontWeight: FontWeight.w700,
@@ -266,7 +270,7 @@ class StatCard extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 9.5,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
@@ -285,10 +289,7 @@ class StatCard extends StatelessWidget {
           ),
         ),
         if (sub != null)
-          Text(
-            sub!,
-            style: const TextStyle(fontSize: 10.5, color: AppColors.mut),
-          ),
+          Text(sub!, style: TextStyle(fontSize: 10.5, color: AppColors.mut)),
       ],
     ),
   );
@@ -324,7 +325,7 @@ class EmptyState extends StatelessWidget {
         Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.mut, fontSize: 13),
+          style: TextStyle(color: AppColors.mut, fontSize: 13),
         ),
         if (action != null) ...[const SizedBox(height: 14), action!],
       ],
@@ -420,10 +421,7 @@ class ActionCard extends StatelessWidget {
           ),
           if (meta != null) ...[
             const SizedBox(height: 4),
-            Text(
-              meta!,
-              style: const TextStyle(fontSize: 11.5, color: AppColors.mut),
-            ),
+            Text(meta!, style: TextStyle(fontSize: 11.5, color: AppColors.mut)),
           ],
           if (body != null) ...[const SizedBox(height: 10), body!],
         ],
@@ -530,7 +528,7 @@ class _CardMenuButton extends StatelessWidget {
         ),
       );
     },
-    child: const SizedBox(
+    child: SizedBox(
       width: 44,
       height: 44,
       child: Icon(Icons.more_vert_rounded, size: 20, color: AppColors.mut),
@@ -599,15 +597,9 @@ Future<T?> showAppModal<T>(
           ),
           border: Border(
             top: BorderSide(color: wide ? AppColors.line : AppColors.line),
-            left: wide
-                ? const BorderSide(color: AppColors.line)
-                : BorderSide.none,
-            right: wide
-                ? const BorderSide(color: AppColors.line)
-                : BorderSide.none,
-            bottom: wide
-                ? const BorderSide(color: AppColors.line)
-                : BorderSide.none,
+            left: wide ? BorderSide(color: AppColors.line) : BorderSide.none,
+            right: wide ? BorderSide(color: AppColors.line) : BorderSide.none,
+            bottom: wide ? BorderSide(color: AppColors.line) : BorderSide.none,
           ),
         ),
         child: Builder(
@@ -701,7 +693,7 @@ class Field extends StatelessWidget {
     children: [
       Text(
         label.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
@@ -712,7 +704,7 @@ class Field extends StatelessWidget {
       child,
       if (hint != null) ...[
         const SizedBox(height: 5),
-        Text(hint!, style: const TextStyle(fontSize: 11, color: AppColors.mut)),
+        Text(hint!, style: TextStyle(fontSize: 11, color: AppColors.mut)),
       ],
     ],
   );
@@ -776,8 +768,8 @@ class Select<T> extends StatelessWidget {
         value: value,
         isExpanded: true,
         dropdownColor: AppColors.panel2,
-        icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.mut),
-        style: const TextStyle(color: AppColors.ink, fontSize: 14),
+        icon: Icon(Icons.keyboard_arrow_down, color: AppColors.mut),
+        style: TextStyle(color: AppColors.ink, fontSize: 14),
         items: [
           for (final o in options)
             DropdownMenuItem(value: o.value, child: Text(o.label)),
@@ -971,19 +963,19 @@ class NumStepper extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: '$value',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        // RichText does not inherit DefaultTextStyle: without
+                        // this the value stays white in the light palette.
+                        color: AppColors.ink,
                       ),
                     ),
                     if (suffix != null)
                       TextSpan(
                         text: ' ${suffix}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.mut,
-                        ),
+                        style: TextStyle(fontSize: 11, color: AppColors.mut),
                       ),
                   ],
                 ),

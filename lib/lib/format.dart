@@ -19,6 +19,21 @@ String fmtMinutes(num totalSec) {
   return '$h h ${pad2(m % 60)}m';
 }
 
+/// Compact duration used in cards: `15h 22m`, `42m`, `35s`.
+String fmtDurationHuman(num totalSec) {
+  final s = totalSec < 0 ? 0 : totalSec.round();
+  final hours = s ~/ 3600;
+  final minutes = (s % 3600) ~/ 60;
+  if (hours > 0) return '${hours}h ${pad2(minutes)}m';
+  if (minutes > 0) return '${minutes}m';
+  return '${s}s';
+}
+
+String fmtTimeOfDay(int timestamp) {
+  final d = DateTime.fromMillisecondsSinceEpoch(timestamp);
+  return '${pad2(d.hour)}:${pad2(d.minute)}';
+}
+
 int? parseTimeInput(String raw) {
   final s = raw.trim();
   if (s.isEmpty) return null;

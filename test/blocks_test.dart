@@ -163,6 +163,39 @@ void main() {
     });
   });
 
+  group('Settings persistence', () {
+    test('legacy blobs without bellSet fall back to the classic bank', () {
+      final s = Settings.fromJson(<String, dynamic>{'sound': true});
+      expect(s.bellSet, 'classic');
+      expect(s.comboVoice, true);
+    });
+
+    test('bellSet round-trips through JSON', () {
+      final s = Settings.fromJson(<String, dynamic>{'bellSet': 'ring'});
+      expect(s.bellSet, 'ring');
+      expect(Settings.fromJson(s.toJson()).bellSet, 'ring');
+      expect(s.copyWith(bellSet: 'beep').bellSet, 'beep');
+      expect(s.copyWith(bellSet: 'beep').sound, s.sound);
+    });
+
+    test('theme choice defaults to system and round-trips', () {
+      final legacy = Settings.fromJson(<String, dynamic>{});
+      expect(legacy.themeChoice, ThemeChoice.system);
+      expect(
+        Settings.fromJson(<String, dynamic>{'theme': 'dark'}).themeChoice,
+        ThemeChoice.dark,
+      );
+      expect(
+        Settings.fromJson(<String, dynamic>{'theme': 'nonsense'}).themeChoice,
+        ThemeChoice.system,
+      );
+      final forced = legacy.copyWith(themeChoice: ThemeChoice.light);
+      expect(forced.themeChoice, ThemeChoice.light);
+      expect(Settings.fromJson(forced.toJson()).themeChoice, ThemeChoice.light);
+      expect(forced.toJson()['theme'], 'light');
+    });
+  });
+
   group('stretching workout end-to-end at the buildPlan seam', () {
     test('produces a work/rest phase per exercise and resolves no combos', () {
       final plan = _plan(_workout(routine: 'routine-1'));

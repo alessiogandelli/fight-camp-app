@@ -106,7 +106,7 @@ class _StretchRoutineBuilderPageState extends State<StretchRoutineBuilderPage> {
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           l.comboNotFoundMsg,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.warning,
                             fontSize: 12.5,
                           ),
@@ -207,13 +207,13 @@ class _RoutineStepsPanel extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             l.routineExercisesCount(steps.length),
-            style: const TextStyle(fontSize: 11, color: AppColors.mut),
+            style: TextStyle(fontSize: 11, color: AppColors.mut),
           ),
           const SizedBox(height: 10),
           if (steps.isEmpty)
             Text(
               l.routineTapHint,
-              style: const TextStyle(fontSize: 12.5, color: AppColors.mut),
+              style: TextStyle(fontSize: 12.5, color: AppColors.mut),
             )
           else
             ...List.generate(steps.length, (i) {

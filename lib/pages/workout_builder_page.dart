@@ -166,7 +166,7 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                         padding: const EdgeInsets.only(top: AppSpacing.sm),
                         child: Text(
                           l.builderNotFound,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.warning,
                             fontSize: 12.5,
                           ),
@@ -187,7 +187,7 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                           const SizedBox(height: AppSpacing.sm + 4),
                           Text(
                             '${workoutTypeMeta(store.workoutTypeOf(effective)).icon} ${workoutTypeLabel(store.workoutTypeOf(effective), lang)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
                               color: AppColors.mut,
                               fontWeight: FontWeight.w700,
@@ -208,7 +208,7 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                                 fmtClock(effective.workDuration),
                                 fmtClock(effective.restDuration),
                               ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11.5,
                                 color: AppColors.mut,
                               ),
@@ -366,10 +366,7 @@ class _WorkoutBuilderPageState extends State<WorkoutBuilderPage> {
                         fmtClock(totals.work),
                         fmtClock(totals.rest),
                       ),
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.mut,
-                      ),
+                      style: TextStyle(fontSize: 11.5, color: AppColors.mut),
                     ),
                   ],
                 ),

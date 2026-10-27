@@ -71,6 +71,10 @@ void main() {
       await tester.tap(find.text('EN'));
       await tester.pumpAndSettle();
       expect(find.text('SETTINGS'), findsOneWidget);
+      // Combo voice and the bell banks stay available in every language.
+      expect(find.text('READ COMBOS ALOUD'), findsOneWidget);
+      expect(find.text('BELLS'), findsOneWidget);
+      expect(find.text('CLASSIC'), findsOneWidget);
     },
   );
 
@@ -102,5 +106,22 @@ void main() {
     // Skip controls exist.
     expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
     expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+  });
+
+  testWidgets('heart-rate settings save Karvonen inputs', (tester) async {
+    await bootApp(tester);
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextField);
+    expect(fields, findsNWidgets(2));
+    await tester.enterText(fields.at(0), '190');
+    await tester.enterText(fields.at(1), '60');
+    await tester.pumpAndSettle();
+
+    final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
+    expect(store.data.settings.maxHeartRate, 190);
+    expect(store.data.settings.restingHeartRate, 60);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -66,6 +66,11 @@ class CountCue extends CueEvent {
   CountCue(this.n);
 }
 
+/// The natural end of a work round that is followed by a rest. Emitted only at
+/// real boundaries (never on skip/prev), so the engine can strike the finish
+/// bell without faking a round end when the athlete jumps around.
+class RoundEndCue extends CueEvent {}
+
 class DoneCue extends CueEvent {}
 
 List<CueEvent> eventsBetween(SessionPlan plan, num from, num to) {
@@ -80,6 +85,15 @@ List<CueEvent> eventsBetween(SessionPlan plan, num from, num to) {
     if (end <= from) continue;
     if (start >= to) break;
     if (start > from) events.add(SegmentCue(s.kind, s.round, i));
+    // A round that hands over to a rest has really ended: strike the finish
+    // bell on top of the rest tone that the rest segment itself triggers.
+    if (s.kind == SegmentKind.work &&
+        i + 1 < plan.segments.length &&
+        plan.segments[i + 1].kind == SegmentKind.rest &&
+        end > from &&
+        end <= to) {
+      events.add(RoundEndCue());
+    }
     if (s.duration >= 10) {
       final warnT = end - 10;
       if (warnT > from && warnT <= to) events.add(WarnCue());

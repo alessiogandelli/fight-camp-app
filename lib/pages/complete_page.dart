@@ -168,7 +168,7 @@ class _CompletePageState extends State<CompletePage>
                                   ),
                                 ],
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.check_rounded,
                                 color: AppColors.success,
                                 size: 44,
@@ -188,7 +188,7 @@ class _CompletePageState extends State<CompletePage>
                         Text(
                           cfg.name.toUpperCase(),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.mut,
                             fontSize: 12,
                             letterSpacing: 1.2,
@@ -267,7 +267,7 @@ class _CompletePageState extends State<CompletePage>
                                 children: [
                                   Text(
                                     l.completeHowHard.toUpperCase(),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 1.2,
@@ -281,7 +281,7 @@ class _CompletePageState extends State<CompletePage>
                                       textAlign: TextAlign.right,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 10.5,
                                         color: AppColors.mut,
                                       ),
@@ -345,7 +345,7 @@ class _CompletePageState extends State<CompletePage>
                                 children: [
                                   Text(
                                     l.completeRpeEasy,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 10.5,
                                       color: AppColors.mut,
                                     ),
@@ -353,7 +353,7 @@ class _CompletePageState extends State<CompletePage>
                                   const Spacer(),
                                   Text(
                                     l.completeRpeMax,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 10.5,
                                       color: AppColors.mut,
                                     ),
@@ -372,7 +372,7 @@ class _CompletePageState extends State<CompletePage>
                                         _rpe,
                                       ),
                                     ),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.primary,
@@ -491,7 +491,7 @@ class _Stat extends StatelessWidget {
         Text(
           label.toUpperCase(),
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 9,
             fontWeight: FontWeight.w700,
             color: AppColors.mut,

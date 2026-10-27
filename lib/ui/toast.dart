@@ -68,7 +68,7 @@ class ToastProviderState extends State<ToastProvider> {
                             Flexible(
                               child: Text(
                                 m.msg,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.ink,

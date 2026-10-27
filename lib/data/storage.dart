@@ -2,12 +2,14 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../lib/format.dart';
 import '../models/types.dart';
 import '../models/seed.dart';
+import '../training/training.dart';
 
 const dataKey = 'fight-camp:data:v3';
 const activeKey = 'fight-camp:active:v3';
-const storageVersion = 8;
+const storageVersion = 9;
 
 /// Seed workout ids that existed before v6 and are replaced by the new
 /// seed list (riscaldamento / corda / circuito / sparring).
@@ -45,6 +47,7 @@ AppData _migrateToV6(AppData d) {
     sessions: d.sessions,
     plans: d.plans,
     settings: d.settings,
+    healthLinks: d.healthLinks,
   );
 }
 
@@ -79,6 +82,7 @@ AppData _migrateToV7(AppData d) {
     sessions: d.sessions,
     plans: d.plans,
     settings: d.settings,
+    healthLinks: d.healthLinks,
   );
 }
 
@@ -146,6 +150,25 @@ AppData _migrateToV8(AppData d) {
     sessions: d.sessions,
     plans: d.plans,
     settings: d.settings,
+    healthLinks: d.healthLinks,
+  );
+}
+
+/// v9: introduce trainings. Sessions performed back to back get a shared
+/// group id, so history and stats can count a real training (warm-up + bag +
+/// stretching) as one instead of three.
+AppData _migrateToV9(AppData d) {
+  if (d.version >= 9) return d;
+  final needsGroups = d.sessions.any((s) => s.groupId == null);
+  return AppData(
+    version: 9,
+    techniques: d.techniques,
+    combinations: d.combinations,
+    workouts: d.workouts,
+    sessions: needsGroups ? assignGroupIds(d.sessions, uid) : d.sessions,
+    plans: d.plans,
+    settings: d.settings,
+    healthLinks: d.healthLinks,
   );
 }
 
@@ -161,7 +184,9 @@ Future<AppData> loadData() async {
       return seedData();
     if (appData.version < 1 || appData.version > storageVersion)
       return seedData();
-    final migrated = _migrateToV8(_migrateToV7(_migrateToV6(appData)));
+    final migrated = _migrateToV9(
+      _migrateToV8(_migrateToV7(_migrateToV6(appData))),
+    );
     if (migrated.version != appData.version) await saveData(migrated);
     return migrated;
   } catch (_) {

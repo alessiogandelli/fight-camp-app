@@ -233,7 +233,7 @@ class _TrainPageState extends State<TrainPage> {
               children: [
                 Text(
                   l.trainReady.toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
                     height: 1.05,
                     fontWeight: FontWeight.w900,
@@ -245,7 +245,7 @@ class _TrainPageState extends State<TrainPage> {
                 const SizedBox(height: 6),
                 Text(
                   l.trainReadySub,
-                  style: const TextStyle(fontSize: 13, color: AppColors.mut),
+                  style: TextStyle(fontSize: 13, color: AppColors.mut),
                 ),
               ],
             ),
@@ -260,7 +260,7 @@ class _TrainPageState extends State<TrainPage> {
     padding: const EdgeInsets.all(14),
     child: Row(
       children: [
-        const Icon(Icons.play_circle_outline_rounded, color: AppColors.primary),
+        Icon(Icons.play_circle_outline_rounded, color: AppColors.primary),
         const SizedBox(width: AppSpacing.sm + 4),
         Expanded(
           child: Column(
@@ -268,7 +268,7 @@ class _TrainPageState extends State<TrainPage> {
             children: [
               Text(
                 l.trainInProgress.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
@@ -356,15 +356,15 @@ class _TrainPageState extends State<TrainPage> {
           ),
         ),
         const SizedBox(height: 10),
-        const Divider(height: 1, thickness: 1, color: AppColors.line),
+        Divider(height: 1, thickness: 1, color: AppColors.line),
         const SizedBox(height: 8),
         Row(
           children: [
-            const Icon(Icons.repeat_rounded, size: 16, color: AppColors.mut),
+            Icon(Icons.repeat_rounded, size: 16, color: AppColors.mut),
             const SizedBox(width: 8),
             Text(
               l.commonRounds.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
@@ -399,7 +399,7 @@ class _TrainPageState extends State<TrainPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
                   '${_setup.rounds}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                     color: AppColors.ink,
@@ -462,7 +462,7 @@ class _TrainPageState extends State<TrainPage> {
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.0,
@@ -472,7 +472,7 @@ class _TrainPageState extends State<TrainPage> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.mut),
+            Icon(Icons.chevron_right_rounded, color: AppColors.mut),
           ],
         ),
       ),
@@ -525,7 +525,7 @@ class _TrainPageState extends State<TrainPage> {
           ),
           Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.1,
@@ -596,7 +596,7 @@ class _HeroTime extends StatelessWidget {
           const SizedBox(width: 7),
           Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
@@ -618,7 +618,7 @@ class _HeroTime extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 30,
                     height: 0.92,
                     fontWeight: FontWeight.w900,

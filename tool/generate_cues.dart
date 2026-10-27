@@ -8,13 +8,24 @@ import 'package:fight_camp/lib/cue_synth.dart';
 
 void main() {
   final projectRoot = File.fromUri(Platform.script).parent.parent;
-  final outDir = Directory('${projectRoot.path}/assets/audio')
+  final outRoot = Directory('${projectRoot.path}/assets/audio')
     ..createSync(recursive: true);
 
-  final bank = renderCueBank();
-  for (final entry in bank.entries) {
-    final file = File('${outDir.path}/${entry.key}.wav');
-    file.writeAsBytesSync(entry.value);
-    stdout.writeln('wrote ${file.path} (${entry.value.length} bytes)');
+  // Drop legacy flat cue files: every bank now lives in its own subfolder.
+  for (final entity in outRoot.listSync()) {
+    if (entity is File && entity.path.endsWith('.wav')) entity.deleteSync();
   }
+
+  var written = 0;
+  for (final bank in renderAllBanks().entries) {
+    final dir = Directory('${outRoot.path}/${bank.key}')
+      ..createSync(recursive: true);
+    for (final cue in bank.value.entries) {
+      final file = File('${dir.path}/${cue.key}.wav');
+      file.writeAsBytesSync(cue.value);
+      stdout.writeln('wrote ${file.path} (${cue.value.length} bytes)');
+      written++;
+    }
+  }
+  stdout.writeln('$written cue files written across ${cueBanks.length} banks');
 }

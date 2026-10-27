@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (valori per tema estesi da ADR 0006)
 
 ## Context
 

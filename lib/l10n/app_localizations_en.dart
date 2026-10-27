@@ -444,6 +444,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep sound on — beeps count down the last seconds and mark each combination.';
 
   @override
+  String get liveComboVoiceMute => 'Mute combo voice';
+
+  @override
+  String get liveComboVoiceUnmute => 'Unmute combo voice';
+
+  @override
   String get liveGetReady => 'Get ready';
 
   @override
@@ -1062,6 +1068,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsThemeHint =>
+      'App appearance: follow the phone, or force light or dark';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
   String get settingsLanguage => 'Language';
 
   @override
@@ -1085,6 +1107,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPrepHint => 'Runs automatically when the session starts';
+
+  @override
+  String get settingsBells => 'Bells';
+
+  @override
+  String get settingsBellsHint => 'Timbre of the sound cues';
+
+  @override
+  String get bellClassic => 'Classic';
+
+  @override
+  String get bellRing => 'Ring';
+
+  @override
+  String get bellBeep => 'Beep';
 
   @override
   String get trainPresets => 'Presets';
@@ -1271,4 +1308,327 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHowItWorks => 'How it works';
+
+  @override
+  String get settingsHealth => 'Apple Health';
+
+  @override
+  String get settingsHealthHint =>
+      'Import runs and workouts from Apple Watch or other apps, including effort, distance, splits and heart rate.';
+
+  @override
+  String get settingsHealthSync => 'Automatic sync';
+
+  @override
+  String get settingsHealthImportNow => 'Import now';
+
+  @override
+  String get settingsHealthNever => 'Never synced';
+
+  @override
+  String settingsHealthLastSync(Object date) {
+    return 'Last sync: $date';
+  }
+
+  @override
+  String get settingsHealthUnavailable =>
+      'Health is not available on this device.';
+
+  @override
+  String settingsHealthImported(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n workouts imported',
+      one: '1 workout imported',
+      zero: 'No new workouts',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsHealthNeedsPermission =>
+      'Allow access in Settings › Health › Data Access & Devices.';
+
+  @override
+  String trainingPieces(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n parts',
+      one: '1 part',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyHealth => 'Health';
+
+  @override
+  String historyHeartRate(Object avg) {
+    return 'HR $avg';
+  }
+
+  @override
+  String historyHeartRateRange(Object avg, Object max) {
+    return 'HR $avg/$max';
+  }
+
+  @override
+  String historyEnergy(Object n) {
+    return '$n kcal';
+  }
+
+  @override
+  String get historyTraining => 'Training';
+
+  @override
+  String get progressOverview => 'Overview';
+
+  @override
+  String get progressLog => 'Log';
+
+  @override
+  String get progressWorkouts => 'Workouts';
+
+  @override
+  String get progressActiveDaysLabel => 'Active days';
+
+  @override
+  String get progressNoTrainings => 'No workouts';
+
+  @override
+  String get progressNoPreviousPeriod => 'No previous period to compare';
+
+  @override
+  String get progressSameAsPrevious => 'same as previous period';
+
+  @override
+  String get progressVsPreviousWeek => 'vs previous week';
+
+  @override
+  String get progressVsPrevious4Weeks => 'vs previous 4 weeks';
+
+  @override
+  String get progressActivity => 'Activity';
+
+  @override
+  String get progressTapActiveDay => 'Tap an active day to see what you did.';
+
+  @override
+  String get progressNoActivityDay => 'No workout on this day.';
+
+  @override
+  String get progressTrainingMix => 'Training mix';
+
+  @override
+  String get progressRecent => 'Recent';
+
+  @override
+  String get progressViewFullLog => 'Open log';
+
+  @override
+  String get progressAllSources => 'All sources';
+
+  @override
+  String get progressSourceApp => 'Fight Camp';
+
+  @override
+  String get progressSourceHealth => 'Apple Health';
+
+  @override
+  String get progressResetFilters => 'Reset filters';
+
+  @override
+  String get progressNoMatchingTrainings => 'No matches';
+
+  @override
+  String get progressNoMatchingMsg => 'No workout matches the active filters.';
+
+  @override
+  String get progressNoTrainingsPeriod => 'No workouts in this period';
+
+  @override
+  String get progressNoTrainingsPeriodMsg => 'Change period or log a workout.';
+
+  @override
+  String get progressTapDayFilter => 'Tap a day to filter';
+
+  @override
+  String get progressThisWeekShort => 'This wk';
+
+  @override
+  String progressGoalProgress(Object done, Object goal) {
+    return '$done/$goal';
+  }
+
+  @override
+  String get progressLoad7Days => 'Load · 7 days';
+
+  @override
+  String get progressDistance => 'Distance';
+
+  @override
+  String get progressVs4WeekAverage => 'vs 4-week average';
+
+  @override
+  String get progressNoLoadData => 'No load data';
+
+  @override
+  String progressUncategorized(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n sessions are uncategorized',
+      one: '1 session is uncategorized',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressSortThem => 'Sort them';
+
+  @override
+  String get progressChooseType => 'Choose type';
+
+  @override
+  String get progressCategorizeTitle => 'Categorize sessions';
+
+  @override
+  String get progressCategorizeHint =>
+      'Choose a workout type for each session.';
+
+  @override
+  String get progressCategorizeSave => 'Save categories';
+
+  @override
+  String get progressCategorized => 'Sessions categorized';
+
+  @override
+  String get progressFilters => 'Filters';
+
+  @override
+  String progressHrBpm(Object bpm) {
+    return '$bpm bpm';
+  }
+
+  @override
+  String get trainingDetailHeartRate => 'Heart rate';
+
+  @override
+  String get trainingDetailAvgHr => 'Avg HR';
+
+  @override
+  String get trainingDetailMaxHr => 'Max HR';
+
+  @override
+  String get trainingDetailEnergy => 'Energy';
+
+  @override
+  String get trainingDetailSessions => 'Sessions';
+
+  @override
+  String get trainingDetailAddNote => 'Add a note';
+
+  @override
+  String get trainingDetailEditNotesTitle => 'Workout notes';
+
+  @override
+  String get trainingDetailNoteHint => 'How did it go?';
+
+  @override
+  String get trainingDetailSaveNotes => 'Save notes';
+
+  @override
+  String get trainingDetailNotesSaved => 'Notes saved';
+
+  @override
+  String get trainingDetailNoHeartRate => 'No heart-rate series available.';
+
+  @override
+  String get trainingDetailHealth => 'Apple Health details';
+
+  @override
+  String get trainingDetailDelete => 'Delete session';
+
+  @override
+  String progressAverageActiveDays(Object avg) {
+    return '$avg active days/week';
+  }
+
+  @override
+  String progressAverageActiveDay(Object avg) {
+    return '$avg active day/week';
+  }
+
+  @override
+  String progressWeeksOnGoal(Object hit, Object total) {
+    return '$hit/$total weeks on target';
+  }
+
+  @override
+  String get progressLoadWeek => 'Load · week';
+
+  @override
+  String get progressLoad4Weeks => 'Load · weekly avg';
+
+  @override
+  String get progressLoadAll => 'Load · weekly avg';
+
+  @override
+  String get progressLoadInsufficient => 'Not enough data';
+
+  @override
+  String progressLoadCoverage(Object measured, Object total) {
+    return '$measured/$total sessions with RPE/Effort';
+  }
+
+  @override
+  String get progressLoadFormula =>
+      'Load = minutes × RPE/Effort (1–10). Only sessions with a value contribute.';
+
+  @override
+  String get settingsHrZones => 'Heart-rate zones';
+
+  @override
+  String get settingsHrZonesHint =>
+      'Used for Karvonen zones in workout details.';
+
+  @override
+  String get settingsMaxHr => 'Max heart rate';
+
+  @override
+  String get settingsRestingHr => 'Resting heart rate';
+
+  @override
+  String settingsHrSuggested(Object bpm) {
+    return 'Suggested: $bpm bpm';
+  }
+
+  @override
+  String get settingsHrUseSuggested => 'Use suggested';
+
+  @override
+  String get settingsHrNotSet => 'Not set';
+
+  @override
+  String get settingsHealthEnriched => 'Health data updated';
+
+  @override
+  String get trainingDetailSplits => 'Splits per km';
+
+  @override
+  String get trainingDetailZones => 'Heart-rate zones';
+
+  @override
+  String get trainingDetailZonesSetup =>
+      'Set max and resting heart rate in Settings to see zones.';
+
+  @override
+  String get trainingDetailPartial => 'partial';
+
+  @override
+  String trainingDetailHrZoneRange(Object index, Object min, Object max) {
+    return 'Z$index · $min–$max bpm';
+  }
 }

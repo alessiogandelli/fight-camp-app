@@ -89,6 +89,11 @@ class SessionEngine extends ChangeNotifier {
       return;
     }
     final segs = evs.whereType<SegmentCue>().toList();
+    // Round end: same finish bell that closes the session, layered over the
+    // rest tone below so the boundary is unmistakable.
+    if (evs.any((e) => e is RoundEndCue)) {
+      if (soundOn) await Sound.done();
+    }
     if (segs.isNotEmpty) {
       // A distinct cue announces each work/rest phase; the prep countdown is
       // left to its 3-2-1 blips. All of it is gated by the sound setting.

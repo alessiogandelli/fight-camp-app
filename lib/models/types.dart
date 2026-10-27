@@ -541,6 +541,9 @@ class StrengthEntry {
 
 class SessionRecord {
   final String id;
+
+  /// When the session was recorded, i.e. its end (epoch ms). The start is
+  /// `date - duration * 1000`; use `sessionStart`/`sessionEnd` in training.dart.
   final int date;
   final WorkoutType type;
   final String source; // 'timer' | 'manual'
@@ -559,6 +562,16 @@ class SessionRecord {
   final List<UsageRef>? techniqueUsage;
   final RunningExtra? running;
   final List<StrengthEntry>? strength;
+
+  /// The real-world training this session belongs to. Sessions performed back
+  /// to back (or covered by the same Apple Health workout) share a group id;
+  /// Progressi counts groups, not sessions. Null means "a group of its own".
+  final String? groupId;
+
+  /// Heart-rate summary, filled from Apple Health when a workout overlaps this
+  /// session. Null when Health has no samples for the window.
+  final int? hrAvg;
+  final int? hrMax;
 
   const SessionRecord({
     required this.id,
@@ -580,6 +593,9 @@ class SessionRecord {
     this.techniqueUsage,
     this.running,
     this.strength,
+    this.groupId,
+    this.hrAvg,
+    this.hrMax,
   });
 
   factory SessionRecord.fromJson(Map<String, dynamic> j) => SessionRecord(
@@ -615,6 +631,9 @@ class SessionRecord {
     strength: (j['strength'] as List?)
         ?.map((e) => StrengthEntry.fromJson(Map<String, dynamic>.from(e)))
         .toList(),
+    groupId: j['groupId'] as String?,
+    hrAvg: (j['hrAvg'] as num?)?.toInt(),
+    hrMax: (j['hrMax'] as num?)?.toInt(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -639,6 +658,138 @@ class SessionRecord {
       'techniqueUsage': techniqueUsage!.map((e) => e.toJson()).toList(),
     if (running != null) 'running': running!.toJson(),
     if (strength != null) 'strength': strength!.map((e) => e.toJson()).toList(),
+    if (groupId != null) 'groupId': groupId,
+    if (hrAvg != null) 'hrAvg': hrAvg,
+    if (hrMax != null) 'hrMax': hrMax,
+  };
+
+  /// Only the fields the health import enriches are overridable; everything
+  /// else belongs to the session that was recorded.
+  SessionRecord copyWith({
+    WorkoutType? type,
+    String? groupId,
+    int? hrAvg,
+    int? hrMax,
+    int? rpe,
+    int? load,
+    String? notes,
+    bool clearNotes = false,
+  }) => SessionRecord(
+    id: id,
+    date: date,
+    type: type ?? this.type,
+    source: source,
+    workoutId: workoutId,
+    name: name,
+    roundsCompleted: roundsCompleted,
+    totalRounds: totalRounds,
+    duration: duration,
+    workDuration: workDuration,
+    rpe: rpe ?? this.rpe,
+    load: load ?? this.load,
+    notes: clearNotes ? null : (notes ?? this.notes),
+    energyBefore: energyBefore,
+    feelingAfter: feelingAfter,
+    combosUsed: combosUsed,
+    techniqueUsage: techniqueUsage,
+    running: running,
+    strength: strength,
+    groupId: groupId ?? this.groupId,
+    hrAvg: hrAvg ?? this.hrAvg,
+    hrMax: hrMax ?? this.hrMax,
+  );
+}
+
+/// One Apple Health workout attached to a training group.
+///
+/// Kept separate from [SessionRecord] on purpose: a single Health workout can
+/// span several sessions of the app (warm-up, bag, stretching), so an external
+/// id on the session would be ambiguous. The heart-rate series itself lives on
+/// disk, referenced by [externalId].
+class HealthLink {
+  final String externalId; // HealthKit workout UUID
+  final String groupId;
+  final int start;
+  final int end;
+
+  /// HealthKit activity type name, e.g. `RUNNING`, `TRADITIONAL_STRENGTH_TRAINING`.
+  final String activity;
+  final String sourceName;
+  final double? distanceKm;
+  final int? energyKcal;
+  final int? avgHr;
+  final int? maxHr;
+
+  /// Apple's Effort rating for this workout (1–10), when recorded/estimated.
+  final int? effortScore;
+
+  /// Whether a downsampled heart-rate series was written for the chart.
+  final bool hasSeries;
+
+  const HealthLink({
+    required this.externalId,
+    required this.groupId,
+    required this.start,
+    required this.end,
+    required this.activity,
+    this.sourceName = '',
+    this.distanceKm,
+    this.energyKcal,
+    this.avgHr,
+    this.maxHr,
+    this.effortScore,
+    this.hasSeries = false,
+  });
+
+  HealthLink copyWith({
+    String? groupId,
+    bool? hasSeries,
+    int? avgHr,
+    int? maxHr,
+    int? effortScore,
+  }) => HealthLink(
+    externalId: externalId,
+    groupId: groupId ?? this.groupId,
+    start: start,
+    end: end,
+    activity: activity,
+    sourceName: sourceName,
+    distanceKm: distanceKm,
+    energyKcal: energyKcal,
+    avgHr: avgHr ?? this.avgHr,
+    maxHr: maxHr ?? this.maxHr,
+    effortScore: effortScore ?? this.effortScore,
+    hasSeries: hasSeries ?? this.hasSeries,
+  );
+
+  factory HealthLink.fromJson(Map<String, dynamic> j) => HealthLink(
+    externalId: (j['externalId'] ?? '') as String,
+    groupId: (j['groupId'] ?? '') as String,
+    start: (j['start'] ?? 0) as int,
+    end: (j['end'] ?? 0) as int,
+    activity: (j['activity'] ?? 'OTHER') as String,
+    sourceName: (j['sourceName'] ?? '') as String,
+    distanceKm: (j['distanceKm'] as num?)?.toDouble(),
+    energyKcal: (j['energyKcal'] as num?)?.toInt(),
+    avgHr: (j['avgHr'] as num?)?.toInt(),
+    maxHr: (j['maxHr'] as num?)?.toInt(),
+    effortScore: (j['effortScore'] as num?)?.toInt(),
+    hasSeries: j['hasSeries'] == true,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'externalId': externalId,
+    'groupId': groupId,
+    'start': start,
+    'end': end,
+    'activity': activity,
+    if (sourceName.isNotEmpty) 'sourceName': sourceName,
+    if (distanceKm != null) 'distanceKm': distanceKm,
+    if (energyKcal != null) 'energyKcal': energyKcal,
+    if (avgHr != null) 'avgHr': avgHr,
+    if (maxHr != null) 'maxHr': maxHr,
+    if (effortScore != null) 'effortScore': effortScore,
+    if (hasSeries) 'hasSeries': true,
   };
 }
 
@@ -687,6 +838,25 @@ class WeekPlanItem {
   );
 }
 
+/// Appearance choice. [system] follows the phone; the other two force a
+/// palette regardless of the device setting.
+enum ThemeChoice {
+  system('system'),
+  light('light'),
+  dark('dark');
+
+  final String code;
+  const ThemeChoice(this.code);
+
+  static ThemeChoice parse(Object? value) {
+    if (value is! String) return ThemeChoice.system;
+    for (final choice in values) {
+      if (choice.code == value) return choice;
+    }
+    return ThemeChoice.system;
+  }
+}
+
 class Settings {
   final bool sound;
   final bool vibration;
@@ -694,11 +864,39 @@ class Settings {
 
   /// Read the upcoming combo aloud during the pause before a round.
   final bool comboVoice;
+
+  /// Which cue bank plays. See `cueBanks` in lib/cue_synth.dart.
+  final String bellSet;
+
+  /// Dark/light appearance override; defaults to following the device.
+  final ThemeChoice themeChoice;
+
+  /// Sync Apple Health workouts into the training history.
+  final bool healthSync;
+
+  /// Last successful Health import, epoch ms. Null when never synced.
+  final int? healthLastSync;
+
+  /// One-time backfill of effort scores and per-workout distance samples for
+  /// workouts imported before those features existed.
+  final bool healthEnriched;
+
+  /// Manual Karvonen inputs. Null means zones are not available yet.
+  final int? maxHeartRate;
+  final int? restingHeartRate;
+
   const Settings({
     required this.sound,
     required this.vibration,
     required this.prepSeconds,
     this.comboVoice = true,
+    this.bellSet = 'classic',
+    this.themeChoice = ThemeChoice.system,
+    this.healthSync = false,
+    this.healthLastSync,
+    this.healthEnriched = false,
+    this.maxHeartRate,
+    this.restingHeartRate,
   });
 
   factory Settings.fromJson(Map<String, dynamic> j) => Settings(
@@ -706,12 +904,26 @@ class Settings {
     vibration: j['vibration'] != false,
     prepSeconds: (j['prepSeconds'] ?? 3) as int,
     comboVoice: j['comboVoice'] != false,
+    bellSet: (j['bellSet'] as String?) ?? 'classic',
+    themeChoice: ThemeChoice.parse(j['theme']),
+    healthSync: j['healthSync'] == true,
+    healthLastSync: (j['healthLastSync'] as num?)?.toInt(),
+    healthEnriched: j['healthEnriched'] == true,
+    maxHeartRate: (j['maxHeartRate'] as num?)?.toInt(),
+    restingHeartRate: (j['restingHeartRate'] as num?)?.toInt(),
   );
   Map<String, dynamic> toJson() => {
     'sound': sound,
     'vibration': vibration,
     'prepSeconds': prepSeconds,
     'comboVoice': comboVoice,
+    'bellSet': bellSet,
+    'theme': themeChoice.code,
+    if (healthSync) 'healthSync': true,
+    if (healthLastSync != null) 'healthLastSync': healthLastSync,
+    if (healthEnriched) 'healthEnriched': true,
+    if (maxHeartRate != null) 'maxHeartRate': maxHeartRate,
+    if (restingHeartRate != null) 'restingHeartRate': restingHeartRate,
   };
 
   Settings copyWith({
@@ -719,11 +931,25 @@ class Settings {
     bool? vibration,
     int? prepSeconds,
     bool? comboVoice,
+    String? bellSet,
+    ThemeChoice? themeChoice,
+    bool? healthSync,
+    int? healthLastSync,
+    bool? healthEnriched,
+    int? maxHeartRate,
+    int? restingHeartRate,
   }) => Settings(
     sound: sound ?? this.sound,
     vibration: vibration ?? this.vibration,
     prepSeconds: prepSeconds ?? this.prepSeconds,
     comboVoice: comboVoice ?? this.comboVoice,
+    bellSet: bellSet ?? this.bellSet,
+    themeChoice: themeChoice ?? this.themeChoice,
+    healthSync: healthSync ?? this.healthSync,
+    healthLastSync: healthLastSync ?? this.healthLastSync,
+    healthEnriched: healthEnriched ?? this.healthEnriched,
+    maxHeartRate: maxHeartRate ?? this.maxHeartRate,
+    restingHeartRate: restingHeartRate ?? this.restingHeartRate,
   );
 }
 
@@ -735,6 +961,7 @@ class AppData {
   final List<SessionRecord> sessions;
   final List<WeekPlanItem> plans;
   final Settings settings;
+  final List<HealthLink> healthLinks;
 
   const AppData({
     required this.version,
@@ -744,6 +971,7 @@ class AppData {
     required this.sessions,
     required this.plans,
     required this.settings,
+    this.healthLinks = const [],
   });
 
   factory AppData.fromJson(Map<String, dynamic> j) => AppData(
@@ -764,6 +992,9 @@ class AppData {
         .map((e) => WeekPlanItem.fromJson(Map<String, dynamic>.from(e)))
         .toList(),
     settings: Settings.fromJson(Map<String, dynamic>.from(j['settings'] ?? {})),
+    healthLinks: ((j['healthLinks'] ?? []) as List)
+        .map((e) => HealthLink.fromJson(Map<String, dynamic>.from(e)))
+        .toList(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -774,6 +1005,8 @@ class AppData {
     'sessions': sessions.map((e) => e.toJson()).toList(),
     'plans': plans.map((e) => e.toJson()).toList(),
     'settings': settings.toJson(),
+    if (healthLinks.isNotEmpty)
+      'healthLinks': healthLinks.map((e) => e.toJson()).toList(),
   };
 }
 

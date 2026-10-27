@@ -150,7 +150,7 @@ class _WorkoutCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.error.withAlpha(140)),
         ),
-        child: const Icon(Icons.delete_outline, color: AppColors.error),
+        child: Icon(Icons.delete_outline, color: AppColors.error),
       ),
       child: ActionCard(
         icon: workoutIconFor(workout, type: store.workoutTypeOf(workout)),
@@ -228,7 +228,7 @@ class _WorkoutBody extends StatelessWidget {
     if (labels.isEmpty) {
       return Text(
         summarizeWorkout(workout, l),
-        style: const TextStyle(fontSize: 11.5, color: AppColors.mut),
+        style: TextStyle(fontSize: 11.5, color: AppColors.mut),
       );
     }
     return Wrap(
@@ -239,17 +239,14 @@ class _WorkoutBody extends StatelessWidget {
         for (var i = 0; i < labels.length; i++) ...[
           Text(
             labels[i],
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
               color: AppColors.mut,
             ),
           ),
           if (i < labels.length - 1)
-            const Text(
-              '→',
-              style: TextStyle(fontSize: 10, color: AppColors.mut),
-            ),
+            Text('→', style: TextStyle(fontSize: 10, color: AppColors.mut)),
         ],
       ],
     );

@@ -1,9 +1,11 @@
 // Global store ported from src/store/AppStore.tsx (ChangeNotifier-based).
 import 'package:flutter/foundation.dart';
 
+import '../lib/audio.dart';
 import '../lib/format.dart';
 import '../lib/haptics.dart';
 import '../models/types.dart';
+import '../training/training.dart';
 import 'storage.dart';
 
 class AppStore extends ChangeNotifier {
@@ -14,6 +16,7 @@ class AppStore extends ChangeNotifier {
 
   AppStore(this.data, this.lang, {this.onboardingSeen = false}) {
     Haptics.enabled = data.settings.vibration;
+    Sound.bank = data.settings.bellSet;
   }
 
   static Future<AppStore> create() async {
@@ -39,6 +42,7 @@ class AppStore extends ChangeNotifier {
   void _set(AppData next) {
     data = next;
     Haptics.enabled = next.settings.vibration;
+    Sound.bank = next.settings.bellSet;
     notifyListeners();
     saveData(next);
   }
@@ -62,6 +66,7 @@ class AppStore extends ChangeNotifier {
         sessions: data.sessions,
         plans: data.plans,
         settings: data.settings,
+        healthLinks: data.healthLinks,
       ),
     );
     return tech;
@@ -222,7 +227,13 @@ class AppStore extends ChangeNotifier {
 
   // ---- sessions ----
   void addSession(SessionRecord s) {
-    _set(_copyWith(sessions: [...data.sessions, s]));
+    // Sessions recorded back to back belong to the same training.
+    final group =
+        s.groupId ??
+        groupIdNear(data.sessions, sessionStart(s), sessionEnd(s)) ??
+        uid();
+    final record = s.groupId == null ? s.copyWith(groupId: group) : s;
+    _set(_copyWith(sessions: [...data.sessions, record]));
   }
 
   void updateSession(SessionRecord s) {
@@ -235,7 +246,18 @@ class AppStore extends ChangeNotifier {
   }
 
   void deleteSession(String id) {
-    _set(_copyWith(sessions: data.sessions.where((s) => s.id != id).toList()));
+    final remaining = data.sessions.where((s) => s.id != id).toList();
+    // A Health link without a session left in its group would be invisible but
+    // still stored: drop it together with the last session of the training.
+    final groups = {for (final s in remaining) groupIdOf(s)};
+    _set(
+      _copyWith(
+        sessions: remaining,
+        healthLinks: data.healthLinks
+            .where((l) => groups.contains(l.groupId))
+            .toList(),
+      ),
+    );
   }
 
   // ---- week plan ----
@@ -263,6 +285,13 @@ class AppStore extends ChangeNotifier {
     bool? vibration,
     int? prepSeconds,
     bool? comboVoice,
+    String? bellSet,
+    ThemeChoice? themeChoice,
+    bool? healthSync,
+    int? healthLastSync,
+    bool? healthEnriched,
+    int? maxHeartRate,
+    int? restingHeartRate,
   }) {
     _set(
       _copyWith(
@@ -271,7 +300,30 @@ class AppStore extends ChangeNotifier {
           vibration: vibration,
           prepSeconds: prepSeconds,
           comboVoice: comboVoice,
+          bellSet: bellSet,
+          themeChoice: themeChoice,
+          healthSync: healthSync,
+          healthLastSync: healthLastSync,
+          healthEnriched: healthEnriched,
+          maxHeartRate: maxHeartRate,
+          restingHeartRate: restingHeartRate,
         ),
+      ),
+    );
+  }
+
+  // ---- Apple Health ----
+  /// Replaces the session and link lists after a Health import.
+  void applyHealthImport({
+    required List<SessionRecord> sessions,
+    required List<HealthLink> links,
+    required int syncedAt,
+  }) {
+    _set(
+      _copyWith(
+        sessions: sessions,
+        healthLinks: links,
+        settings: data.settings.copyWith(healthLastSync: syncedAt),
       ),
     );
   }
@@ -283,6 +335,7 @@ class AppStore extends ChangeNotifier {
     List<SessionRecord>? sessions,
     List<WeekPlanItem>? plans,
     Settings? settings,
+    List<HealthLink>? healthLinks,
   }) => AppData(
     version: data.version,
     techniques: techniques ?? data.techniques,
@@ -291,5 +344,6 @@ class AppStore extends ChangeNotifier {
     sessions: sessions ?? data.sessions,
     plans: plans ?? data.plans,
     settings: settings ?? data.settings,
+    healthLinks: healthLinks ?? data.healthLinks,
   );
 }

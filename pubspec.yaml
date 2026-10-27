@@ -49,6 +49,8 @@ dependencies:
   flutter_tts: ^4.2.5
   liquid_glass_widgets: ^1.7.2
   glass_bottom_navigation: ^0.2.0
+  health: 13.1.4
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
@@ -79,7 +81,9 @@ flutter:
   assets:
     - assets/stretch/
     - assets/conditioning/
-    - assets/audio/
+    - assets/audio/classic/
+    - assets/audio/ring/
+    - assets/audio/beep/
     - assets/brand/
 
   # To add assets to your application, add an assets section, like this:

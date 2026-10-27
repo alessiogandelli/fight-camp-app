@@ -1,5 +1,6 @@
 // Stats helpers ported from src/lib/stats.ts.
 import '../models/types.dart';
+import '../training/training.dart';
 import 'format.dart';
 
 int computeLoad(int durationSec, int? rpe) {
@@ -12,7 +13,7 @@ DateTime startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
 DateTime startOfWeek(DateTime d) {
   final x = startOfDay(d);
   final day = (x.weekday + 6) % 7; // Monday-based
-  return x.subtract(Duration(days: day));
+  return DateTime(x.year, x.month, x.day - day);
 }
 
 class Streaks {
@@ -55,7 +56,7 @@ Streaks streaks(List<SessionRecord> sessions) {
 double sessionsPerWeek(List<SessionRecord> sessions, [int windowWeeks = 4]) {
   final cutoff =
       DateTime.now().millisecondsSinceEpoch - windowWeeks * 7 * 86400000;
-  final n = sessions.where((s) => s.date >= cutoff).length;
+  final n = trainingCount(sessions.where((s) => s.date >= cutoff));
   return ((n / windowWeeks) * 10).round() / 10;
 }
 
@@ -80,13 +81,13 @@ int weeklyStreak(List<SessionRecord> sessions) {
 
 int sessionsThisWeek(List<SessionRecord> sessions) {
   final key = dateKey(startOfWeek(DateTime.now()));
-  return sessions
-      .where(
-        (s) =>
-            dateKey(startOfWeek(DateTime.fromMillisecondsSinceEpoch(s.date))) ==
-            key,
-      )
-      .length;
+  return trainingCount(
+    sessions.where(
+      (s) =>
+          dateKey(startOfWeek(DateTime.fromMillisecondsSinceEpoch(s.date))) ==
+          key,
+    ),
+  );
 }
 
 class LoadBucket {
@@ -122,7 +123,7 @@ List<LoadBucket> weeklyBuckets(List<SessionRecord> sessions, [int weeks = 8]) {
       LoadBucket(
         '${start.day}/${start.month}',
         inRange.fold(0, (a, s) => a + s.load),
-        inRange.length,
+        trainingCount(inRange),
         (inRange.fold(0, (a, s) => a + s.duration) / 60).round(),
         _roundsOf(inRange),
       ),
@@ -195,7 +196,7 @@ List<LoadBucket> monthlyBuckets(
       LoadBucket(
         label,
         inRange.fold(0, (a, s) => a + s.load),
-        inRange.length,
+        trainingCount(inRange),
         (inRange.fold(0, (a, s) => a + s.duration) / 60).round(),
         _roundsOf(inRange),
       ),
@@ -220,7 +221,7 @@ class VolumeStats {
 }
 
 VolumeStats volumeStats(List<SessionRecord> sessions) => VolumeStats(
-  sessions.length,
+  trainingCount(sessions),
   (sessions.fold<int>(0, (a, s) => a + s.duration) / 60).round(),
   sessions.fold(0, (a, s) => a + (s.roundsCompleted ?? 0)),
   sessions.fold(0, (a, s) => a + (s.workDuration ?? 0)),
@@ -292,7 +293,7 @@ class BagStats {
 BagStats bagStats(List<SessionRecord> sessions) {
   final bag = sessions.where((s) => s.type == WorkoutType.heavyBag).toList();
   return BagStats(
-    bag.length,
+    trainingCount(bag),
     bag.fold(0, (a, s) => a + (s.roundsCompleted ?? 0)),
     bag.fold(0, (a, s) => a + (s.workDuration ?? s.duration)),
   );
@@ -323,10 +324,7 @@ StatsPeriod periodFor(StatsRange range, {DateTime? now}) {
     case StatsRange.week:
       return StatsPeriod(startOfWeek(n), null);
     case StatsRange.weeks4:
-      return StatsPeriod(
-        startOfWeek(n).subtract(const Duration(days: 21)),
-        null,
-      );
+      return StatsPeriod(_calendarDaysBefore(startOfWeek(n), 21), null);
     case StatsRange.all:
       return const StatsPeriod(null, null);
   }
@@ -338,14 +336,17 @@ StatsPeriod? previousPeriodFor(StatsRange range, {DateTime? now}) {
   switch (range) {
     case StatsRange.week:
       final thisWeek = startOfWeek(n);
-      return StatsPeriod(thisWeek.subtract(const Duration(days: 7)), thisWeek);
+      return StatsPeriod(_calendarDaysBefore(thisWeek, 7), thisWeek);
     case StatsRange.weeks4:
-      final start = startOfWeek(n).subtract(const Duration(days: 21));
-      return StatsPeriod(start.subtract(const Duration(days: 28)), start);
+      final start = _calendarDaysBefore(startOfWeek(n), 21);
+      return StatsPeriod(_calendarDaysBefore(start, 28), start);
     case StatsRange.all:
       return null;
   }
 }
+
+DateTime _calendarDaysBefore(DateTime date, int days) =>
+    DateTime(date.year, date.month, date.day - days);
 
 List<SessionRecord> sessionsInPeriod(
   List<SessionRecord> sessions,

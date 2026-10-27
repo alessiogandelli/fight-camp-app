@@ -908,6 +908,18 @@ abstract class AppLocalizations {
   /// **'Keep sound on — beeps count down the last seconds and mark each combination.'**
   String get liveSoundHint;
 
+  /// No description provided for @liveComboVoiceMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute combo voice'**
+  String get liveComboVoiceMute;
+
+  /// No description provided for @liveComboVoiceUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute combo voice'**
+  String get liveComboVoiceUnmute;
+
   /// No description provided for @liveGetReady.
   ///
   /// In en, this message translates to:
@@ -2048,6 +2060,36 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTitle;
 
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'App appearance: follow the phone, or force light or dark'**
+  String get settingsThemeHint;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
   /// No description provided for @settingsLanguage.
   ///
   /// In en, this message translates to:
@@ -2095,6 +2137,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Runs automatically when the session starts'**
   String get settingsPrepHint;
+
+  /// No description provided for @settingsBells.
+  ///
+  /// In en, this message translates to:
+  /// **'Bells'**
+  String get settingsBells;
+
+  /// No description provided for @settingsBellsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Timbre of the sound cues'**
+  String get settingsBellsHint;
+
+  /// No description provided for @bellClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get bellClassic;
+
+  /// No description provided for @bellRing.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring'**
+  String get bellRing;
+
+  /// No description provided for @bellBeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Beep'**
+  String get bellBeep;
 
   /// No description provided for @trainPresets.
   ///
@@ -2449,6 +2521,540 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'How it works'**
   String get settingsHowItWorks;
+
+  /// No description provided for @settingsHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health'**
+  String get settingsHealth;
+
+  /// No description provided for @settingsHealthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Import runs and workouts from Apple Watch or other apps, including effort, distance, splits and heart rate.'**
+  String get settingsHealthHint;
+
+  /// No description provided for @settingsHealthSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic sync'**
+  String get settingsHealthSync;
+
+  /// No description provided for @settingsHealthImportNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Import now'**
+  String get settingsHealthImportNow;
+
+  /// No description provided for @settingsHealthNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never synced'**
+  String get settingsHealthNever;
+
+  /// No description provided for @settingsHealthLastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {date}'**
+  String settingsHealthLastSync(Object date);
+
+  /// No description provided for @settingsHealthUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Health is not available on this device.'**
+  String get settingsHealthUnavailable;
+
+  /// No description provided for @settingsHealthImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{No new workouts} =1{1 workout imported} other{{n} workouts imported}}'**
+  String settingsHealthImported(num n);
+
+  /// No description provided for @settingsHealthNeedsPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access in Settings › Health › Data Access & Devices.'**
+  String get settingsHealthNeedsPermission;
+
+  /// No description provided for @trainingPieces.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 part} other{{n} parts}}'**
+  String trainingPieces(num n);
+
+  /// No description provided for @historyHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get historyHealth;
+
+  /// No description provided for @historyHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'HR {avg}'**
+  String historyHeartRate(Object avg);
+
+  /// No description provided for @historyHeartRateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'HR {avg}/{max}'**
+  String historyHeartRateRange(Object avg, Object max);
+
+  /// No description provided for @historyEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} kcal'**
+  String historyEnergy(Object n);
+
+  /// No description provided for @historyTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get historyTraining;
+
+  /// No description provided for @progressOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get progressOverview;
+
+  /// No description provided for @progressLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get progressLog;
+
+  /// No description provided for @progressWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get progressWorkouts;
+
+  /// No description provided for @progressActiveDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active days'**
+  String get progressActiveDaysLabel;
+
+  /// No description provided for @progressNoTrainings.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts'**
+  String get progressNoTrainings;
+
+  /// No description provided for @progressNoPreviousPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No previous period to compare'**
+  String get progressNoPreviousPeriod;
+
+  /// No description provided for @progressSameAsPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'same as previous period'**
+  String get progressSameAsPrevious;
+
+  /// No description provided for @progressVsPreviousWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'vs previous week'**
+  String get progressVsPreviousWeek;
+
+  /// No description provided for @progressVsPrevious4Weeks.
+  ///
+  /// In en, this message translates to:
+  /// **'vs previous 4 weeks'**
+  String get progressVsPrevious4Weeks;
+
+  /// No description provided for @progressActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get progressActivity;
+
+  /// No description provided for @progressTapActiveDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an active day to see what you did.'**
+  String get progressTapActiveDay;
+
+  /// No description provided for @progressNoActivityDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout on this day.'**
+  String get progressNoActivityDay;
+
+  /// No description provided for @progressTrainingMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Training mix'**
+  String get progressTrainingMix;
+
+  /// No description provided for @progressRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get progressRecent;
+
+  /// No description provided for @progressViewFullLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Open log'**
+  String get progressViewFullLog;
+
+  /// No description provided for @progressAllSources.
+  ///
+  /// In en, this message translates to:
+  /// **'All sources'**
+  String get progressAllSources;
+
+  /// No description provided for @progressSourceApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Fight Camp'**
+  String get progressSourceApp;
+
+  /// No description provided for @progressSourceHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health'**
+  String get progressSourceHealth;
+
+  /// No description provided for @progressResetFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get progressResetFilters;
+
+  /// No description provided for @progressNoMatchingTrainings.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get progressNoMatchingTrainings;
+
+  /// No description provided for @progressNoMatchingMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout matches the active filters.'**
+  String get progressNoMatchingMsg;
+
+  /// No description provided for @progressNoTrainingsPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts in this period'**
+  String get progressNoTrainingsPeriod;
+
+  /// No description provided for @progressNoTrainingsPeriodMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Change period or log a workout.'**
+  String get progressNoTrainingsPeriodMsg;
+
+  /// No description provided for @progressTapDayFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a day to filter'**
+  String get progressTapDayFilter;
+
+  /// No description provided for @progressThisWeekShort.
+  ///
+  /// In en, this message translates to:
+  /// **'This wk'**
+  String get progressThisWeekShort;
+
+  /// No description provided for @progressGoalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{goal}'**
+  String progressGoalProgress(Object done, Object goal);
+
+  /// No description provided for @progressLoad7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Load · 7 days'**
+  String get progressLoad7Days;
+
+  /// No description provided for @progressDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get progressDistance;
+
+  /// No description provided for @progressVs4WeekAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'vs 4-week average'**
+  String get progressVs4WeekAverage;
+
+  /// No description provided for @progressNoLoadData.
+  ///
+  /// In en, this message translates to:
+  /// **'No load data'**
+  String get progressNoLoadData;
+
+  /// No description provided for @progressUncategorized.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 session is uncategorized} other{{n} sessions are uncategorized}}'**
+  String progressUncategorized(num n);
+
+  /// No description provided for @progressSortThem.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort them'**
+  String get progressSortThem;
+
+  /// No description provided for @progressChooseType.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose type'**
+  String get progressChooseType;
+
+  /// No description provided for @progressCategorizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorize sessions'**
+  String get progressCategorizeTitle;
+
+  /// No description provided for @progressCategorizeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a workout type for each session.'**
+  String get progressCategorizeHint;
+
+  /// No description provided for @progressCategorizeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save categories'**
+  String get progressCategorizeSave;
+
+  /// No description provided for @progressCategorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions categorized'**
+  String get progressCategorized;
+
+  /// No description provided for @progressFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get progressFilters;
+
+  /// No description provided for @progressHrBpm.
+  ///
+  /// In en, this message translates to:
+  /// **'{bpm} bpm'**
+  String progressHrBpm(Object bpm);
+
+  /// No description provided for @trainingDetailHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate'**
+  String get trainingDetailHeartRate;
+
+  /// No description provided for @trainingDetailAvgHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg HR'**
+  String get trainingDetailAvgHr;
+
+  /// No description provided for @trainingDetailMaxHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Max HR'**
+  String get trainingDetailMaxHr;
+
+  /// No description provided for @trainingDetailEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy'**
+  String get trainingDetailEnergy;
+
+  /// No description provided for @trainingDetailSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get trainingDetailSessions;
+
+  /// No description provided for @trainingDetailAddNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get trainingDetailAddNote;
+
+  /// No description provided for @trainingDetailEditNotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout notes'**
+  String get trainingDetailEditNotesTitle;
+
+  /// No description provided for @trainingDetailNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How did it go?'**
+  String get trainingDetailNoteHint;
+
+  /// No description provided for @trainingDetailSaveNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Save notes'**
+  String get trainingDetailSaveNotes;
+
+  /// No description provided for @trainingDetailNotesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes saved'**
+  String get trainingDetailNotesSaved;
+
+  /// No description provided for @trainingDetailNoHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'No heart-rate series available.'**
+  String get trainingDetailNoHeartRate;
+
+  /// No description provided for @trainingDetailHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health details'**
+  String get trainingDetailHealth;
+
+  /// No description provided for @trainingDetailDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete session'**
+  String get trainingDetailDelete;
+
+  /// No description provided for @progressAverageActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{avg} active days/week'**
+  String progressAverageActiveDays(Object avg);
+
+  /// No description provided for @progressAverageActiveDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{avg} active day/week'**
+  String progressAverageActiveDay(Object avg);
+
+  /// No description provided for @progressWeeksOnGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'{hit}/{total} weeks on target'**
+  String progressWeeksOnGoal(Object hit, Object total);
+
+  /// No description provided for @progressLoadWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Load · week'**
+  String get progressLoadWeek;
+
+  /// No description provided for @progressLoad4Weeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Load · weekly avg'**
+  String get progressLoad4Weeks;
+
+  /// No description provided for @progressLoadAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Load · weekly avg'**
+  String get progressLoadAll;
+
+  /// No description provided for @progressLoadInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data'**
+  String get progressLoadInsufficient;
+
+  /// No description provided for @progressLoadCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'{measured}/{total} sessions with RPE/Effort'**
+  String progressLoadCoverage(Object measured, Object total);
+
+  /// No description provided for @progressLoadFormula.
+  ///
+  /// In en, this message translates to:
+  /// **'Load = minutes × RPE/Effort (1–10). Only sessions with a value contribute.'**
+  String get progressLoadFormula;
+
+  /// No description provided for @settingsHrZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate zones'**
+  String get settingsHrZones;
+
+  /// No description provided for @settingsHrZonesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for Karvonen zones in workout details.'**
+  String get settingsHrZonesHint;
+
+  /// No description provided for @settingsMaxHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Max heart rate'**
+  String get settingsMaxHr;
+
+  /// No description provided for @settingsRestingHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting heart rate'**
+  String get settingsRestingHr;
+
+  /// No description provided for @settingsHrSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested: {bpm} bpm'**
+  String settingsHrSuggested(Object bpm);
+
+  /// No description provided for @settingsHrUseSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Use suggested'**
+  String get settingsHrUseSuggested;
+
+  /// No description provided for @settingsHrNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get settingsHrNotSet;
+
+  /// No description provided for @settingsHealthEnriched.
+  ///
+  /// In en, this message translates to:
+  /// **'Health data updated'**
+  String get settingsHealthEnriched;
+
+  /// No description provided for @trainingDetailSplits.
+  ///
+  /// In en, this message translates to:
+  /// **'Splits per km'**
+  String get trainingDetailSplits;
+
+  /// No description provided for @trainingDetailZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate zones'**
+  String get trainingDetailZones;
+
+  /// No description provided for @trainingDetailZonesSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set max and resting heart rate in Settings to see zones.'**
+  String get trainingDetailZonesSetup;
+
+  /// No description provided for @trainingDetailPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'partial'**
+  String get trainingDetailPartial;
+
+  /// No description provided for @trainingDetailHrZoneRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Z{index} · {min}–{max} bpm'**
+  String trainingDetailHrZoneRange(Object index, Object min, Object max);
 }
 
 class _AppLocalizationsDelegate

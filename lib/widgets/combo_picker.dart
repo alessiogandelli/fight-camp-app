@@ -57,7 +57,7 @@ class _ComboPickerBodyState extends State<_ComboPickerBody> {
           onChanged: (v) => setState(() => _query = v),
           decoration: InputDecoration(
             hintText: l.pickerSearch,
-            prefixIcon: const Icon(Icons.search, color: AppColors.mut),
+            prefixIcon: Icon(Icons.search, color: AppColors.mut),
           ),
         ),
         const SizedBox(height: 10),
@@ -94,7 +94,7 @@ class _ComboPickerBodyState extends State<_ComboPickerBody> {
                   child: Text(
                     l.pickerEmpty,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.mut),
+                    style: TextStyle(color: AppColors.mut),
                   ),
                 )
               : ListView.builder(
@@ -205,7 +205,7 @@ class _ComboPickerBodyState extends State<_ComboPickerBody> {
                       ),
                       if (c.favorite) ...[
                         const SizedBox(width: 6),
-                        const Icon(
+                        Icon(
                           Icons.star_rounded,
                           size: 13,
                           color: AppColors.warning,
@@ -218,7 +218,7 @@ class _ComboPickerBodyState extends State<_ComboPickerBody> {
                     techniqueChain(c.techniqueIds, store.data.techniques, lang),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11, color: AppColors.mut),
+                    style: TextStyle(fontSize: 11, color: AppColors.mut),
                   ),
                 ],
               ),

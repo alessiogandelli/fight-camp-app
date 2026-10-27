@@ -43,7 +43,7 @@ Future<void> _showImagePreview(
           Text(
             description,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: AppColors.mut),
+            style: TextStyle(fontSize: 13, color: AppColors.mut),
           ),
         const SizedBox(height: 8),
       ],
@@ -172,10 +172,7 @@ class _CombosPageState extends State<CombosPage> {
                         hintText: _section == _Section.bag
                             ? l.combosSearch
                             : l.stretchesSearch,
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: AppColors.mut,
-                        ),
+                        prefixIcon: Icon(Icons.search, color: AppColors.mut),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -334,10 +331,7 @@ class _StretchExerciseCard extends StatelessWidget {
               ),
               child: img != null
                   ? SvgPicture.asset(img, width: 80, height: 80)
-                  : const Icon(
-                      Icons.self_improvement_rounded,
-                      color: AppColors.mut,
-                    ),
+                  : Icon(Icons.self_improvement_rounded, color: AppColors.mut),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -357,7 +351,7 @@ class _StretchExerciseCard extends StatelessWidget {
                     const SizedBox(height: 5),
                     Text(
                       desc,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         color: AppColors.mut,
                         height: 1.35,
@@ -368,7 +362,7 @@ class _StretchExerciseCard extends StatelessWidget {
               ),
             ),
             if (img != null)
-              const Icon(Icons.zoom_in_rounded, size: 18, color: AppColors.mut),
+              Icon(Icons.zoom_in_rounded, size: 18, color: AppColors.mut),
           ],
         ),
       ),
@@ -412,10 +406,7 @@ class _ConditioningExerciseCard extends StatelessWidget {
               ),
               child: img != null
                   ? SvgPicture.asset(img, width: 80, height: 80)
-                  : const Icon(
-                      Icons.fitness_center_rounded,
-                      color: AppColors.mut,
-                    ),
+                  : Icon(Icons.fitness_center_rounded, color: AppColors.mut),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -429,7 +420,7 @@ class _ConditioningExerciseCard extends StatelessWidget {
               ),
             ),
             if (img != null)
-              const Icon(Icons.zoom_in_rounded, size: 18, color: AppColors.mut),
+              Icon(Icons.zoom_in_rounded, size: 18, color: AppColors.mut),
           ],
         ),
       ),
@@ -557,7 +548,7 @@ class _ComboCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.error.withAlpha(140)),
         ),
-        child: const Icon(Icons.delete_outline, color: AppColors.error),
+        child: Icon(Icons.delete_outline, color: AppColors.error),
       ),
       child: ActionCard(
         icon: comboCardIcon,
@@ -582,10 +573,7 @@ class _ComboCard extends StatelessWidget {
                 ),
               ),
               if (i < techniqueNames.length - 1)
-                const Text(
-                  '→',
-                  style: TextStyle(fontSize: 12, color: AppColors.mut),
-                ),
+                Text('→', style: TextStyle(fontSize: 12, color: AppColors.mut)),
             ],
           ],
         ),

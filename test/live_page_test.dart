@@ -13,9 +13,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Future<void> bootApp(WidgetTester tester) async {
+Future<void> bootApp(WidgetTester tester, {String lang = 'it'}) async {
   SharedPreferences.setMockInitialValues({
-    'fight-camp:lang': 'it',
+    'fight-camp:lang': lang,
     'fight-camp:onboarding-seen': true,
   });
   await tester.pumpWidget(const FightCampApp());
@@ -52,7 +52,8 @@ Future<void> startCombinationRound(WidgetTester tester) async {
     ),
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.text('AVVIA').hitTestable().last);
+  // Language-agnostic: the idle screen's single start button.
+  await tester.tap(find.byType(Button).hitTestable().last);
   await tester.pumpAndSettle();
 }
 
@@ -166,4 +167,48 @@ void main() {
       expect(find.text('PANCAKE'), findsOneWidget);
     },
   );
+
+  testWidgets('combo voice mute sits next to restart and exit', (tester) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await bootApp(tester);
+    await startCombinationRound(tester);
+
+    // On by default: the button offers to mute.
+    expect(find.byType(ComboVoiceButton), findsOneWidget);
+    expect(find.byIcon(Icons.record_voice_over_rounded), findsOneWidget);
+
+    await tester.tap(find.byType(ComboVoiceButton));
+    await tester.pumpAndSettle();
+
+    // Muted: icon flips and the saved setting is left untouched.
+    expect(find.byIcon(Icons.voice_over_off_rounded), findsOneWidget);
+    final store = tester.element(find.byType(MaterialApp)).read<AppStore>();
+    expect(store.data.settings.comboVoice, true);
+  });
+
+  testWidgets('combo voice mute is available in English too', (tester) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await bootApp(tester, lang: 'en');
+    await startCombinationRound(tester);
+
+    await tester.tap(find.byType(ComboVoiceButton));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.voice_over_off_rounded), findsOneWidget);
+  });
+
+  testWidgets('combo voice mute is hidden when the session has no combos', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await bootApp(tester);
+    await startFreeRound(tester);
+
+    expect(find.byType(ComboVoiceButton), findsNothing);
+  });
 }
