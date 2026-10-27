@@ -154,8 +154,21 @@ log "ipa: $IPA"
 
 AUTH=(--apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER_ID")
 
+# altool can exit 0 while reporting a failure in its output, so treat both a
+# non-zero status and the error markers as fatal.
+run_altool() {
+  local label="$1"
+  shift
+  local out status=0
+  out="$(xcrun altool "$@" 2>&1)" || status=$?
+  printf '%s\n' "$out"
+  if [ "$status" -ne 0 ] || printf '%s' "$out" | grep -qE 'FAILED|ERROR:'; then
+    die "$label failed"
+  fi
+}
+
 log "validating with App Store Connect"
-xcrun altool --validate-app -f "$IPA" -t ios "${AUTH[@]}"
+run_altool "validation" --validate-app -f "$IPA" -t ios "${AUTH[@]}"
 
 if [ "$DRY_RUN" -eq 1 ] || [ "$NO_UPLOAD" -eq 1 ]; then
   log "skipping upload (--dry-run/--no-upload)"
@@ -164,6 +177,6 @@ if [ "$DRY_RUN" -eq 1 ] || [ "$NO_UPLOAD" -eq 1 ]; then
 fi
 
 log "uploading to App Store Connect"
-xcrun altool --upload-app -f "$IPA" -t ios "${AUTH[@]}"
+run_altool "upload" --upload-app -f "$IPA" -t ios "${AUTH[@]}"
 
 log "done: $NEW_VERSION uploaded"

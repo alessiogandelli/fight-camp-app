@@ -30,6 +30,8 @@
 		<true/>
 		<key>NSHealthShareUsageDescription</key>
 		<string>Fight Camp legge gli allenamenti, i battiti, la distanza e l'effort da Apple Salute per importare corse e workout, mostrare splits e zone e calcolare il carico. Fight Camp reads workouts, heart rate, distance and effort from Apple Health to import runs and workouts, show splits and zones, and calculate training load.</string>
+		<key>NSHealthUpdateUsageDescription</key>
+		<string>Fight Camp non scrive dati su Apple Salute: l'app legge soltanto allenamenti e battiti per calcolare il carico. Fight Camp does not write data to Apple Health: the app only reads workouts and heart rate to calculate training load.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>La fotocamera viene usata per contare automaticamente le flessioni. The camera is used to count push-ups automatically.</string>
 		<key>UIApplicationSceneManifest</key>
