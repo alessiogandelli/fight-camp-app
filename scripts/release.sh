@@ -144,10 +144,15 @@ log "flutter pub get"
 (cd "$APP_ROOT" && flutter pub get)
 
 log "flutter build ipa --release"
-(cd "$APP_ROOT" && flutter build ipa --release)
+# Remove any previous IPA first: `flutter build ipa` can exit 0 even when the
+# export/signing step fails, and the script would then validate a stale build.
+rm -f "$APP_ROOT"/build/ios/ipa/*.ipa
+if ! (cd "$APP_ROOT" && flutter build ipa --release); then
+  die "flutter build ipa failed"
+fi
 
 IPA="$(ls -t "$APP_ROOT"/build/ios/ipa/*.ipa 2>/dev/null | head -1 || true)"
-[ -n "$IPA" ] || die "no .ipa found in build/ios/ipa"
+[ -n "$IPA" ] || die "no .ipa found in build/ios/ipa (build or signing failed)"
 log "ipa: $IPA"
 
 # --- validate / upload --------------------------------------------------------
