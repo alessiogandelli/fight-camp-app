@@ -113,6 +113,7 @@ class HealthService {
     store.applyHealthImport(
       sessions: plan.sessions,
       links: plan.links,
+      segments: plan.segments,
       syncedAt: now.millisecondsSinceEpoch,
     );
     if (needsBackfill &&

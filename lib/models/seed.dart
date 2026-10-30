@@ -2200,7 +2200,7 @@ final seedThaiWorkouts = <Workout>[
 AppData seedData() {
   final now = DateTime.now().millisecondsSinceEpoch;
   return AppData(
-    version: 9,
+    version: 10,
     techniques: seedTechniques,
     combinations:
         [

@@ -67,10 +67,15 @@ class Training {
   final List<SessionRecord> sessions;
   final List<HealthLink> links;
 
+  /// Blocks declared by the user on the heart-rate timeline (rests or
+  /// timer-less exercises) that fill the gaps between sessions.
+  final List<TrainingSegment> segments;
+
   const Training({
     required this.id,
     required this.sessions,
     this.links = const [],
+    this.segments = const [],
   });
 
   bool get isEmpty => sessions.isEmpty && links.isEmpty;
@@ -102,10 +107,14 @@ class Training {
     return v;
   }
 
-  /// Sum of the app sessions' durations. Health workouts add no time: when they
-  /// overlap a session they describe the same minutes, and when they don't they
-  /// are imported as sessions themselves.
-  int get durationSec => sessions.fold(0, (a, s) => a + s.duration);
+  /// Sum of the app sessions' durations plus the declared blocks. Health
+  /// workouts add no time of their own: when they overlap a session they
+  /// describe the same minutes, and when they don't they are imported as
+  /// sessions themselves. Declared rests count too: the timeline is the real
+  /// time spent at the gym.
+  int get durationSec =>
+      sessions.fold(0, (a, s) => a + s.duration) +
+      segments.fold(0, (a, s) => a + s.durationSec);
 
   int get load => sessions.fold(0, (a, s) => a + s.load);
 
@@ -187,8 +196,9 @@ class Training {
 /// Groups sessions and Health links into trainings, newest first.
 List<Training> trainingsOf(
   List<SessionRecord> sessions,
-  List<HealthLink> links,
-) {
+  List<HealthLink> links, {
+  List<TrainingSegment> segments = const [],
+}) {
   final byGroup = <String, List<SessionRecord>>{};
   for (final s in sessions) {
     byGroup.putIfAbsent(groupIdOf(s), () => []).add(s);
@@ -197,6 +207,10 @@ List<Training> trainingsOf(
   for (final l in links) {
     linksByGroup.putIfAbsent(l.groupId, () => []).add(l);
   }
+  final segmentsByGroup = <String, List<TrainingSegment>>{};
+  for (final s in segments) {
+    segmentsByGroup.putIfAbsent(s.groupId, () => []).add(s);
+  }
   final ids = {...byGroup.keys, ...linksByGroup.keys};
   final out = <Training>[];
   for (final id in ids) {
@@ -204,7 +218,14 @@ List<Training> trainingsOf(
       ..sort((a, b) => a.date.compareTo(b.date));
     final groupLinks = [...?linksByGroup[id]];
     if (groupSessions.isEmpty && groupLinks.isEmpty) continue;
-    out.add(Training(id: id, sessions: groupSessions, links: groupLinks));
+    out.add(
+      Training(
+        id: id,
+        sessions: groupSessions,
+        links: groupLinks,
+        segments: [...?segmentsByGroup[id]],
+      ),
+    );
   }
   out.sort((a, b) => b.start.compareTo(a.start));
   return out;

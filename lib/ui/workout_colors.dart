@@ -33,6 +33,11 @@ Color progressTrainingColor(Training training) {
   for (final session in training.sessions) {
     durations[session.type] = (durations[session.type] ?? 0) + session.duration;
   }
+  for (final segment in training.segments) {
+    final type = segment.type;
+    if (segment.kind != TrainingSegmentKind.activity || type == null) continue;
+    durations[type] = (durations[type] ?? 0) + segment.durationSec;
+  }
   if (durations.isEmpty) return kProgressBlue;
   final ordered = durations.entries.toList()
     ..sort((a, b) {

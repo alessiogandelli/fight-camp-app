@@ -1631,4 +1631,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String trainingDetailHrZoneRange(Object index, Object min, Object max) {
     return 'Z$index · $min–$max bpm';
   }
+
+  @override
+  String get onboardingTitle4 => 'Connect Apple Health';
+
+  @override
+  String get onboardingBody4 =>
+      'Import runs and workouts recorded by your Watch or other apps, with heart rate, effort and splits — and see them next to your Fight Camp sessions.';
+
+  @override
+  String get onboardingConnectHealth => 'Connect Apple Health';
+
+  @override
+  String get onboardingHealthSkip => 'Not now';
+
+  @override
+  String get onboardingHealthConnected => 'Apple Health connected';
+
+  @override
+  String get onboardingHealthConnecting => 'Connecting…';
+
+  @override
+  String get trainingDetailTimelineHint =>
+      'Tap a gap to declare it a rest or a timer-less exercise.';
+
+  @override
+  String get trainingDetailBlockDeclare => 'Declare this block';
+
+  @override
+  String get trainingDetailBlockEdit => 'Edit block';
+
+  @override
+  String get trainingDetailBlockPause => 'Rest';
+
+  @override
+  String get trainingDetailBlockActivity => 'Timer-less exercise';
+
+  @override
+  String get trainingDetailBlockName => 'Name';
+
+  @override
+  String get trainingDetailBlockNameHint => 'e.g. Sparring, Rope';
+
+  @override
+  String get trainingDetailBlockSaved => 'Block saved';
+
+  @override
+  String get trainingDetailBlockDeleted => 'Block removed';
+
+  @override
+  String get trainingDetailBlockDeleteTitle => 'Delete block';
+
+  @override
+  String get trainingDetailBlockDeleteMsg =>
+      'Remove this declared block from the training?';
+
+  @override
+  String get trainingDetailPace => 'Pace';
 }

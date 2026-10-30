@@ -9,7 +9,7 @@ import '../training/training.dart';
 
 const dataKey = 'fight-camp:data:v3';
 const activeKey = 'fight-camp:active:v3';
-const storageVersion = 9;
+const storageVersion = 10;
 
 /// Seed workout ids that existed before v6 and are replaced by the new
 /// seed list (riscaldamento / corda / circuito / sparring).
@@ -172,6 +172,24 @@ AppData _migrateToV9(AppData d) {
   );
 }
 
+/// v10: declare the blocks of a training that have no timer session of their
+/// own — a rest or a timer-less exercise — so the heart-rate timeline can show
+/// the whole training. Purely additive: existing data is kept.
+AppData _migrateToV10(AppData d) {
+  if (d.version >= 10) return d;
+  return AppData(
+    version: 10,
+    techniques: d.techniques,
+    combinations: d.combinations,
+    workouts: d.workouts,
+    sessions: d.sessions,
+    plans: d.plans,
+    settings: d.settings,
+    healthLinks: d.healthLinks,
+    segments: d.segments,
+  );
+}
+
 Future<AppData> loadData() async {
   try {
     final prefs = await SharedPreferences.getInstance();
@@ -184,8 +202,8 @@ Future<AppData> loadData() async {
       return seedData();
     if (appData.version < 1 || appData.version > storageVersion)
       return seedData();
-    final migrated = _migrateToV9(
-      _migrateToV8(_migrateToV7(_migrateToV6(appData))),
+    final migrated = _migrateToV10(
+      _migrateToV9(_migrateToV8(_migrateToV7(_migrateToV6(appData)))),
     );
     if (migrated.version != appData.version) await saveData(migrated);
     return migrated;

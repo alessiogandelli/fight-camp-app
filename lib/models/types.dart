@@ -793,6 +793,82 @@ class HealthLink {
   };
 }
 
+/// What a declared block of an Allenamento is: a rest between two sessions or
+/// an exercise performed without the timer (e.g. sparring, rope).
+enum TrainingSegmentKind { pause, activity }
+
+/// A block of an Allenamento that has no timer session of its own. The user
+/// declares it on the heart-rate timeline, filling a gap between two sessions,
+/// so the chart can show the whole training — rest included.
+class TrainingSegment {
+  final String id;
+
+  /// The training group this block belongs to (see [SessionRecord.groupId]).
+  final String groupId;
+  final int start;
+  final int end;
+  final TrainingSegmentKind kind;
+
+  /// Free label shown on the timeline ("Sparring", "Corda", "Pausa").
+  final String name;
+
+  /// Only set when [kind] is [TrainingSegmentKind.activity].
+  final WorkoutType? type;
+
+  const TrainingSegment({
+    required this.id,
+    required this.groupId,
+    required this.start,
+    required this.end,
+    required this.kind,
+    required this.name,
+    this.type,
+  });
+
+  int get durationSec => ((end - start) / 1000).round().clamp(0, 1 << 31);
+
+  factory TrainingSegment.fromJson(Map<String, dynamic> j) => TrainingSegment(
+    id: (j['id'] ?? '') as String,
+    groupId: (j['groupId'] ?? '') as String,
+    start: (j['start'] ?? 0) as int,
+    end: (j['end'] ?? 0) as int,
+    kind: TrainingSegmentKind.values.firstWhere(
+      (k) => k.name == j['kind'],
+      orElse: () => TrainingSegmentKind.pause,
+    ),
+    name: (j['name'] ?? '') as String,
+    type: j['type'] == null ? null : workoutTypeFromJson(j['type'] as String),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'groupId': groupId,
+    'start': start,
+    'end': end,
+    'kind': kind.name,
+    if (name.isNotEmpty) 'name': name,
+    if (type != null) 'type': type!.json,
+  };
+
+  TrainingSegment copyWith({
+    String? groupId,
+    int? start,
+    int? end,
+    TrainingSegmentKind? kind,
+    String? name,
+    WorkoutType? type,
+    bool clearType = false,
+  }) => TrainingSegment(
+    id: id,
+    groupId: groupId ?? this.groupId,
+    start: start ?? this.start,
+    end: end ?? this.end,
+    kind: kind ?? this.kind,
+    name: name ?? this.name,
+    type: clearType ? null : (type ?? this.type),
+  );
+}
+
 class WeekPlanItem {
   final String id;
   final String dateKey; // YYYY-MM-DD
@@ -962,6 +1038,7 @@ class AppData {
   final List<WeekPlanItem> plans;
   final Settings settings;
   final List<HealthLink> healthLinks;
+  final List<TrainingSegment> segments;
 
   const AppData({
     required this.version,
@@ -972,6 +1049,7 @@ class AppData {
     required this.plans,
     required this.settings,
     this.healthLinks = const [],
+    this.segments = const [],
   });
 
   factory AppData.fromJson(Map<String, dynamic> j) => AppData(
@@ -995,6 +1073,9 @@ class AppData {
     healthLinks: ((j['healthLinks'] ?? []) as List)
         .map((e) => HealthLink.fromJson(Map<String, dynamic>.from(e)))
         .toList(),
+    segments: ((j['segments'] ?? []) as List)
+        .map((e) => TrainingSegment.fromJson(Map<String, dynamic>.from(e)))
+        .toList(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -1007,6 +1088,8 @@ class AppData {
     'settings': settings.toJson(),
     if (healthLinks.isNotEmpty)
       'healthLinks': healthLinks.map((e) => e.toJson()).toList(),
+    if (segments.isNotEmpty)
+      'segments': segments.map((e) => e.toJson()).toList(),
   };
 }
 

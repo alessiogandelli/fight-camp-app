@@ -7,9 +7,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../data/store.dart';
+import '../health/health_service.dart';
 import '../l10n/app_localizations.dart';
 import '../ui/theme.dart';
+import '../ui/toast.dart';
 import '../ui/widgets.dart';
+import '../ui/workout_colors.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -21,12 +24,51 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _controller = PageController();
   int _index = 0;
+  bool _healthAvailable = false;
+  bool _connecting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ask about Apple Health only where a health store exists.
+    healthService.available().then((value) {
+      if (mounted && value) setState(() => _healthAvailable = true);
+    });
+  }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
+  int get _slideCount => 3 + (_healthAvailable ? 1 : 0);
+
+  List<({String title, String body, Widget visual})> _slides(
+    AppLocalizations l,
+  ) => [
+    (
+      title: l.onboardingTitle1,
+      body: l.onboardingBody1,
+      visual: const _CountdownVisual(),
+    ),
+    (
+      title: l.onboardingTitle2,
+      body: l.onboardingBody2,
+      visual: const _TechniqueChainVisual(),
+    ),
+    (
+      title: l.onboardingTitle3,
+      body: l.onboardingBody3,
+      visual: const _ProgressVisual(),
+    ),
+    if (_healthAvailable)
+      (
+        title: l.onboardingTitle4,
+        body: l.onboardingBody4,
+        visual: const _HealthVisual(),
+      ),
+  ];
 
   Future<void> _finish() async {
     await context.read<AppStore>().markOnboardingSeen();
@@ -41,7 +83,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void _next() {
-    if (_index >= 2) {
+    if (_index >= _slideCount - 1) {
       _finish();
       return;
     }
@@ -51,27 +93,38 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
+  /// Asks HealthKit access, enables the automatic sync and imports the first
+  /// window right away, so the user sees data on the first launch.
+  Future<void> _connectHealth() async {
+    final l = AppLocalizations.of(context)!;
+    final store = context.read<AppStore>();
+    setState(() => _connecting = true);
+    store.setSettings(healthSync: true);
+    try {
+      final result = await healthService.syncNow(store);
+      if (!mounted) return;
+      if (!result.available) {
+        context.showToast(l.settingsHealthUnavailable);
+      } else if (result.importedCount > 0) {
+        context.showToast(l.settingsHealthImported(result.importedCount));
+      } else {
+        context.showToast(l.settingsHealthNeedsPermission);
+      }
+    } catch (_) {
+      if (mounted) context.showToast(l.settingsHealthNeedsPermission);
+    } finally {
+      if (mounted) setState(() => _connecting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final slides = <({String title, String body, Widget visual})>[
-      (
-        title: l.onboardingTitle1,
-        body: l.onboardingBody1,
-        visual: const _CountdownVisual(),
-      ),
-      (
-        title: l.onboardingTitle2,
-        body: l.onboardingBody2,
-        visual: const _TechniqueChainVisual(),
-      ),
-      (
-        title: l.onboardingTitle3,
-        body: l.onboardingBody3,
-        visual: const _ProgressVisual(),
-      ),
-    ];
-    final isLast = _index == slides.length - 1;
+    final store = context.watch<AppStore>();
+    final slides = _slides(l);
+    final isLast = _index >= slides.length - 1;
+    final onHealth = _healthAvailable && isLast;
+    final connected = store.data.settings.healthSync;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -110,7 +163,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 onPageChanged: (i) => setState(() => _index = i),
                 itemBuilder: (context, i) {
                   final s = slides[i];
-                  return _Slide(title: s.title, body: s.body, visual: s.visual);
+                  return _Slide(
+                    title: s.title,
+                    body: s.body,
+                    visual: s.visual,
+                    footer: onHealth && i == slides.length - 1 && connected
+                        ? l.onboardingHealthConnected
+                        : null,
+                  );
                 },
               ),
             ),
@@ -141,14 +201,43 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 AppSpacing.lg,
                 AppSpacing.lg,
               ),
-              child: SizedBox(
-                width: double.infinity,
-                child: Button(
-                  label: isLast ? l.onboardingStart : l.onboardingNext,
-                  size: BtnSize.lg,
-                  expanded: true,
-                  onTap: _next,
-                ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: onHealth && !connected
+                        ? Button(
+                            label: _connecting
+                                ? l.onboardingHealthConnecting
+                                : l.onboardingConnectHealth,
+                            size: BtnSize.lg,
+                            expanded: true,
+                            icon: Icons.favorite_rounded,
+                            onTap: _connecting ? null : _connectHealth,
+                          )
+                        : Button(
+                            label: isLast
+                                ? l.onboardingStart
+                                : l.onboardingNext,
+                            size: BtnSize.lg,
+                            expanded: true,
+                            onTap: isLast ? _finish : _next,
+                          ),
+                  ),
+                  if (onHealth && !connected)
+                    TextButton(
+                      onPressed: _connecting ? null : _finish,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.mut,
+                        minimumSize: const Size(0, 40),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      child: Text(l.onboardingHealthSkip),
+                    ),
+                ],
               ),
             ),
           ],
@@ -162,7 +251,13 @@ class _Slide extends StatelessWidget {
   final String title;
   final String body;
   final Widget visual;
-  const _Slide({required this.title, required this.body, required this.visual});
+  final String? footer;
+  const _Slide({
+    required this.title,
+    required this.body,
+    required this.visual,
+    this.footer,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -199,6 +294,28 @@ class _Slide extends StatelessWidget {
                   height: 1.55,
                 ),
               ),
+              if (footer != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      size: 15,
+                      color: kProgressGreen,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      footer!,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: kProgressGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -513,6 +630,108 @@ class _TechniqueChainVisualState extends State<_TechniqueChainVisual>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ---------- Slide 4: Apple Health connection ----------
+
+class _HealthVisual extends StatefulWidget {
+  const _HealthVisual();
+
+  @override
+  State<_HealthVisual> createState() => _HealthVisualState();
+}
+
+class _HealthVisualState extends State<_HealthVisual>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _VisualCard(
+      width: 230,
+      height: 270,
+      glow: kProgressRed,
+      child: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (context, _) {
+          final pulse = 0.9 + 0.1 * math.sin(_ctrl.value * math.pi * 2);
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    for (var i = 0; i < 3; i++)
+                      Container(
+                        width: 74.0 + i * 18,
+                        height: 74.0 + i * 18,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: kProgressRed.withAlpha(40 - i * 10),
+                          ),
+                        ),
+                      ),
+                    Transform.scale(
+                      scale: pulse,
+                      child: const Icon(
+                        Icons.favorite_rounded,
+                        size: 58,
+                        color: kProgressRed,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'APPLE HEALTH',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2,
+                  color: AppColors.mut,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final label in const ['FC', 'EFFORT', 'SPLITS'])
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.panel2,
+                        borderRadius: BorderRadius.circular(AppSpacing.pill),
+                        border: Border.all(color: AppColors.line),
+                      ),
+                      child: Text(label, style: AppText.micro),
+                    ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

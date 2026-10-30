@@ -392,4 +392,55 @@ void main() {
     expect(plan.links.single.effortScore, 6);
     expect(plan.distanceSeries, hasLength(1));
   });
+
+  test('merging groups moves declared blocks to the surviving group', () {
+    final plan = planHealthImport(
+      data: AppData(
+        version: 10,
+        techniques: const [],
+        combinations: const [],
+        workouts: const [],
+        sessions: [
+          _session(
+            id: 'a',
+            start: day,
+            duration: 10 * minuteSec,
+            groupId: 'g1',
+          ),
+          _session(
+            id: 'b',
+            start: day + 12 * minute,
+            duration: 10 * minuteSec,
+            groupId: 'g2',
+          ),
+        ],
+        plans: const [],
+        settings: const Settings(sound: true, vibration: true, prepSeconds: 3),
+        segments: [
+          TrainingSegment(
+            id: 'seg',
+            groupId: 'g2',
+            start: day + 10 * minute,
+            end: day + 12 * minute,
+            kind: TrainingSegmentKind.pause,
+            name: 'Pausa',
+          ),
+        ],
+      ),
+      batch: HealthBatch(
+        workouts: const [
+          HealthWorkout(
+            externalId: 'w1',
+            start: day,
+            end: day + 25 * minute,
+            activity: 'MARTIAL_ARTS',
+          ),
+        ],
+      ),
+      lang: Lang.it,
+      newId: _ids(),
+    );
+
+    expect(plan.segments.single.groupId, 'g1');
+  });
 }

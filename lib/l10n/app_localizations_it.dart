@@ -1641,4 +1641,61 @@ class AppLocalizationsIt extends AppLocalizations {
   String trainingDetailHrZoneRange(Object index, Object min, Object max) {
     return 'Z$index · $min–$max bpm';
   }
+
+  @override
+  String get onboardingTitle4 => 'Collega Apple Salute';
+
+  @override
+  String get onboardingBody4 =>
+      'Importa corse e allenamenti registrati da Apple Watch o altre app, con battiti, effort e splits — e vedili accanto alle sessioni di Fight Camp.';
+
+  @override
+  String get onboardingConnectHealth => 'Collega Apple Salute';
+
+  @override
+  String get onboardingHealthSkip => 'Non ora';
+
+  @override
+  String get onboardingHealthConnected => 'Apple Salute collegato';
+
+  @override
+  String get onboardingHealthConnecting => 'Collegamento…';
+
+  @override
+  String get trainingDetailTimelineHint =>
+      'Tocca un buco per dichiararlo pausa o esercizio senza timer.';
+
+  @override
+  String get trainingDetailBlockDeclare => 'Dichiara questo pezzo';
+
+  @override
+  String get trainingDetailBlockEdit => 'Modifica pezzo';
+
+  @override
+  String get trainingDetailBlockPause => 'Pausa';
+
+  @override
+  String get trainingDetailBlockActivity => 'Esercizio senza timer';
+
+  @override
+  String get trainingDetailBlockName => 'Nome';
+
+  @override
+  String get trainingDetailBlockNameHint => 'es. Sparring, Corda';
+
+  @override
+  String get trainingDetailBlockSaved => 'Pezzo salvato';
+
+  @override
+  String get trainingDetailBlockDeleted => 'Pezzo rimosso';
+
+  @override
+  String get trainingDetailBlockDeleteTitle => 'Elimina pezzo';
+
+  @override
+  String get trainingDetailBlockDeleteMsg =>
+      'Rimuovere questo pezzo dichiarato dall\'allenamento?';
+
+  @override
+  String get trainingDetailPace => 'Ritmo';
 }

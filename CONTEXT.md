@@ -37,6 +37,9 @@ Il blocco di sessioni eseguite di seguito (al massimo 15 minuti di stacco fra un
 ### Sessione
 L'unità atomica registrata: il risultato completato (o abbandonato) di un Timer o di un Workout, oppure un workout importato da Salute. Più Sessioni ravvicinate formano un Allenamento. Visibile dentro l'Allenamento in Progressi e Storico.
 
+### Pezzo dichiarato
+Un blocco di un Allenamento senza una Sessione del timer: una **pausa** fra due Sessioni oppure un **esercizio senza timer** (es. sparring, corda), dichiarato dall'utente sulla timeline del battito. Vive nell'Allenamento, entra nella durata dello stesso e — se è un esercizio — nel mix per tipo; la pausa non ha un tipo.
+
 ### Progressi
 La pagina che mostra come sta andando l'allenamento: riassunti, volume nel tempo, lista delle Sessioni.
 
@@ -47,3 +50,4 @@ La pagina che mostra come sta andando l'allenamento: riassunti, volume nel tempo
 - **Combo/Routine ≠ Workout**: una Combo o una Routine è una lista di movimenti; un Workout è una configurazione del Timer che può referenziare una di esse.
 - **Workout ≠ sequenza di blocchi**: un Workout è un'unica configurazione a intervalli uniformi, non una sequenza di parti eterogenee.
 - **Allenamento ≠ Sessione**: l'Allenamento è il blocco reale (più Sessioni, più eventuali workout di Salute); la Sessione è il singolo pezzo registrato. I Progressi contano Allenamenti, le statistiche di volume sommano Sessioni.
+- **Pezzo dichiarato ≠ Sessione**: il pezzo dichiarato descrive un buco della timeline (pausa o esercizio senza timer); non ha round, timer né tecniche registrate.

@@ -288,6 +288,13 @@ Map<String, ProgressDay> progressDaysByKey(Iterable<Training> trainings) {
     for (final session in training.sessions) {
       types[session.type] = (types[session.type] ?? 0) + session.duration;
     }
+    for (final segment in training.segments) {
+      final type = segment.type;
+      if (segment.kind != TrainingSegmentKind.activity || type == null) {
+        continue;
+      }
+      types[type] = (types[type] ?? 0) + segment.durationSec;
+    }
     out[key] = ProgressDay(
       date: day,
       durationSec: (current?.durationSec ?? 0) + training.durationSec,
@@ -342,6 +349,13 @@ List<TrainingMixRow> trainingMix(Iterable<Training> trainings) {
       rounds[session.type] =
           (rounds[session.type] ?? 0) + (session.roundsCompleted ?? 0);
     }
+    for (final segment in training.segments) {
+      final type = segment.type;
+      if (segment.kind != TrainingSegmentKind.activity || type == null) {
+        continue;
+      }
+      durations[type] = (durations[type] ?? 0) + segment.durationSec;
+    }
     final hasRunning = training.sessions.any(
       (s) => s.type == WorkoutType.running,
     );
@@ -386,7 +400,13 @@ List<Training> filterTrainings(
   return trainings.where((training) {
     if (dayKey != null && _dayKey(training.start) != dayKey) return false;
     if (types.isNotEmpty &&
-        !training.sessions.any((s) => types.contains(s.type))) {
+        !training.sessions.any((s) => types.contains(s.type)) &&
+        !training.segments.any(
+          (s) =>
+              s.kind == TrainingSegmentKind.activity &&
+              s.type != null &&
+              types.contains(s.type),
+        )) {
       return false;
     }
     if (source == TrainingSourceFilter.app &&
@@ -419,6 +439,7 @@ bool trainingMatchesQuery(Training training, String lowerCaseQuery) {
       for (final c in s.combosUsed ?? const <NameRef>[]) c.name,
       for (final e in s.strength ?? const <StrengthEntry>[]) e.exercise,
     ],
+    for (final segment in training.segments) segment.name,
   ];
   return haystack.any((value) => value.toLowerCase().contains(lowerCaseQuery));
 }

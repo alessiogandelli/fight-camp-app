@@ -37,7 +37,7 @@ Media e massimo si calcolano dai campioni `HEART_RATE` nell'intervallo del worko
 
 ### 4. Sola lettura, iOS
 
-L'app non scrive mai su Salute (nessun `NSHealthUpdateUsageDescription`, solo `NSHealthShareUsageDescription` e l'entitlement HealthKit). Sync automatica all'avvio/ritorno in foreground, al massimo una volta l'ora e solo se attivata; import manuale da Impostazioni con finestra di 30 giorni al primo giro.
+L'app non scrive mai su Salute (nessun `NSHealthUpdateUsageDescription`, solo `NSHealthShareUsageDescription` e l'entitlement HealthKit). Sync automatica all'avvio/ritorno in foreground, al massimo una volta l'ora e solo se attivata; import manuale da Impostazioni con finestra di 30 giorni al primo giro. Il primo avvio include una slide di onboarding che chiede di collegare Apple Salute, attiva la sync e importa subito la prima finestra.
 
 ### 5. Effort, distanza e carico
 
@@ -54,6 +54,10 @@ I campioni di distanza sono salvati su file accanto alla serie HR (`<uuid>.dista
 ### 6. Zone di frequenza
 
 Le zone usano il metodo Karvonen con FC massima e FC a riposo confermate dall'utente in Impostazioni. L'app suggerisce il massimo osservato nelle serie HR e l'ultima resting HR importata, ma non applica automaticamente la formula 220−età. Le zone native di HealthKit (iOS 27 / SDK 27) non sono ancora compilabili con Xcode 26.2 e verranno usate quando disponibili.
+
+### 7. Timeline dei battiti e pezzi dichiarati
+
+La scheda Allenamento disegna le fasce dei pezzi (sessioni, workout Salute e pezzi dichiarati) dietro la curva HR, tutte sullo stesso clock che parte dall'inizio dell'Allenamento. I buchi fra due sessioni possono essere dichiarati dall'utente come **pausa** o **esercizio senza timer** (`TrainingSegment`, storage v10): i pezzi entrano nella durata dell'Allenamento, gli esercizi anche nel mix per tipo. Il ritmo, calcolato dai campioni di distanza, è tracciato nello stesso grafico su un secondo asse invertito (più veloce in alto).
 
 ## Consequences
 

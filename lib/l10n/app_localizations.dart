@@ -3055,6 +3055,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Z{index} · {min}–{max} bpm'**
   String trainingDetailHrZoneRange(Object index, Object min, Object max);
+
+  /// No description provided for @onboardingTitle4.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Apple Health'**
+  String get onboardingTitle4;
+
+  /// No description provided for @onboardingBody4.
+  ///
+  /// In en, this message translates to:
+  /// **'Import runs and workouts recorded by your Watch or other apps, with heart rate, effort and splits — and see them next to your Fight Camp sessions.'**
+  String get onboardingBody4;
+
+  /// No description provided for @onboardingConnectHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Apple Health'**
+  String get onboardingConnectHealth;
+
+  /// No description provided for @onboardingHealthSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get onboardingHealthSkip;
+
+  /// No description provided for @onboardingHealthConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health connected'**
+  String get onboardingHealthConnected;
+
+  /// No description provided for @onboardingHealthConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get onboardingHealthConnecting;
+
+  /// No description provided for @trainingDetailTimelineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a gap to declare it a rest or a timer-less exercise.'**
+  String get trainingDetailTimelineHint;
+
+  /// No description provided for @trainingDetailBlockDeclare.
+  ///
+  /// In en, this message translates to:
+  /// **'Declare this block'**
+  String get trainingDetailBlockDeclare;
+
+  /// No description provided for @trainingDetailBlockEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit block'**
+  String get trainingDetailBlockEdit;
+
+  /// No description provided for @trainingDetailBlockPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get trainingDetailBlockPause;
+
+  /// No description provided for @trainingDetailBlockActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer-less exercise'**
+  String get trainingDetailBlockActivity;
+
+  /// No description provided for @trainingDetailBlockName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get trainingDetailBlockName;
+
+  /// No description provided for @trainingDetailBlockNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Sparring, Rope'**
+  String get trainingDetailBlockNameHint;
+
+  /// No description provided for @trainingDetailBlockSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Block saved'**
+  String get trainingDetailBlockSaved;
+
+  /// No description provided for @trainingDetailBlockDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Block removed'**
+  String get trainingDetailBlockDeleted;
+
+  /// No description provided for @trainingDetailBlockDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete block'**
+  String get trainingDetailBlockDeleteTitle;
+
+  /// No description provided for @trainingDetailBlockDeleteMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this declared block from the training?'**
+  String get trainingDetailBlockDeleteMsg;
+
+  /// No description provided for @trainingDetailPace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace'**
+  String get trainingDetailPace;
 }
 
 class _AppLocalizationsDelegate

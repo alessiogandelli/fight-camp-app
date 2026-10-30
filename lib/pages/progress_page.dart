@@ -40,7 +40,11 @@ class _ProgressPageState extends State<ProgressPage> {
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
     final l = AppLocalizations.of(context)!;
-    final trainings = trainingsOf(store.data.sessions, store.data.healthLinks);
+    final trainings = trainingsOf(
+      store.data.sessions,
+      store.data.healthLinks,
+      segments: store.data.segments,
+    );
     final maxOffset = maxProgressOffset(_range, trainings);
     final offset = _periodOffset.clamp(0, maxOffset);
     final period = progressPeriodFor(_range, offset: offset);
@@ -238,7 +242,11 @@ class _ProgressPageState extends State<ProgressPage> {
   Future<void> _sortUncategorized() async {
     final store = context.read<AppStore>();
     final l = AppLocalizations.of(context)!;
-    final trainings = trainingsOf(store.data.sessions, store.data.healthLinks);
+    final trainings = trainingsOf(
+      store.data.sessions,
+      store.data.healthLinks,
+      segments: store.data.segments,
+    );
     final current = trainingsInPeriod(trainings, periodFor(_range));
     final sessions = uncategorizedSessions(current);
     if (sessions.isEmpty) return;

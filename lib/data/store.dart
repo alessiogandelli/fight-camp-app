@@ -256,8 +256,31 @@ class AppStore extends ChangeNotifier {
         healthLinks: data.healthLinks
             .where((l) => groups.contains(l.groupId))
             .toList(),
+        segments: data.segments
+            .where((s) => groups.contains(s.groupId))
+            .toList(),
       ),
     );
+  }
+
+  // ---- training segments (declared blocks) ----
+  void addTrainingSegment(TrainingSegment segment) {
+    _set(_copyWith(segments: [...data.segments, segment]));
+  }
+
+  void updateTrainingSegment(TrainingSegment segment) {
+    if (!data.segments.any((s) => s.id == segment.id)) return;
+    _set(
+      _copyWith(
+        segments: data.segments
+            .map((s) => s.id == segment.id ? segment : s)
+            .toList(),
+      ),
+    );
+  }
+
+  void deleteTrainingSegment(String id) {
+    _set(_copyWith(segments: data.segments.where((s) => s.id != id).toList()));
   }
 
   // ---- week plan ----
@@ -317,12 +340,14 @@ class AppStore extends ChangeNotifier {
   void applyHealthImport({
     required List<SessionRecord> sessions,
     required List<HealthLink> links,
+    List<TrainingSegment>? segments,
     required int syncedAt,
   }) {
     _set(
       _copyWith(
         sessions: sessions,
         healthLinks: links,
+        segments: segments,
         settings: data.settings.copyWith(healthLastSync: syncedAt),
       ),
     );
@@ -336,6 +361,7 @@ class AppStore extends ChangeNotifier {
     List<WeekPlanItem>? plans,
     Settings? settings,
     List<HealthLink>? healthLinks,
+    List<TrainingSegment>? segments,
   }) => AppData(
     version: data.version,
     techniques: techniques ?? data.techniques,
@@ -345,5 +371,6 @@ class AppStore extends ChangeNotifier {
     plans: plans ?? data.plans,
     settings: settings ?? data.settings,
     healthLinks: healthLinks ?? data.healthLinks,
+    segments: segments ?? data.segments,
   );
 }

@@ -26,6 +26,7 @@ class HealthImportPlan {
   /// Full replacement lists, ready to be stored.
   final List<SessionRecord> sessions;
   final List<HealthLink> links;
+  final List<TrainingSegment> segments;
   final List<HealthSeriesWrite> series;
   final List<HealthDistanceWrite> distanceSeries;
 
@@ -44,6 +45,7 @@ class HealthImportPlan {
   const HealthImportPlan({
     required this.sessions,
     required this.links,
+    this.segments = const [],
     required this.series,
     this.distanceSeries = const [],
     this.newSessions = 0,
@@ -72,6 +74,7 @@ HealthImportPlan planHealthImport({
 }) {
   final sessions = [...data.sessions];
   final links = [...data.healthLinks];
+  final segments = [...data.segments];
   final series = <HealthSeriesWrite>[];
   final distanceSeries = <HealthDistanceWrite>[];
 
@@ -211,6 +214,12 @@ HealthImportPlan planHealthImport({
         links[i] = l.copyWith(groupId: target);
       }
     }
+    for (var i = 0; i < segments.length; i++) {
+      final segment = segments[i];
+      if (groups.contains(segment.groupId) && segment.groupId != target) {
+        segments[i] = segment.copyWith(groupId: target);
+      }
+    }
     links.add(link.copyWith(groupId: target));
     attached++;
   }
@@ -218,6 +227,7 @@ HealthImportPlan planHealthImport({
   return HealthImportPlan(
     sessions: sessions,
     links: links,
+    segments: segments,
     series: series,
     distanceSeries: distanceSeries,
     newSessions: newSessions,
